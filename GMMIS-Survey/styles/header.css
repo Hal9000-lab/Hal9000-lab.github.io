@@ -11,6 +11,7 @@ header > h1 {
     margin: auto;
     padding: 0.5em;
     padding-top: 1.8em;
+    max-width: 25cm;
     font-size: 2.5em;
     color: rgb(50, 50, 50);
 }
@@ -42,12 +43,62 @@ header > p#affil > a:hover {
     color: rgb(70, 0, 199);
 }
 
+/* fast links */
+div#fast-cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    margin: auto;
+    margin-top: 20px;
+}
+
+span.fast-card {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    height: 45px;
+    width: 110px;
+    background: rgb(82, 82, 82);
+    border: none;
+    border-radius: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+span.fast-card#arxiv {
+    background: rgb(179, 27, 27);
+}
+span.fast-card#github {
+    background: rgb(216, 216, 216);
+}
+
+span.fast-card > a > img {
+    height: 30px;
+    min-height: 30px;
+}
+span.fast-card#arxiv > a > img {
+    height: 25px;
+    min-height: 25px;
+}
+span.fast-card#github > a > img {
+    height: 40px;
+    min-height: 40px;
+}
+
+span.fast-card > a > span.hidden {
+    display: none;
+}
 
 /* graphical abstract */
 
 header > div#graphical-abstract {
     width: 90%;
-    max-width: 22cm;
+    max-width: 19cm;
     margin: auto;
     margin-top: 3em;
 }
