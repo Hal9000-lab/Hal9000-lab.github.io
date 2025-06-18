@@ -1,0 +1,29 @@
+div#empty-table {
+    margin: auto;
+    margin-top: 40px;
+    border: 2px solid firebrick;
+    border-radius: 3px;
+    width: 4cm;
+    text-align: center;
+}
+
+div#empty-table > h3 {
+    margin: 0;
+    padding: 0;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    width: 100%;
+    font-size: 1.3em;
+    font-weight: 600;
+    color: whitesmoke;
+    background-color: firebrick;
+}
+
+div#empty-table > p {
+    margin: 0;
+    padding: 0;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    font-size: 1.0em;
+    color: rgb(75, 75, 75);
+}

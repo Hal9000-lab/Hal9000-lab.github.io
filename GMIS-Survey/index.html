@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMIS-Survey: AAMIA Softwares</title>
+    <link rel="icon" href="../assets/paper.png">
+    <link rel="stylesheet" href="./styles/main.css">
+
+    <script src="./sql.js-gh-pages/dist/sql-wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+    <header>
+        <h1>
+            Generalist Models in Medical Image Segmentation:<br/>
+            A Survey and Performance Comparison with Task-Specific Approaches
+        </h1>
+
+        <p id="authors">
+            Andrea Moglia<sup>1&#10022;</sup>
+                <a target="_blank" href="https://orcid.org/0000-0002-3365-580X"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?user=J5VLBNIAAAAJ&hl=en"><img src="../assets/scholar.ico" class="auth-ico-scholar"/></a>,
+            Matteo Leccardi<sup>1&#10022;</sup>
+                <a target="_blank" href="https://orcid.org/0009-0002-3434-0559"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?user=wOjE0VUAAAAJ&hl=en"><img src="../assets/scholar.ico" class="auth-ico-scholar"/></a>,
+            <br/>
+            Matteo Cavicchioli<sup>1</sup>
+                <a target="_blank" href="https://orcid.org/0000-0001-9394-4913"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=OJprwb0AAAAJ"><img src="../assets/scholar.ico" class="auth-ico-scholar"/></a>,
+            Alice Maccarini<sup>2</sup>
+                <a target="_blank" href="https://orcid.org/0009-0008-2472-9687"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                ,
+            Marco Marcon<sup>1</sup>
+                <a target="_blank" href="https://orcid.org/0000-0001-6557-2120"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=caRWcc4AAAAJ"><img src="../assets/scholar.ico" class="auth-ico-scholar"/></a>,
+            <br/>
+            Luca Mainardi<sup>1</sup>
+                <a target="_blank" href="https://orcid.org/0000-0002-6276-6314"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=-4sUeToAAAAJ"><img src="../assets/scholar.ico" class="auth-ico-scholar"/></a>,
+            Pietro Cerveri<sup>1,2</sup>
+                <a target="_blank" href="https://orcid.org/0000-0003-3995-8673"><img src="../assets/orcid.ico" class="auth-ico-orcid"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=oHDqHtQAAAAJ"><img src="../assets/scholar.ico" class="auth-ico-scholar"/></a>,
+        </p>
+
+        <p id="affil">
+            1: Politecnico di Milano, 2: Università di Pavia
+            <br/>
+            &#10022;: Equally contributing authors
+            <br/>
+            For correspondence: <a href="mailto:andrea.moglia@polimi.it">andrea.moglia@polimi.it</a>
+        </p>
+
+        <div id="graphical-abstract">
+            <img src="../assets/fig2.svg">
+        </div>
+        
+        <div id="abstract">
+            <h2>Abstract</h2>
+            <p>
+                Following the successful paradigm shift of large language models, leveraging pre-training on a massive corpus of data and fine-tuning on different downstream tasks, generalist models have made their foray into computer vision. 
+                The introduction of Segment Anything Model (SAM) set a milestone on segmentation of natural images, inspiring the design of a multitude of architectures for medical image segmentation. 
+                In this survey we offer a comprehensive and in-depth investigation on generalist models for medical image segmentation. 
+                We start with an introduction on the fundamentals concepts underpinning their development. 
+                Then, we provide a taxonomy on the different declinations of SAM in terms of zero-shot, few-shot, fine-tuning, adapters, on the recent SAM 2, on other innovative models trained on images alone, and others trained on both text and images. 
+                We thoroughly analyze their performances at the level of both primary research and best-in-literature, followed by a rigorous comparison with the state-of-the-art task-specific models. 
+                We emphasize the need to address challenges in terms of compliance with regulatory frameworks, privacy and security laws, budget, and trustworthy artificial intelligence (AI). 
+                Finally, we share our perspective on future directions concerning synthetic data, early fusion, lessons learnt from generalist models in natural language processing, agentic AI and physical AI, and clinical translation.
+            </p>
+        </div>
+    </header>
+    
+
+    
+    
+    
+    
+    
+    <div id="main-tabs">
+        <button id="main-models" class="active-tab">Models</button>
+        <button id="main-datasets">Datasets</button>
+        <button id="main-results">Results</button>
+    </div>
+
+
+
+
+
+        
+
+    <div id="main-container">
+        <!-- 
+            This is th eocntainer of tables, graphs, and any other tab-related element.
+            All content is here, except tables that get built on the go.
+            This is necessary otherwise it does not work..
+        -->
+        <div id="empty-table">
+            <h3>Try again!</h3>
+            <p>Use another query combination</p>
+        </div>
+
+        <div class="minipage-container" id="results">
+            <span class="minipage-text">Selection of interest:</span>
+            <div class="dropdown">
+                <button class="dropbtn" id="dropdown-dataset-organ-button">
+                    <span class="dropbtn-text">Choose</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                </button>
+                <div id="dropdown-dataset-organ-curtain" class="dropdown-content single">
+                    <div class="search-input hidden">
+                        <input type="text" name="" id="">
+                    </div>
+                    <button>Organs</button>
+                    <button>Datasets</button>
+                    <button>Main Anatomical Structure</button>
+                    <button>Anatomical Region</button>
+                </div>
+            </div>
+
+            <span class="minipage-text">Selection:</span>
+            <div class="dropdown">
+                <button class="dropbtn" id="dropdown-specific-dataset-organ-button">
+                    <span class="dropbtn-text">No selections available</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div id="dropdown-specific-dataset-organ-curtain" class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="">
+                    </div>
+                </div>
+            </div>
+            <br/>
+            <span class="minipage-text">Filter results by:</span>
+            <div class="dropdown">
+                <button class="dropbtn" id="results-model-filter-framework">
+                    <span class="dropbtn-text">Framework</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="results-model-filter-architecture">
+                    <span class="dropbtn-text">Architecture</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="results-model-filter-visual-backbone">
+                    <span class="dropbtn-text">Visual Backbone</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="results-model-filter-release-date">
+                    <span class="dropbtn-text">Release Year</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-display-box">
+                <!-- Tables to display will go here -->
+            </div>
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+
+
+    <div id="publications-container">
+        <div class="publication-box" id="arxiv">
+            <h3>Preprint available on ArXiv</h3>
+            <p>12 Jun 2025</p>
+            <p>https://doi.org/10.48550/arXiv.2506.10825</p>
+            <button class="publication" id="arxiv-bibtex-button">Copy Bibtex</button>
+            <a href="https://doi.org/10.48550/arXiv.2506.10825" target="_blank">
+                <button class="publication">Open Publication</button>
+            </a>
+        </div>
+        <!-- Add more publications here following the above template (publication-box) -->
+        </div>
+        <!-- Content that is invisible and position-indipendent-->
+        <div id="bibtex-container">
+        <div>
+            <p><button id="bibtex-close">&#10005;</button></p>
+            <textarea id="bibtex-textarea">
+            </textarea>
+        </div>
+    </div>
+
+
+
+  
+</body>
+</html>
+
+

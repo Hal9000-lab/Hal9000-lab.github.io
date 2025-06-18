@@ -1,1 +1,3 @@
-# Hal9000-lab.github.io
+# Generalist Models in Medical Image Segmentation: A Survey and Performance Comparison with Task-Specific Approaches
+
+

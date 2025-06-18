@@ -1,0 +1,101 @@
+/* HEADER */
+
+/* title and authors and affiliations */
+header {
+    margin: 0;
+    padding: 0;
+    padding-bottom: 1.5em;
+    text-align: center;
+}
+header > h1 {
+    margin: auto;
+    padding: 0.5em;
+    padding-top: 1.8em;
+    font-size: 2.5em;
+    color: rgb(50, 50, 50);
+}
+
+header > p#authors {
+    margin: 0;
+    padding: 0;
+    padding-top: 0.7em;
+    font-size: 1.2em;
+    line-height: 1.5em;
+}
+header > p#authors > sup {
+    padding-left: 1.5px;
+    font-size: 0.7em;
+}
+
+header > p#affil {
+    margin: 0;
+    margin-top: 1.5em;
+    padding: 0;
+    font-size: 1.0em;
+}
+
+header > p#affil > a {
+    text-decoration: none;
+    color: rgb(0, 0, 0);
+}
+header > p#affil > a:hover {
+    color: rgb(70, 0, 199);
+}
+
+
+/* graphical abstract */
+
+header > div#graphical-abstract {
+    width: 90%;
+    max-width: 22cm;
+    margin: auto;
+    margin-top: 3em;
+}
+
+header > div#graphical-abstract > img {
+    width: 100%;
+}
+
+
+/* abstract */
+
+header > div#abstract {
+    margin: 0;
+    padding: 0;
+}
+
+header > div#abstract > h2 {
+    margin: auto;
+    margin-top: 1.0em;
+    padding: 0;
+}
+
+header > div#abstract > p {
+    width: 90%;
+    max-width: 17cm;
+    margin: auto;
+    margin-top: 1.0em;
+    text-align: justify;
+    color: rgb(73, 73, 73);
+    font-size: 1.1em;
+    line-height: 1.3em;
+}
+
+img.auth-ico-orcid {
+    height: 0.9em;
+    transition: 0.3s;
+}
+img.auth-ico-orcid:hover {
+    height: 1.1em;
+    margin-bottom: -0.1em;
+    transition: 0.3s;
+}
+img.auth-ico-scholar {
+    height: 1.0em;
+    transition: 0.3s;
+}
+img.auth-ico-scholar:hover {
+    height: 1.2em;
+    margin-bottom: -0.1em;
+    transition: 0.3s;
+}
