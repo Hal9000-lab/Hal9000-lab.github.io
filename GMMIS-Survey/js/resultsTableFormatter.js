@@ -4,7 +4,7 @@ export function resultsTableFormatter(resultsTableQueryAnswer, colorHeader, colo
     let columns = resultsTableQueryAnswer[0]["columns"];
     let values = resultsTableQueryAnswer[0]["values"];
     
-    let out = '<table class="styled-table"><thead>';
+    let out = '<table class="styled-table results"><thead>';
     columns.forEach(c => {
         out += '<th>' + c + '</th>';
     });
@@ -24,7 +24,7 @@ export function resultsTableFormatter(resultsTableQueryAnswer, colorHeader, colo
 
 let a = `
 div>
-        <table class="styled-table">
+        <table class="styled-table results">
             <thead>
                 <tr>
                     <th>Name</th>

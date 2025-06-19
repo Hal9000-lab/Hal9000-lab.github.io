@@ -72,8 +72,14 @@ function _build_condition_models_date(column, list_of_options) {
     return sql_condition;
 }
 
+/**
+ * 
+ * @param {Object} buttons_state_dict 
+ * @param {String} column_to_order_by 
+ * @returns 
+ */
 
-function getResultsTable(buttons_state_dict) {
+function getResultsTable(buttons_state_dict, column_to_order_by='') {
 
     // if the selection button is empty, do not display anything
     // if object in question (dataset, organ or whatever), framework, architecture, visual backbone or year are empty, consider any value
@@ -155,6 +161,16 @@ function getResultsTable(buttons_state_dict) {
     columns_selector = '"Related Paper", strftime("%Y-%m", Date) AS Date, ' + columns_selector;
     // not null results
     const empty_rows_neutralizer = filtered_column_selector_list.map(e => '"' + e + '"').join(' IS NOT NULL OR ') + ' IS NOT NULL';
+    // order by statement
+    if (column_to_order_by.length > 0 && columns_selector.includes(column_to_order_by)) {
+        const asc_desc = (column_to_order_by.includes('Related Paper')) ? 'ASC' : 'DESC';
+        var order_by_statement = `
+            ORDER BY 
+                CASE 
+                    WHEN ${column_to_order_by} IS NULL THEN 1 ELSE 0 END, ${column_to_order_by} ${asc_desc}`;
+    }
+    else
+        var order_by_statement = ``;
     // Results table query
     let query = `
         SELECT ${columns_selector}
@@ -178,7 +194,8 @@ function getResultsTable(buttons_state_dict) {
             AND
             (
                 ${empty_rows_neutralizer}
-            ) 
+            )
+        ${order_by_statement}
         ;
     `;
     const answer = executeQuery(query);
@@ -269,14 +286,16 @@ export function resultsSetup() {
             searchbox.classList.add('hidden');
         }
     });
-
+    
+    // get area where table will be displayed
+    const results_table_container = document.querySelector('div.minipage-container#results > div.table-display-box');
 
     // trigger the display of results
     var results_list_ob_buttons = [
                 organs_or_dataset_button, object_multichoice_button, 
                 frameworks_button, architecture_button, 
                 visual_backbone_button, release_dates_button
-        ];
+            ];
     var results_buttons_state = getStateOfChoiches(results_list_ob_buttons);
     window.addEventListener('click', (event) => {
         // we have to check wether the event fell on a choiche button,
@@ -295,9 +314,31 @@ export function resultsSetup() {
         } else {
             // state of buttons changes -> update table content
             results_buttons_state = state;
-            const results_table_container = document.querySelector('div.minipage-container#results > div.table-display-box');
             results_table_container.innerHTML = getResultsTable(results_buttons_state);
         }
+    });
+
+    // when a column name is touched, whatever it is, the table will be ordered by that column
+    window.addEventListener('click', (event) => {
+        // check if there's a table in the page with class results
+        const table = document.querySelector('table.results');
+        if (! table)
+            return;
+        // check if a header element was clicked
+        const header_elements = Array(...table.querySelectorAll('table.results th'));
+        if (header_elements.length == 0)
+            return;
+        const hit = header_elements.some(el =>
+            el.contains(event.target) || el === event.target
+        );
+        if (!hit)
+            return;
+        // Get the name of the column
+        var column_name = `"${event.target.innerHTML}"`;
+        // Reprint the table
+        results_table_container.innerHTML = getResultsTable(results_buttons_state, column_name); 
+        
+
     });
 
 }
