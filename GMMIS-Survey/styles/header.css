@@ -52,7 +52,7 @@ div#fast-cards-container {
     align-items: center;
 
     margin: auto;
-    margin-top: 20px;
+    margin-top: 40px;
 }
 
 span.fast-card {
@@ -62,7 +62,7 @@ span.fast-card {
     justify-content: center;
     align-items: center;
 
-    height: 45px;
+    height: 40px;
     width: 110px;
     background: rgb(82, 82, 82);
     border: none;

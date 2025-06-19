@@ -2,7 +2,8 @@ import { executeQuery, getTableColumns, getTableNames } from './dbManager.js';
 import { 
     dropdownButtonGetAllInnerOptions, 
     updateDropdownButtonArrow,
-    getStateOfChoiches
+    getStateOfChoiches,
+    updateButtonCounterAndClearCross
     } from './dropdownMenusManager.js';
 
 import { getEmptyContentHTML } from './emptyContent.js';
@@ -43,6 +44,8 @@ function refillButton(button, list_of_values) {
     options_container.insertAdjacentHTML('beforeend', new_content);
     // Arrow
     updateDropdownButtonArrow(button);
+    // Number and cross
+    updateButtonCounterAndClearCross(button);
 }
 
 
@@ -139,12 +142,19 @@ function getResultsTable(buttons_state_dict) {
             columns_selector = anatomical_region_result[0]['values'].map(e => '"' + e[0] + '"').join(", ");
             break;
         default:
-            columns_selector = '*';
+            return getEmptyContentHTML();
     }
     if (columns_selector.length < 2) {
         return getEmptyContentHTML();
     }
+    // cross check: we need to check wether the retrieved columns are actually in the results columns
+    const all_results_columns = getTableColumns('results_best');
+    const column_selector_list = columns_selector.split(', ').map(e => e.replaceAll('"', ''))
+    const filtered_column_selector_list = column_selector_list.filter(item => all_results_columns.includes(item));
+    columns_selector = filtered_column_selector_list.map(e => '"' + e + '"').join(", ");
     columns_selector = '"Related Paper", strftime("%Y-%m", Date) AS Date, ' + columns_selector;
+    // not null results
+    const empty_rows_neutralizer = filtered_column_selector_list.map(e => '"' + e + '"').join(' IS NOT NULL OR ') + ' IS NOT NULL';
     // Results table query
     let query = `
         SELECT ${columns_selector}
@@ -165,6 +175,10 @@ function getResultsTable(buttons_state_dict) {
                 
                 ${_build_condition_models_date('"First Publication Date"', buttons_state_dict['results-model-filter-release-date'])}
             )
+            AND
+            (
+                ${empty_rows_neutralizer}
+            ) 
         ;
     `;
     const answer = executeQuery(query);

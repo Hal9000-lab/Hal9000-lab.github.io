@@ -78,7 +78,7 @@ export function addEventListenerToDropdownButtonSingleSelect(button) {
     });
 }
 
-function updateButtonCounterAndClearCross(button) {
+export function updateButtonCounterAndClearCross(button) {
     // button is the main button
     const counter_span = button.querySelector('span.dropbtn-counter');
     const clear_span = button.parentNode.querySelector('span.dropbtn-clear-content');
@@ -151,6 +151,27 @@ function filterContent(button, filter_string) {
 
 
 
+export function getStateOfChoiches(list_of_buttons) {
+    // input: a list of dropdown buttons elements
+    // we take all buttons names, all active choices, and see
+    // which one are active at this moment
+    let out_dict = {};
+    list_of_buttons.forEach(button => {
+        const id = button.id;
+        const choiches = dropdownButtonGetAllInnerOptions(button);
+        let active_choices = [];
+        if (choiches) {
+            choiches.forEach(choice_btn => {
+                if (choice_btn.classList.contains('selected')) {
+                    const chn = choice_btn.innerHTML;
+                    active_choices.push(chn);
+                }
+            });
+        } 
+        out_dict[id] = active_choices;
+    });
+    return out_dict;
+}
 
 
 
@@ -230,35 +251,28 @@ export function dropdownMenuSetup() {
         
     });
 
-}
 
-
-
-
-
-
-
-
-
-
-export function getStateOfChoiches(list_of_buttons) {
-    // input: a list of dropdown buttons elements
-    // we take all buttons names, all active choices, and see
-    // which one are active at this moment
-    let out_dict = {};
-    list_of_buttons.forEach(button => {
-        const id = button.id;
-        const choiches = dropdownButtonGetAllInnerOptions(button);
-        let active_choices = [];
-        if (choiches) {
-            choiches.forEach(choice_btn => {
-                if (choice_btn.classList.contains('selected')) {
-                    const chn = choice_btn.innerHTML;
-                    active_choices.push(chn);
-                }
-            });
-        } 
-        out_dict[id] = active_choices;
+    // Set-unset listener to make blinker disappear
+    const all_dropdown_buttons_with_unset_blinker = Array
+        .from(all_dropdown_buttons)
+        .filter(button => button.classList.contains('unset'));
+    
+    all_dropdown_buttons_with_unset_blinker.forEach(button => {
+        const dropdown_container = button.parentNode.querySelector('div.dropdown-content');
+        dropdown_container.addEventListener("click", () => {
+            const selected = dropdown_container.querySelectorAll('button.selected');
+            if (selected.length > 0) {
+                button.classList.remove('unset');
+            }
+        });
     });
-    return out_dict;
+
 }
+
+
+
+
+
+
+
+
