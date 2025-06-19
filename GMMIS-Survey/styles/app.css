@@ -7,5 +7,11 @@
 @import "./dropdown_menu_specific_behaviours.css";
 @import "./minipage.css";
 
+@import "./table_all.css";
+@import "./table_datasets.css";
+@import "./table_models.css";
+@import "./table_results.css";
+
 @import "./footer.css";
 @import "./loading.css";
+@import "./tooltip.css";

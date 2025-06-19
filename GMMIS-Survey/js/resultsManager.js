@@ -318,6 +318,7 @@ export function resultsSetup() {
         }
     });
 
+
     // when a column name is touched, whatever it is, the table will be ordered by that column
     window.addEventListener('click', (event) => {
         // check if there's a table in the page with class results
@@ -341,4 +342,34 @@ export function resultsSetup() {
 
     });
 
+    // results can be long, use the tooltip to display infos when hover on a number
+    window.addEventListener('click', (event) => {
+        // check if there's a table in the page with class results
+        const table = document.querySelector('table.results');
+        if (! table)
+            return;
+        // check if a number element was clicked
+        const table_elements = Array(...table.querySelectorAll('table.results tbody td.number'));
+        if (table_elements.length == 0)
+            return;
+        const hit = table_elements.some(el =>
+            el.contains(event.target) || el === event.target
+        );
+        if (!hit)
+            return;
+        
+        // get tooltip object
+        const tooltip = document.querySelector('div.tooltip');
+        // display tooltip
+        const tooltip_x = event.pageX;
+        const tooltip_y = event.pageY;
+        tooltip.style.top = `${tooltip_y}px`;
+        tooltip.style.left = `${tooltip_x}px`;
+
+        const model = event.target.classList[1].replaceAll('§', ' ');
+        const dataset = event.target.classList[2].replaceAll('§', ' ');
+        tooltip.querySelector('span').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
+
+        tooltip.classList.remove('hidden');
+    });
 }

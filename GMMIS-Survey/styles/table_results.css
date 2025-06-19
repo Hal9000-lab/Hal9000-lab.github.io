@@ -1,0 +1,20 @@
+table.styled-table.results thead tr {
+    background-color: rgb(129 210 255);
+    color: #ffffff;
+    text-align: left;
+}
+table.styled-table.results thead tr th:hover {
+    background-color: rgb(85, 169, 214);
+}
+
+table.styled-table.results thead tr:hover,
+table.results tbody td.number {
+    cursor: pointer;
+}
+
+table.results td.highest {
+    font-weight: 600;
+}
+
+
+
