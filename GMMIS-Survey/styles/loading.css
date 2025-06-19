@@ -1,0 +1,42 @@
+div.loading  {
+    background: white;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity:1;
+}
+div.loading.error  {
+    animation: errorPulse 4s infinite;
+}
+@keyframes errorPulse {
+    0% {background: white;}
+    60% {background: white;}
+    70% {background: rgb(238, 141, 129);}
+    100% {background: white;}
+}
+
+div.loading.hidden {
+    transition: opacity 1s;
+    -o-transition: opacity 1s;
+    -ms-transition: opacity 1s;
+    -moz-transition: opacity 1s;
+    -webkit-transition: opacity 1s;
+    opacity: 0;
+    animation: bringBack 0.1s forwards;
+    animation-delay: 1.1s;
+}
+@keyframes bringBack {
+    0% {z-index: 100;}
+    100% {z-index: -100;}
+}
+
+div.loading img {
+    max-height: 3cm;
+}

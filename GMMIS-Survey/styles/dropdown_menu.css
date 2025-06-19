@@ -53,9 +53,15 @@ div.dropdown-content {
 
 div.search-input > input {
     border: none;
+    outline: none;
+    box-shadow: none;
+    font-size: 0.7em;
 }
-div.search-input > input:hover, div.search-input > input:focus{
-    border: none;
+div.search-input > input:hover, div.search-input > input:focus {
+    border-color: transparent;
+}
+div.search-input > input:focus-within {
+    border-color: transparent;
 }
 
 div.search-input {
@@ -63,6 +69,10 @@ div.search-input {
     width: 80%;
     margin: auto;
     padding: 5px 10px;
+}
+div.search-input:focus, div.search-input:focus-within {
+    border-bottom: 1px solid #6d9aa8;
+    transition: ease 0.5s;
 }
 div.search-input.hidden {
     display: none;

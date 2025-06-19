@@ -1,20 +1,15 @@
 import { startDatabase, executeQuery } from './dbManager.js';
 import { exportBibtexSetup } from './exportBibtexManager.js';
-
 import { tabsManagerSetup } from './tabsManager.js';
 import { dropdownMenuSetup } from './dropdownMenusManager.js';
-
-
 import { resultsSetup } from './resultsManager.js';
-
-//
-//
-// In here, UI elements and logic gets connected
-//
-//
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Force scroll to top
+        history.scrollRestoration = "manual";
+        window.scrollTo(0,0);
+
         // First, load the database
         await startDatabase();
         console.log("startDatabase() started successfully.");
@@ -30,13 +25,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Dropdown menus
         dropdownMenuSetup();
         console.log("dropdownMenuSetup() started successfully.");
-
+        
         // Results
         resultsSetup();
         console.log("resultsSetup() started successfully.");
+        
+        // Loading screen
+        document.querySelector('div.loading').classList.add('hidden');
 
     } catch (error) {
-        console.error("Failed to initialize the app:", error);
-        // Handle the error appropriately, e.g., display an error message to the user
+        // Handle the error
+        console.error("Failed to initialize the app:\n", error);
+        document.querySelector('div.loading').classList.remove('hidden')
+        document.querySelector('div.loading').classList.add('error');
     }
 });

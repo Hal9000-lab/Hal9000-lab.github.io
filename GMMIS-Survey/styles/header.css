@@ -70,24 +70,35 @@ span.fast-card {
     margin-left: 10px;
     margin-right: 10px;
 }
-span.fast-card#arxiv {
-    background: rgb(179, 27, 27);
-}
-span.fast-card#github {
-    background: rgb(216, 216, 216);
-}
-
 span.fast-card > a > img {
     height: 30px;
     min-height: 30px;
+    transform: translateY(2px);
+}
+
+span.fast-card#arxiv {
+    background: rgb(179, 27, 27);
 }
 span.fast-card#arxiv > a > img {
     height: 25px;
     min-height: 25px;
 }
+
+span.fast-card#github {
+    background: rgb(216, 216, 216);
+}
 span.fast-card#github > a > img {
     height: 40px;
     min-height: 40px;
+}
+
+span.fast-card#sqlite {
+    background: rgb(148, 205, 228);
+}
+span.fast-card#sqlite > a > img {
+    height: 38px;
+    min-height: 38px;
+    transform: translateY(3px);
 }
 
 span.fast-card > a > span.hidden {

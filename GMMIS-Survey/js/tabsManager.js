@@ -11,6 +11,25 @@ function hideSubelementsExcept(object, css_identifier) {
     });
 }
 
+function switchContentToDisplay(tab_button) {
+    const content_container = document.getElementById('main-container');
+    const buttonName = tab_button.innerHTML;
+    switch (buttonName) {
+        case 'Models':
+            hideSubelementsExcept(content_container, "div#empty-table");
+            break;
+        case 'Datasets':
+            hideSubelementsExcept(content_container, "div#empty-table");
+            break;
+        case 'Results':
+            hideSubelementsExcept(content_container, "div#results");
+            break;
+        default:
+            hideSubelementsExcept(content_container, "div#empty-table");
+            break;
+    }
+}
+
 export function tabsManagerSetup() {
     const tabButtons = document.querySelectorAll('#main-tabs button');
     const contentContainer = document.getElementById('main-container');
@@ -34,23 +53,16 @@ export function tabsManagerSetup() {
             if (lastClickedTabButton != button.innerHTML) {
                 // if different do something
                 lastClickedTabButton = button.innerHTML;
-                let buttonName = button.innerHTML;
-                switch (buttonName) {
-                    case 'Models':
-                        hideSubelementsExcept(contentContainer, "div#empty-table");
-                        break;
-                    case 'Datasets':
-                        hideSubelementsExcept(contentContainer, "div#empty-table");
-                        break;
-                    case 'Results':
-                        hideSubelementsExcept(contentContainer, "div#results");
-                        break;
-                    default:
-                        hideSubelementsExcept(contentContainer, "div#empty-table");
-                        break;
-                }
+                switchContentToDisplay(button);
             }
         });
+    });
+
+    // When screen first load, the event listener does not fire.
+    // Fire it manually (one-shot), depending on which is the active tab button
+    tabButtons.forEach(button => {
+        if (button.classList.contains('active-tab'))
+            switchContentToDisplay(button);
     });
 
 }
