@@ -1,6 +1,7 @@
 div.minipage-container {
     margin: auto;
     padding: 0;
+    padding-top: 30px;
 }
 
 span.minipage-text {
