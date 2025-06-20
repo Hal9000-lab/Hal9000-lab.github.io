@@ -13,3 +13,27 @@ div.table-display-box {
     overflow: auto;
     padding-top: 50px;
 }
+
+
+/* text helper */
+
+span.minipage-text.helper {
+    display: block;
+    margin: auto;
+    margin-top: 25px;
+    padding: 25px;
+    font-size: 0.9em;
+    background-color: #e5edf0;
+    border: 2px solid #8e999d;
+    border-radius: 20px;
+    width: 80%;
+    position: relative;
+}
+
+span.minipage-text.helper > img {
+    position: absolute;
+    top: 0px;
+    right: -2px;
+    height: 40px;
+    z-index: 10;
+}

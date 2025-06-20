@@ -10,10 +10,10 @@ table.results th.focused {
     animation: pulseColumnHead 1.5s infinite;
 }
 @keyframes pulseColumnHead {
-    0% {background-color: rgb(129 210 255);}
-    30% {background-color: rgb(129 210 255);}
-    50% {background-color: rgb(158 220 254);}
-    100% {background-color: rgb(129 210 255);}
+    0% {background-color: rgb(120 198 242);}
+    30% {background-color: rgb(120 198 242);}
+    50% {background-color: rgb(85, 169, 214);}
+    100% {background-color: rgb(120 198 242);}
 }
 
 table.results th#Related_Paper {
@@ -24,7 +24,9 @@ table.results th#Date {
     min-width: 50px;
 }
 
-table.styled-table.results thead tr:hover,
+table.styled-table.results thead th:hover {
+    cursor: pointer;
+}
 table.results tbody td.number {
     cursor: cell;
 }
