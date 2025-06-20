@@ -36,16 +36,17 @@ export function resultsTableFormatter(resultsTableQueryAnswer, colorHeader, colo
     
     let out = '<table class="styled-table results"><thead><tr>';
     columns.forEach(c => {
-        out += '<th>' + c + '</th>';
+        const c_spaceless = c.replaceAll(' ', '_');
+        out += `<th id="${c_spaceless}"> ${c} </th>`;
     });
     out += '</tr></thead><tbody>';
     values.forEach((row, i) => {
-        const model_name_h = row[0].replaceAll(' ', '§');
+        const model_name_h = row[0].replaceAll(' ', '_');
         out += `<tr class="${frameworks_classes[i]}">`;
         row.forEach((element, i) => {
-            const dataset_h = columns[i].replaceAll(' ', '§');
+            const dataset_h = columns[i].replaceAll(' ', '_');
             const class_h = (element == highest_values[i]) ? ' highest' : '';
-            if (['Related Paper', 'Date'].includes(dataset_h))
+            if (['Related§Paper', 'Date'].includes(dataset_h))
                 out += `<td>` + element + '</td>';
             else
                 out += `<td class="number ${model_name_h} ${dataset_h} ${class_h}">` + element + '</td>';

@@ -88,6 +88,67 @@ function removeUnwantedModelsInplace(answer) {
 }
 
 /**
+ * Removes the empty columns, if any
+ * @param {*} answer The raw answer of the main database query of getResultsTable()
+ */
+function removeEmptyColumnsInplace(answer) {
+    // Input checks
+    if (!answer || !answer[0] || !answer[0]['columns'] || !answer[0]['values'])
+        return;
+    const originalColumns = answer[0]['columns'];
+    const originalValues = answer[0]['values'];
+    if (originalValues.length === 0)
+        return;
+
+    // Determine which columns are empty
+    const columnsToRemoveIndices = new Set(); // Use a Set for efficient lookup
+
+    // Assume all columns are potentially empty until proven otherwise
+    // Initialize an array to track if a column contains any non-empty value
+    const hasNonEmptyValue = new Array(originalColumns.length).fill(false);
+
+    // Iterate through each row and each cell to find non-empty values
+    originalValues.forEach(row => {
+        row.forEach((cellValue, colIndex) => {
+            // If we find any non-empty value in this column, mark it
+            if (cellValue !== null && cellValue !== undefined && cellValue !== '') {
+                hasNonEmptyValue[colIndex] = true;
+            }
+        });
+    });
+
+    // Mark columns for removal if they contain no non-empty values
+    originalColumns.forEach((colName, colIndex) => {
+        if (!hasNonEmptyValue[colIndex]) {
+            columnsToRemoveIndices.add(colIndex);
+        }
+    });
+
+    // Step 2: Create new arrays for columns and values, excluding the empty ones
+    const newColumns = [];
+    const newValues = [];
+    originalColumns.forEach((colName, colIndex) => {
+        if (!columnsToRemoveIndices.has(colIndex)) {
+            newColumns.push(colName);
+        }
+    });
+    originalValues.forEach(row => {
+        const newRow = [];
+        row.forEach((cellValue, colIndex) => {
+            if (!columnsToRemoveIndices.has(colIndex)) {
+                newRow.push(cellValue);
+            }
+        });
+        newValues.push(newRow);
+    });
+    // Step 3: Update the answer object in place
+    answer[0]['columns'] = newColumns;
+    answer[0]['values'] = newValues;
+    return;
+}
+
+
+/**
  * 
  * @param {Object} buttons_state_dict 
  * @param {String} column_to_order_by 
@@ -212,9 +273,11 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
         ${order_by_statement}
         ;
     `;
-    const answer = executeQuery(query);
+    const answer = executeQuery(query); 
     // Remove models that are in the database, but that we do not want to display
+    // (answer, which is an array, so a pointer, is const, but it's 'content' may be changed)
     removeUnwantedModelsInplace(answer);
+    removeEmptyColumnsInplace(answer);
     if (answer.length == 0) {
         return getEmptyContentHTML();
     }
@@ -335,6 +398,10 @@ export function resultsSetup() {
     });
 
 
+
+
+
+
     // when a column name is touched, whatever it is, the table will be ordered by that column
     window.addEventListener('click', (event) => {
         // check if there's a table in the page with class results
@@ -351,9 +418,10 @@ export function resultsSetup() {
         if (!hit)
             return;
         // Get the name of the column
-        var column_name = `"${event.target.innerHTML}"`;
+        var column_name = `"${event.target.innerHTML.trim()}"`;
+        console.log(column_name);
         // Reprint the table
-        results_table_container.innerHTML = getResultsTable(results_buttons_state, column_name); 
+        results_table_container.innerHTML = getResultsTable(results_buttons_state, column_name);
         
 
     });
@@ -377,13 +445,16 @@ export function resultsSetup() {
         // get tooltip object
         const tooltip = document.querySelector('div.tooltip');
         // display tooltip
-        const tooltip_x = event.pageX;
-        const tooltip_y = event.pageY;
+        const number_bb = event.target.getBoundingClientRect();
+        const table_bb = results_table_container.getBoundingClientRect();
+        const tooltip_x =  number_bb.left + window.scrollX;
+        const tooltip_y =  number_bb.top + window.scrollY;
+        console.log(tooltip_x, tooltip_y);
         tooltip.style.top = `${tooltip_y}px`;
         tooltip.style.left = `${tooltip_x}px`;
 
-        const model = event.target.classList[1].replaceAll('§', ' ');
-        const dataset = event.target.classList[2].replaceAll('§', ' ');
+        const model = event.target.classList[1].replaceAll('_', ' ');
+        const dataset = event.target.classList[2].replaceAll('_', ' ');
         tooltip.querySelector('span').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
 
         tooltip.classList.remove('hidden');

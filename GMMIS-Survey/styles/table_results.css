@@ -1,10 +1,18 @@
-table.styled-table.results thead tr {
+table.results th {
     background-color: rgb(129 210 255);
     color: #ffffff;
     text-align: left;
 }
-table.styled-table.results thead tr th:hover {
+table.results th:hover {
     background-color: rgb(85, 169, 214);
+}
+
+table.results th#Related_Paper {
+    min-width: 110px;
+}
+
+table.results th#Date {
+    min-width: 50px;
 }
 
 table.styled-table.results thead tr:hover,
@@ -15,6 +23,8 @@ table.results tbody td.number {
 table.results td.highest {
     font-weight: 600;
 }
+
+
 
 
 
