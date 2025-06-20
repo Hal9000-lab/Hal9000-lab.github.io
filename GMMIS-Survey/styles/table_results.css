@@ -6,6 +6,15 @@ table.results th {
 table.results th:hover {
     background-color: rgb(85, 169, 214);
 }
+table.results th.focused {
+    animation: pulseColumnHead 1.5s infinite;
+}
+@keyframes pulseColumnHead {
+    0% {background-color: rgb(129 210 255);}
+    30% {background-color: rgb(129 210 255);}
+    50% {background-color: rgb(158 220 254);}
+    100% {background-color: rgb(129 210 255);}
+}
 
 table.results th#Related_Paper {
     min-width: 110px;

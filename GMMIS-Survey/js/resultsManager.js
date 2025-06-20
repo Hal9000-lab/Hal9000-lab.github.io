@@ -421,7 +421,15 @@ export function resultsSetup() {
         var column_name = `"${event.target.innerHTML.trim()}"`;
         // Reprint the table
         results_table_container.innerHTML = getResultsTable(results_buttons_state, column_name);
-        
+        // Style table element
+        const new_table = document.querySelector('table.results');
+        const new_header_elements = Array(...new_table.querySelectorAll('table.results th'));
+        new_header_elements.forEach(element => {
+            if (element.innerHTML == event.target.innerHTML)
+                element.classList.add('focused');
+            else
+                element.classList.remove('focused');
+        });
 
     });
 
