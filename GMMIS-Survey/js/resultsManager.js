@@ -10,6 +10,8 @@ import { getEmptyContentHTML } from './emptyContent.js';
 
 import { resultsTableFormatter } from './resultsTableFormatter.js';
 
+import { unwanted_models } from './unwanted_models.js';
+
 function getAllUniqueElementsInColumn(column, table) {
     // get all elements
     let list_of_objects = executeQuery(`SELECT ${column} FROM ${table};`)
@@ -73,12 +75,24 @@ function _build_condition_models_date(column, list_of_options) {
 }
 
 /**
+ * Modifies the answer object inplace
+ * @param {*} answer The raw answer of the main database query of getResultsTable()
+ */
+function removeUnwantedModelsInplace(answer) {
+    answer[0]["values"] = answer[0]["values"].filter(row => {
+        // Keep the row if its first element (model name) is NOT in the unwanted_models list
+        // (unwanted models imported from outside)
+        return !unwanted_models.includes(row[0]);
+    });
+    return;
+}
+
+/**
  * 
  * @param {Object} buttons_state_dict 
  * @param {String} column_to_order_by 
  * @returns 
  */
-
 function getResultsTable(buttons_state_dict, column_to_order_by='') {
 
     // if the selection button is empty, do not display anything
@@ -199,6 +213,8 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
         ;
     `;
     const answer = executeQuery(query);
+    // Remove models that are in the database, but that we do not want to display
+    removeUnwantedModelsInplace(answer);
     if (answer.length == 0) {
         return getEmptyContentHTML();
     }
