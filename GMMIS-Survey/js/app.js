@@ -3,6 +3,7 @@ import { exportBibtexSetup } from './exportBibtexManager.js';
 import { tabsManagerSetup } from './tabsManager.js';
 import { dropdownMenuSetup } from './dropdownMenusManager.js';
 import { resultsSetup } from './resultsManager.js';
+import { tooltipSetup } from './tooltipManager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -29,6 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Results
         resultsSetup();
         console.log("resultsSetup() started successfully.");
+
+        // Tooltip
+        tooltipSetup();
         
         // Loading screen
         document.querySelector('div.loading').classList.add('hidden');

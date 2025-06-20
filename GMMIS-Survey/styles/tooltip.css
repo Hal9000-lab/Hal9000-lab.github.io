@@ -19,6 +19,23 @@ div.tooltip div.text-container {
     color: antiquewhite;
     font-size: 0.9em;
     font-family: monospace;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+div.tooltip div.text-container span.locked-text {
+    text-align: center;
+    color: darkgray;
+    font-size: 0.7em;
+    padding-top: 0.4em;
+}
+div.tooltip div.text-container span.locked-text:hover {
+    font-size: 0.8em;
+    font-weight: 600;
+    color: antiquewhite;
 }
 
 div.tooltip div.arrow {

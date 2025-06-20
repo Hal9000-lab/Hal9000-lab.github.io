@@ -226,7 +226,7 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
             return getEmptyContentHTML();
     }
     if (columns_selector.length < 2) {
-        return getEmptyContentHTML();
+        return getEmptyContentHTML('No results to be found with this query combination');
     }
     // cross check: we need to check wether the retrieved columns are actually in the results columns
     const all_results_columns = getTableColumns('results_best');
@@ -279,7 +279,7 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
     removeUnwantedModelsInplace(answer);
     removeEmptyColumnsInplace(answer);
     if (answer.length == 0) {
-        return getEmptyContentHTML();
+        return getEmptyContentHTML('No results to be found with this query combination');
     }
     return resultsTableFormatter(answer);
 }
@@ -419,7 +419,6 @@ export function resultsSetup() {
             return;
         // Get the name of the column
         var column_name = `"${event.target.innerHTML.trim()}"`;
-        console.log(column_name);
         // Reprint the table
         results_table_container.innerHTML = getResultsTable(results_buttons_state, column_name);
         
@@ -428,6 +427,13 @@ export function resultsSetup() {
 
     // results can be long, use the tooltip to display infos when hover on a number
     window.addEventListener('click', (event) => {
+        // get tooltip object
+        const tooltip = document.querySelector('div.tooltip');
+        // if the mouse touched the tooltip, do nothing, els ehide it and continue
+        if (tooltip.contains(event.target))
+            return;
+        tooltip.classList.add('hidden');
+        tooltip.unscrolledX = undefined;
         // check if there's a table in the page with class results
         const table = document.querySelector('table.results');
         if (! table)
@@ -442,21 +448,39 @@ export function resultsSetup() {
         if (!hit)
             return;
         
-        // get tooltip object
-        const tooltip = document.querySelector('div.tooltip');
         // display tooltip
         const number_bb = event.target.getBoundingClientRect();
         const table_bb = results_table_container.getBoundingClientRect();
-        const tooltip_x =  number_bb.left + window.scrollX;
-        const tooltip_y =  number_bb.top + window.scrollY;
-        console.log(tooltip_x, tooltip_y);
+        const tooltip_x =  (number_bb.left + number_bb.right)/2 - 4 + window.scrollX;
+        const tooltip_y =  (number_bb.top + number_bb.bottom)/2 - 6 + window.scrollY;
         tooltip.style.top = `${tooltip_y}px`;
         tooltip.style.left = `${tooltip_x}px`;
+        tooltip.biasScrollX = results_table_container.scrollLeft;
 
         const model = event.target.classList[1].replaceAll('_', ' ');
         const dataset = event.target.classList[2].replaceAll('_', ' ');
-        tooltip.querySelector('span').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
+        tooltip.querySelector('span.free-text').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
 
         tooltip.classList.remove('hidden');
     });
+    // scroll the tooltip with the table
+    results_table_container.addEventListener('scroll', (event) => {
+        // return if the table did not scroll left
+        if (results_table_container.scrollLeft == 0)
+            return;
+        // get tooltip object
+        const tooltip = document.querySelector('div.tooltip');
+        // return if tooltip is not visible
+        if (tooltip.classList.contains('hidden'))
+            return;
+        // add a property to tooltip to cache the "unscrolled position"
+        if (!tooltip.unscrolledX) {
+            tooltip.unscrolledX = parseFloat(tooltip.style.left);
+        }
+
+        // add scroll
+        const tooltip_x =  tooltip.unscrolledX - results_table_container.scrollLeft + tooltip.biasScrollX;
+        tooltip.style.left = `${tooltip_x}px`;
+    });
+
 }

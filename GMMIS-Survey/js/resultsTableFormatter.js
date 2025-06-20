@@ -1,8 +1,12 @@
 import { executeQuery } from "./dbManager.js";
+import { getEmptyContentHTML } from "./emptyContent.js";
 
 export function resultsTableFormatter(resultsTableQueryAnswer, colorHeader, colorRowsDark, colorsRowLight) {
     let columns = resultsTableQueryAnswer[0]['columns'];
     let values = resultsTableQueryAnswer[0]['values'];
+
+    if (!columns || !values || columns.length == 0 || values.length == 0)
+        return getEmptyContentHTML('No results to be found with this query combination');
 
     // Coloring: if a model is generalist or task-specific, we mark it appropriate colors
     // (we use a class in css tag of the row)

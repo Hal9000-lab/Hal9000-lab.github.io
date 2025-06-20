@@ -3,7 +3,7 @@ div#empty-table {
     margin-top: 40px;
     border: 2px solid firebrick;
     border-radius: 3px;
-    width: 4cm;
+    width: 6cm;
     text-align: center;
 }
 
@@ -22,8 +22,7 @@ div#empty-table > h3 {
 div#empty-table > p {
     margin: 0;
     padding: 0;
-    padding-top: 0.6em;
-    padding-bottom: 0.6em;
-    font-size: 1.0em;
+    padding: 0.6em;
+    font-size: 0.9em;
     color: rgb(75, 75, 75);
 }
