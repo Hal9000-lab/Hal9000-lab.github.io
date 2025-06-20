@@ -6,10 +6,22 @@ export function resultsTableFormatter(resultsTableQueryAnswer, colorHeader, colo
 
     // Coloring: if a model is generalist or task-specific, we mark it appropriate colors
     // (we use a class in css tag of the row)
-    let models_inclusion_list = values.map(r => `"${r[0]}"`).join(', ');
-    let frameworks_classes = executeQuery(
-        `SELECT Framework FROM models WHERE ID IN (${models_inclusion_list})`
-    )[0]['values'].map(r => r[0].trim().toLowerCase().replaceAll(' ', '-'));
+    // Get all frameworks for the included models
+    const models_inclusion_list = values.map(r => `"${r[0]}"`).join(', ');
+    const frameworks_result = executeQuery(
+        `SELECT ID, Framework FROM models WHERE ID IN (${models_inclusion_list})`
+    )[0]['values'];
+    // - build a map from ID to Framework
+    const idToFramework = {};
+    frameworks_result.forEach(r => {
+        idToFramework[r[0]] = r[1];
+    });
+    // - for each model in models_inclusion_list, get its framework in order
+    const model_ids = values.map(r => r[0]);
+    const frameworks_classes = model_ids.map(id =>
+        idToFramework[id].trim().toLowerCase().replaceAll(' ', '-')
+    );
+
     // Identify the highest value per each column (dict{column_name : value}) except "related Paper" and "Date"
     let highest_values = [];
     columns.forEach((c, ci) => {
