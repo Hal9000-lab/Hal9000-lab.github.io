@@ -17,7 +17,7 @@ table.results th#Date {
 
 table.styled-table.results thead tr:hover,
 table.results tbody td.number {
-    cursor: pointer;
+    cursor: cell;
 }
 
 table.results td.highest {

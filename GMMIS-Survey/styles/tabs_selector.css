@@ -36,6 +36,18 @@
     background-color: #fff;
 }
 
+#main-tabs button:disabled,
+#main-tabs button[disabled]{
+  opacity: 30%;
+}
+#main-tabs button:disabled:hover,
+#main-tabs button[disabled]:hover{
+  opacity: 30%;
+  background-color: rgba(255, 255, 255, 0.1);
+  cursor: no-drop;
+}
+
+
 
 /* CONTAINER */
 
