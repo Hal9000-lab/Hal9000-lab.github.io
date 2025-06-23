@@ -270,7 +270,12 @@ export function dropdownMenuSetup() {
 }
 
 
-
+export function compileChoicesIntoDropdownButton(list_of_choices) {
+    list_of_choices = list_of_choices.map(
+        element => '<button>' + element + '</button>'
+    );
+    return list_of_choices.join(` `);
+}
 
 
 

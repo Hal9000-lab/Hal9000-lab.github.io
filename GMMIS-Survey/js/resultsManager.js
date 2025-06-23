@@ -1,9 +1,15 @@
-import { executeQuery, getTableColumns, getTableNames } from './dbManager.js';
+import { 
+    executeQuery, 
+    getTableColumns, 
+    getTableNames,
+    getAllUniqueElementsInColumn
+    } from './dbManager.js';
 import { 
     dropdownButtonGetAllInnerOptions, 
     updateDropdownButtonArrow,
     getStateOfChoiches,
-    updateButtonCounterAndClearCross
+    updateButtonCounterAndClearCross,
+    compileChoicesIntoDropdownButton
     } from './dropdownMenusManager.js';
 
 import { getEmptyContentHTML } from './emptyContent.js';
@@ -11,28 +17,6 @@ import { getEmptyContentHTML } from './emptyContent.js';
 import { resultsTableFormatter } from './resultsTableFormatter.js';
 
 import { unwanted_models } from './unwanted_models.js';
-
-function getAllUniqueElementsInColumn(column, table) {
-    // get all elements
-    let list_of_objects = executeQuery(`SELECT ${column} FROM ${table};`)
-    list_of_objects = list_of_objects[0]['values'].map(element => element[0]);
-    // make a list with all of them together
-    let full_list = []
-    list_of_objects.forEach(element => {
-        let divided_element = element.split(', ');
-        full_list = full_list.concat(divided_element);
-    });
-    // keep unique ones, order alphabetical
-    let unique_sorted_list = [...new Set(full_list)].sort();
-    return unique_sorted_list;
-}
-
-function compileChoicesIntoDropdownButton(list_of_choices) {
-    list_of_choices = list_of_choices.map(
-        element => '<button>' + element + '</button>'
-    );
-    return list_of_choices.join(` `);
-}
 
 function refillButton(button, list_of_values) {
     // - remove options buttons

@@ -3,13 +3,17 @@ div.tooltip {
     top: 0%;
     left: 50%;
     transform: translateX(-50%) translateY(-100%);
-    z-index: 99;
     opacity: 100%;
     max-width: 30%;
+    z-index: 99;
 }
 div.tooltip.hidden {
-    opacity: 0%;
-    transition: ease-out 0.2s;
+    animation: hideTooltip 0.3s forwards;
+}
+@keyframes hideTooltip {
+    0% {opacity: 100%;}
+    80% {opacity: 0%;}
+    100% {opacity: 0%; z-index: -99;}
 }
 
 div.tooltip div.text-container {

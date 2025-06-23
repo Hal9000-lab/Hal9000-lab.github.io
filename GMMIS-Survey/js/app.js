@@ -3,6 +3,7 @@ import { exportBibtexSetup } from './exportBibtexManager.js';
 import { tabsManagerSetup } from './tabsManager.js';
 import { dropdownMenuSetup } from './dropdownMenusManager.js';
 import { resultsSetup } from './resultsManager.js';
+import { modelsSetup } from './modelsManager.js';
 import { tooltipSetup } from './tooltipManager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -30,6 +31,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Results
         resultsSetup();
         console.log("resultsSetup() started successfully.");
+
+        // Models
+        modelsSetup();
+        console.log("modelsSetup() started successfully.");
 
         // Tooltip
         tooltipSetup();

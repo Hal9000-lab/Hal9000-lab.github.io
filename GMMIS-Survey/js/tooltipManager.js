@@ -8,3 +8,10 @@ export function tooltipSetup() {
     });
 
 }
+
+export function tooltipHide() {
+    const tooltip = document.querySelector('div.tooltip');
+    if (tooltip) {
+        tooltip.classList.add('hidden');
+    }
+}

@@ -1,7 +1,7 @@
 import { executeQuery } from "./dbManager.js";
 import { getEmptyContentHTML } from "./emptyContent.js";
 
-export function resultsTableFormatter(resultsTableQueryAnswer, colorHeader, colorRowsDark, colorsRowLight) {
+export function resultsTableFormatter(resultsTableQueryAnswer) {
     let columns = resultsTableQueryAnswer[0]['columns'];
     let values = resultsTableQueryAnswer[0]['values'];
 

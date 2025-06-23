@@ -1,4 +1,4 @@
-var lastClickedTabButton = document.getElementById('main-models').innerHTML;
+var lastClickedTabButton = 'none clicked yet';
 
 function hideSubelementsExcept(object, css_identifier) {
     const childern = object.querySelectorAll(':scope > div');
@@ -16,16 +16,16 @@ function switchContentToDisplay(tab_button) {
     const buttonName = tab_button.innerHTML;
     switch (buttonName) {
         case 'Models':
-            hideSubelementsExcept(content_container, "div#empty-table");
+            hideSubelementsExcept(content_container, 'div.minipage-container#models');
             break;
         case 'Datasets':
-            hideSubelementsExcept(content_container, "div#empty-table");
+            hideSubelementsExcept(content_container, 'div.minipage-container#datasets');
             break;
         case 'Results':
-            hideSubelementsExcept(content_container, "div#results");
+            hideSubelementsExcept(content_container, 'div.minipage-container#results');
             break;
         default:
-            hideSubelementsExcept(content_container, "div#empty-table");
+            hideSubelementsExcept(content_container, 'div#empty-table');
             break;
     }
 }
