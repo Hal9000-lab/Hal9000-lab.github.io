@@ -1,0 +1,152 @@
+/* HEADER and MEASURES*/
+
+table.datasets th {
+    background-color: rgb(82, 132, 165);
+    color: #ffffff;
+    text-align: left;
+}
+table.datasets th.publication-info-content {
+    border-radius: 0;
+}
+
+table.datasets th.selectable:hover {
+    background-color: rgb(51, 91, 117);
+    cursor: pointer;
+}
+
+table.datasets thead .focused {
+    animation: pulseColumnHeadDatasets 1.5s infinite;
+}
+@keyframes pulseColumnHeadDatasets {
+    0% {background-color: rgb(64, 119, 156);}
+    30% {background-color: rgb(64, 119, 156);}
+    50% {background-color: rgb(38, 89, 122);}
+    100% {background-color: rgb(64, 119, 156);}
+}
+
+/* MEASURES */
+
+table.datasets .name {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+}
+
+table.datasets .sub-datasets {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+table.datasets .modality {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+table.datasets .objects {
+    width: 180px;
+    max-width: 180px;
+    min-width: 180px;
+}
+
+table.datasets .main-structures {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+table.datasets .region {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+table.datasets .links {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+}
+
+table.datasets .numbers {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+
+
+/* BODY and SUBTABLE */
+table.datasets td {
+    margin: 0;
+    padding: 0;
+}
+
+table.datasets table td {
+    margin: 0;
+    padding-left: 6px;
+    padding-right: 6px;
+    vertical-align: top;
+    padding-top: 10px;
+}
+
+table.datasets table tr {
+    background-color: transparent !important;
+}
+table.datasets table td {
+    background-color: transparent;
+}
+
+table.datasets table td div {
+    display: flex;
+    flex-direction: column;
+    row-gap: 5px;
+}
+
+table.datasets table td.objects div {
+    display: flex;
+    flex-direction: row;
+    row-gap: 4px;
+    column-gap: 8px;
+    flex-wrap: wrap;
+}
+table.datasets table td.objects div span {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    padding: 1px 2px;
+}
+
+
+
+
+table.datasets span.title {
+    font-style: italic;
+}
+table.datasets span.nlabels {
+    font-style: italic;
+}
+
+table.datasets tr.description td {
+    padding: 10px 20px;
+    text-align: justify;
+    color: rgb(29, 29, 29);
+}
+
+table.datasets a {
+    color: inherit;
+    text-decoration: none;
+}
+table.datasets a:hover {
+    text-decoration: underline;
+    color: rgb(35, 94, 255);
+}
+
+
+/* Color */
+table.datasets > tbody > tr {
+    background-color: rgb(241 247 255);
+}
+
+table.datasets > tbody > tr:nth-of-type(even) {
+    background-color: rgb(230 236 245);
+}

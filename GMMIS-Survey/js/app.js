@@ -4,6 +4,7 @@ import { tabsManagerSetup } from './tabsManager.js';
 import { dropdownMenuSetup } from './dropdownMenusManager.js';
 import { resultsSetup } from './resultsManager.js';
 import { modelsSetup } from './modelsManager.js';
+import { datasetsSetup } from './datasetsManager.js';
 import { tooltipSetup } from './tooltipManager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -35,6 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Models
         modelsSetup();
         console.log("modelsSetup() started successfully.");
+
+        // Datasets
+        datasetsSetup();
+        console.log("datasetsSetup() started successfully.")
 
         // Tooltip
         tooltipSetup();
