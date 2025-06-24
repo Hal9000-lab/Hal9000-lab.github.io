@@ -9,24 +9,24 @@ const expected_db_columns = [
     'Code',
     'Framework','Architecture','Visual Backbone',
     'Millions of Parameters','Number of GFlops',
-    'Resources'  
+    'Resources', 'Resources Total V-RAM'
 ]
 const header = `
 <thead>
     <tr>
-        <th rowspan="2" class="name-title">Model Name<br><i>Publication Title</i> </th>
+        <th rowspan="2" class="name-title selectable">Model Name<br><i>Publication Title</i> </th>
         <th rowspan="2" class="research-groups">Main Research Groups</th>
         <th rowspan="1" class="publication-info">First Publication<br><i>Last Publication</i></th>
         <th rowspan="2" class="code">Code</th>
         <th rowspan="2" class="arch-vis-backbone">Architecture<br><i>Visual Backbone</i></th>
-        <th rowspan="2" class="params">N. Params (M)<br><i>GFLOPs</i></th>
-        <th rowspan="2" class="resources">Computing Resources<br><i>Total V-RAM</i></th>
+        <th rowspan="2" class="params selectable">N. Params (M)<br><i>GFLOPs</i></th>
+        <th rowspan="2" class="resources selectable">Computing Resources<br><i>Total V-RAM</i></th>
     </tr>
     <tr>
         <th class="publication-info publication-info-content">
             <table class="publication-info-table">
                 <tr>
-                    <td class="date">Date</td>
+                    <td class="date selectable">Date</td>
                     <td class="publisher">Publisher</td>
                 </tr>
             </table>
@@ -146,50 +146,60 @@ function _formatParams(row) {
     return html;
 }
 
-function _formatResources(row) {
-    // row[17] is the resources
+
+const resources_unavailable_html = '<span>&#10006;</span>';
+
+function _scorporateResources(resources) {
     // Total V-RAM must be inferred from the resources
-    const resources = row[17];
+
     if (!resources || resources === 'null') {
-        return '<span>&#10006;</span>';
+        console.warn('Resources are not available:', resources);
+        return -1;
     }
 
     // Split by comma and trim
     const parts = resources.split(',').map(s => s.trim());
 
+    if (parts.length === 0 || parts.length === 1) {
+        console.log('No resources found in resources:', resources);
+        return -1;
+    }
+
     // number of gpus: we don't know in which part it is
     // we know that it is a pure number "10", "8", "1", ..
     let num_gpus = null;
-    const num_gpus_idx = parts.findIndex(p => (/^\d+$/.test(p) && p == parseInt(p, 10).toString()));
+    const num_gpus_idx = parts.findIndex(p => (/^\d+$/.test(p)));
     if (num_gpus_idx !== -1)
         num_gpus = parseInt(parts[num_gpus_idx], 10);
+    else {
+        console.warn('No number of GPUs found in resources:', resources);
+        return -1;
+    }
 
     // brand (Nvidia, AMD, etc.)
     let brand = null;
     let brandIdx = parts.findIndex(p => /nvidia|amd|intel/i.test(p));
-    if (brandIdx !== -1) {
+    if (brandIdx !== -1)
         brand = parts[brandIdx];
+    else {
+        console.warn('Unknown brand found in resources:', resources);
+        return -1;
     }
 
     // gpu model and memory
     let gpu_memory = null;
     let gpu_model = null;
-    let gpu_memoryIdx = parts.findIndex(p => /(\d+GB|(\d+)(\.\d+)?GB)/i.test(p));
+    let gpu_memoryIdx = parts.findIndex(p => /\w+\s+(\d+)GB$/i.test(p));
     if (gpu_memoryIdx !== -1) {
-        gpu_memory = parts[gpu_memoryIdx].match(/(\d+GB|(\d+)(\.\d+)?GB)/i);
+        gpu_memory = parts[gpu_memoryIdx].match(/(\d+)GB$/i);
         if (gpu_memory) {
-            gpu_memory = gpu_memory[1];
-            gpu_memory = parseInt(gpu_memory.replace('GB', ''), 10);
+            gpu_memory = gpu_memory[1]; // gpu_memory is an array like ["24GB", "24"]
+            gpu_memory = parseInt(gpu_memory, 10);
             gpu_model = parts[gpu_memoryIdx];
         }
-    }
-
-    if (! gpu_memory) {
-        console.log('parts: ', parts);
-        console.log('num_gpus: ', num_gpus);
-        console.log('brand: ', brand);
-        console.log('gpu_memory: ', gpu_memory);
-        console.log('gpu_model: ', gpu_model);
+    } else {
+        console.warn('No GPU memory found in resources:', resources);
+        return -1;
     }
 
     // actual memory used per gpu (if any, there's a nnGB alone in the list)
@@ -213,29 +223,59 @@ function _formatResources(row) {
 
     // total v-ram
     let total_vram = null;
-    if (num_gpus && gpu_memory) {
-        total_vram = num_gpus * gpu_memory;
-    } else if (num_gpus && memory_used) {
+    if (num_gpus && memory_used) {
         total_vram = num_gpus * memory_used;
+    } else if (num_gpus && gpu_memory) {
+        total_vram = num_gpus * gpu_memory;
+    } else {
+        console.warn('Could not compute total V-RAM from resources:', resources, 
+            'num_gpus:', num_gpus, 'gpu_memory:', gpu_memory, 
+            'memory_used:', memory_used);
+            return -1;
     }
+
+    // return structured info
+    const info_dict = {
+        num: num_gpus,
+        brand: brand,
+        model: gpu_model,
+        memory_used: memory_used,
+        server: server,
+        total_vram: total_vram
+    }
+    return info_dict;
+}
+
+function _formatResources(row) {
+    // row[17] is the resources
+    // Total V-RAM must be inferred from the resources
+    const resources = row[17];
+    if (!resources || resources === 'null') {
+        return resources_unavailable_html;
+    }
+
+    const resources_info = _scorporateResources(resources);
+    if (resources_info === -1)
+        return resources_unavailable_html;
 
     // format the output
     let html = `
         <div>
             <span class="resources-info">
-                ${num_gpus} ${brand} ${gpu_model}
+                ${resources_info.num} ${resources_info.brand} ${resources_info.model}
     `;
-    if (memory_used) {
-        html += `(of which ${memory_used}GB used)`;
+    if (resources_info.memory_used) {
+        html += `(of which ${resources_info.memory_used}GB used)`;
     }
-    if (server) {
-        html += ` on ${server}`;
+    if (resources_info.server) {
+        html += ` on a ${resources_info.server}`;
     }
     html += `</span>`;
-    if (total_vram) {
-        html += `<span class="vram">${total_vram}GB</span>`;
+    if (resources_info.total_vram) {
+        html += `<span class="vram">${resources_info.total_vram}GB</span>`;
     }
     html += `</div>`;
+
     return html;
 }
 
@@ -312,5 +352,7 @@ export function modelsTableFormatter(resultsTableQueryAnswer) {
     out += `</table>`;
 
     out = out.replaceAll('null', ' ');
+
     return out;
 }
+

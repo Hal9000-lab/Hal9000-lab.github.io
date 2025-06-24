@@ -9,13 +9,18 @@ table.models th.publication-info-content {
     border-radius: 0;
 }
 
-table.models th:hover {
+table.models th.selectable:hover {
     background-color: rgb(131, 57, 190);
+    cursor: pointer;
 }
-table.models th.focused {
-    animation: pulseColumnHead 1.5s infinite;
+table.models th td.selectable:hover {
+    background-color: rgb(131, 57, 190);
+    cursor: pointer;
 }
-@keyframes pulseColumnHead {
+table.models thead .focused {
+    animation: pulseColumnHeadModels 1.5s infinite;
+}
+@keyframes pulseColumnHeadModels {
     0% {background-color: rgb(156, 87, 212);}
     30% {background-color: rgb(156, 87, 212);}
     50% {background-color: rgb(136, 72, 189);}
@@ -25,11 +30,6 @@ table.models th.focused {
 table.models th.publication-info {
     text-align: center;
 }
-
-table.models thead th:hover {
-    cursor: pointer;
-}
-
 
 /* MEASURES */
 

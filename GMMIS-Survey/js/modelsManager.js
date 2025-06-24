@@ -45,9 +45,41 @@ function getModelsTable(buttons_state_dict, column_to_order_by = undefined) {
     // build query
     
     
+    let sorting_statement = '';
+    if (column_to_order_by) {
+        switch (column_to_order_by) {
+            case '"ID"':
+                sorting_statement = 'ORDER BY "ID"';
+                break;
+            case '"First Publication Date"':
+                sorting_statement = 'ORDER BY "First Publication Date" DESC, "ID"';
+                break;
+            case '"Millions of Parameters"':
+                sorting_statement = `
+                ORDER BY 
+                    CASE 
+                        WHEN "Millions of Parameters" IS NULL THEN 1 ELSE 0 END, "Millions of Parameters" DESC;
+                `;
+                break;
+            case '"Resources Total V-RAM"':
+                sorting_statement = `
+                ORDER BY 
+                    CASE 
+                        WHEN "Resources Total V-RAM" IS NULL THEN 1 ELSE 0 END, "Resources Total V-RAM" DESC, "ID";
+                `;
+                break;
+            default:
+                console.warn(`No sorting statement found for column ${column_to_order_by}`);
+                sorting_statement = '';
+                break;
+        }
+    }
     
-    
-    const query = `SELECT * FROM models `;
+    const query = `
+        SELECT * 
+        FROM models 
+        ${sorting_statement}    
+    ;`;
 
 
 
@@ -80,10 +112,12 @@ export function modelsSetup() {
 
 
     table_container.innerHTML = getModelsTable({});
-    return;
-
-
+    
+    var results_buttons_state = {};
+    /*
     ///////////////////    below to do /////////////////////
+
+    // fai in modo che si possa ordinar eper vram.. forse devi aggiungere una colonna al database
 
     
     // Other filters include framework, architecture, and release date
@@ -145,6 +179,61 @@ export function modelsSetup() {
         }
     });
 
+    */
 
+    
+
+    // when a column name is touched, whatever it is, the table will be ordered by that column
+    window.addEventListener('click', (event) => {
+        // check if there's a table in the page with class results
+        const table = document.querySelector('table.models');
+        if (! table)
+            return;
+        // check if a header element was clicked
+        const header_elements = Array(...table.querySelectorAll('table.models thead .selectable'));
+        if (header_elements.length == 0)
+            return;
+        const hit = header_elements.some(el =>
+            el.contains(event.target) || el === event.target
+        );
+        if (!hit)
+            return;
+
+        let target = event.target;
+        if (target.tagName == 'I')
+            target = target.parentNode;
+
+
+        // Get the name of the column
+        const mapper = {
+            // mapper from class name sqlite column name
+            'name-title': 'ID',
+            'date': 'First Publication Date',
+            'params': 'Millions of Parameters',
+            'resources': 'Resources Total V-RAM'
+        }
+        const target_class = target.classList[0];
+        if (!mapper[target_class]) {
+            console.warn(`No mapper found for class name ${target_class}`);
+            return;
+        }
+
+        // Get the column name from the mapper
+        var column_name = `"${mapper[target_class]}"`;
+        
+        // Reprint the table
+        table_container.innerHTML = getModelsTable(results_buttons_state, column_name);
+        
+        // Style table pulsing header
+        const new_table = document.querySelector('table.models');
+        const new_header_elements = Array(...new_table.querySelectorAll('table.models thead .selectable'));
+        new_header_elements.forEach(element => {
+            if (element.innerHTML == target.innerHTML)
+                element.classList.add('focused');
+            else
+                element.classList.remove('focused');
+        });
+
+    });
 
 }
