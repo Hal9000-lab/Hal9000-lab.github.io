@@ -277,7 +277,21 @@ export function compileChoicesIntoDropdownButton(list_of_choices) {
     return list_of_choices.join(` `);
 }
 
-
+export function refillButton(button, list_of_values) {
+    // - remove options buttons
+    const existingButtons = dropdownButtonGetAllInnerOptions(button);
+    existingButtons.forEach(button => {
+        button.remove();
+    });
+    // - add new option buttons
+    const options_container = button.parentNode.querySelector('div.dropdown-content');
+    const new_content = compileChoicesIntoDropdownButton(list_of_values);
+    options_container.insertAdjacentHTML('beforeend', new_content);
+    // Arrow
+    updateDropdownButtonArrow(button);
+    // Number and cross
+    updateButtonCounterAndClearCross(button);
+}
 
 
 

@@ -126,6 +126,18 @@
             RESULTS
         -->
         <div class="minipage-container" id="results">
+
+            <span class="minipage-text helper">
+                Use the selectors below to display the table of
+                    the best-in-literature Dice scores [%]. <br>
+                Click on the table header to sort results for a specific dataset.<br>
+                While navigating the table, click on a Dice score to see which models
+                    obtained it on which dataset.<br>
+                Scroll left and right to navigate the full table 
+                    (use mouse wheel while pressing the shift - or maiusc - key).
+                <img src="../assets/bulb-512.webp">
+            </span>
+
             <span class="minipage-text">Selection of interest:</span>
             <div class="dropdown">
                 <button class="dropbtn unset" id="dropdown-dataset-organ-button">
@@ -211,17 +223,6 @@
                     </div>
                 </div>
             </div>
-            <br>
-            <span class="minipage-text helper">
-                Use the selectors above to display the table of
-                    the best-in-literature Dice scores [%]. <br>
-                Click on the table header to sort results for a specific dataset.<br>
-                While navigating the table, click on a Dice score to see which models
-                    obtained it on which dataset.<br>
-                Scroll left and right to navigate the full table 
-                    (use mouse wheel while pressing the shift - or maiusc - key).
-                <img src="../assets/bulb-512.webp">
-            </span>
             
             <div class="table-display-box">
                 <!-- Tables to display will go here -->
@@ -245,6 +246,103 @@
                     (use mouse wheel while pressing the shift - or maiusc - key).
                 <img src="../assets/bulb-512.webp">
             </span>
+
+            <span class="minipage-text">Filter models by:</span>
+            <br>
+            <br>
+            <div class="dropdown">
+                <button class="dropbtn" id="country-filter">
+                    <span class="dropbtn-text">Country</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="release-year-filter">
+                    <span class="dropbtn-text">Release Year</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="first-publisher-filter">
+                    <span class="dropbtn-text">First Publisher</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="last-publisher-filter">
+                    <span class="dropbtn-text">Last Publisher</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
+            <br>
+            <br>
+            <div class="dropdown">
+                <button class="dropbtn" id="frameworks-filter">
+                    <span class="dropbtn-text">Framework</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="architecture-filter">
+                    <span class="dropbtn-text">Architecture</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" id="backbone-filter">
+                    <span class="dropbtn-text">Visual Backbone</span>
+                    <span class="dropbtn-arrow">&#9662;</span>
+                    <span class="dropbtn-counter"></span>
+                </button>
+                <span class="dropbtn-clear-content" tabindex="0" role="button">&#10005;</span>
+                <div class="dropdown-content multi">
+                    <div class="search-input">
+                        <input type="text" name="" id="" placeholder="Type to search">
+                    </div>
+                </div>
+            </div>
 
             <div class="table-display-box">
                 <!-- Tables to display will go here -->

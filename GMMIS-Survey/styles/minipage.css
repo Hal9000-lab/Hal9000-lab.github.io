@@ -20,7 +20,8 @@ div.table-display-box {
 span.minipage-text.helper {
     display: block;
     margin: auto;
-    margin-top: 25px;
+    margin-top: 15px;
+    margin-bottom: 15px;
     padding: 25px;
     font-size: 0.9em;
     background-color: #e5edf0;

@@ -9,7 +9,8 @@ import {
     updateDropdownButtonArrow,
     getStateOfChoiches,
     updateButtonCounterAndClearCross,
-    compileChoicesIntoDropdownButton
+    compileChoicesIntoDropdownButton,
+    refillButton
     } from './dropdownMenusManager.js';
 
 import { getEmptyContentHTML } from './emptyContent.js';
@@ -17,22 +18,6 @@ import { getEmptyContentHTML } from './emptyContent.js';
 import { resultsTableFormatter } from './resultsTableFormatter.js';
 
 import { unwanted_models } from './unwanted_models.js';
-
-function refillButton(button, list_of_values) {
-    // - remove options buttons
-    const existingButtons = dropdownButtonGetAllInnerOptions(button);
-    existingButtons.forEach(button => {
-        button.remove();
-    });
-    // - add new option buttons
-    const options_container = button.parentNode.querySelector('div.dropdown-content');
-    const new_content = compileChoicesIntoDropdownButton(list_of_values);
-    options_container.insertAdjacentHTML('beforeend', new_content);
-    // Arrow
-    updateDropdownButtonArrow(button);
-    // Number and cross
-    updateButtonCounterAndClearCross(button);
-}
 
 
 function _build_condition_models(column, list_of_options) {
@@ -63,6 +48,10 @@ function _build_condition_models_date(column, list_of_options) {
  * @param {*} answer The raw answer of the main database query of getResultsTable()
  */
 function removeUnwantedModelsInplace(answer) {
+    if (answer.length == 0)
+        return;
+    if (answer[0]["values"].length == 0)
+        return;
     answer[0]["values"] = answer[0]["values"].filter(row => {
         // Keep the row if its first element (model name) is NOT in the unwanted_models list
         // (unwanted models imported from outside)
@@ -360,6 +349,8 @@ export function resultsSetup() {
                 visual_backbone_button, release_dates_button
             ];
     var results_buttons_state = getStateOfChoiches(results_list_ob_buttons);
+    var sorted_column = undefined; // no column is sorted by default
+
     window.addEventListener('click', (event) => {
         // we have to check wether the event fell on a choiche button,
         // and if the new state of choiches is different from the previous one.
@@ -377,7 +368,7 @@ export function resultsSetup() {
         } else {
             // state of buttons changes -> update table content
             results_buttons_state = state;
-            results_table_container.innerHTML = getResultsTable(results_buttons_state);
+            results_table_container.innerHTML = getResultsTable(results_buttons_state, sorted_column);
         }
     });
 
@@ -402,9 +393,9 @@ export function resultsSetup() {
         if (!hit)
             return;
         // Get the name of the column
-        var column_name = `"${event.target.innerHTML.trim()}"`;
+        sorted_column = `"${event.target.innerHTML.trim()}"`;
         // Reprint the table
-        results_table_container.innerHTML = getResultsTable(results_buttons_state, column_name);
+        results_table_container.innerHTML = getResultsTable(results_buttons_state, sorted_column);
         // Style table element
         const new_table = document.querySelector('table.results');
         const new_header_elements = Array(...new_table.querySelectorAll('table.results th'));

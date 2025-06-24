@@ -88,8 +88,12 @@ export function getAllUniqueElementsInColumn(column, table) {
     // make a list with all of them together
     let full_list = []
     list_of_objects.forEach(element => {
-        let divided_element = element.split(', ');
-        full_list = full_list.concat(divided_element);
+        if (! (element === null || element === undefined || element === '')) {
+            // if the element is not null, undefined or empty string
+            // split by comma and space, and add to full_list
+            let divided_element = element.split(', ');
+            full_list = full_list.concat(divided_element);
+        }
     });
     // keep unique ones, order alphabetical
     let unique_sorted_list = [...new Set(full_list)].sort();

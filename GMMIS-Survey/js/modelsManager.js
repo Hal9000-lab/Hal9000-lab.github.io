@@ -9,12 +9,15 @@ import {
     updateDropdownButtonArrow,
     getStateOfChoiches,
     updateButtonCounterAndClearCross,
-    compileChoicesIntoDropdownButton
+    compileChoicesIntoDropdownButton,
+    refillButton
     } from './dropdownMenusManager.js';
 
 import { getEmptyContentHTML } from './emptyContent.js';
 
 import { unwanted_models } from './unwanted_models.js';
+
+import { getSetOfCountriesFromAffiliations, country_to_list_of_affiliations_map } from './affiliationsToCountries.js';
 
 import { modelsTableFormatter } from './modelsTableFormatter.js';
 
@@ -24,6 +27,10 @@ import { modelsTableFormatter } from './modelsTableFormatter.js';
  * @param {*} answer The raw answer of the main database query of getResultsTable()
  */
 function removeUnwantedModelsInplace(answer) {
+    if (answer.length == 0)
+        return;
+    if (answer[0]["values"].length == 0)
+        return;
     answer[0]["values"] = answer[0]["values"].filter(row => {
         // Keep the row if its first element (model name) is NOT in the unwanted_models list
         // (unwanted models imported from outside)
@@ -32,6 +39,28 @@ function removeUnwantedModelsInplace(answer) {
     return;
 }
 
+function _build_condition_models(column, list_of_options) {
+    if (list_of_options.length == 0) {
+        var sql_condition = `SELECT ID from models`;
+    } else {
+        var sql_condition = `
+            SELECT ID from models
+            WHERE (${list_of_options.map(el => `${column} LIKE "%`+el+'%"').join(' OR ')})
+        `;
+    }
+    return sql_condition;
+}
+function _build_condition_models_date(column, list_of_options) {
+    if (list_of_options.length == 0) {
+        var sql_condition = `SELECT ID from models`;
+    } else {
+        var sql_condition = `
+            SELECT ID from models
+            WHERE strftime('%Y', ${column}) IN (${list_of_options.map(el => '"'+el+'"')})
+        `;
+    }
+    return sql_condition;
+}
 
 /**
  * 
@@ -43,8 +72,8 @@ function getModelsTable(buttons_state_dict, column_to_order_by = undefined) {
 
     // By default display the whole table
     // build query
-    
-    
+
+    // Sorting statement
     let sorting_statement = '';
     if (column_to_order_by) {
         switch (column_to_order_by) {
@@ -75,16 +104,51 @@ function getModelsTable(buttons_state_dict, column_to_order_by = undefined) {
         }
     }
     
+    // Filters
+    var affils_list = [];
+    if (! buttons_state_dict['country-filter'].length == 0) {
+        buttons_state_dict['country-filter'].forEach(country => {
+            affils_list.push(...country_to_list_of_affiliations_map[country]);
+        });
+    }
+    const filter_affiliations = _build_condition_models('"Major Affiliations"', affils_list);
+
+    const filter_release_years = _build_condition_models_date('"First Publication Date"', buttons_state_dict['release-year-filter']);
+
+    const filter_first_publishers = _build_condition_models('"First Publisher"', buttons_state_dict['first-publisher-filter']);
+
+    const filter_last_publishers = _build_condition_models('"Last Publisher"', buttons_state_dict['last-publisher-filter']);
+
+    const filter_frameworks = _build_condition_models('"Framework"', buttons_state_dict['frameworks-filter']);
+
+    const filter_architectures = _build_condition_models('"Architecture"', buttons_state_dict['architecture-filter']);
+
+    const filter_visual_backbones = _build_condition_models('"Visual Backbone"', buttons_state_dict['backbone-filter']);
+
+    // Final query
     const query = `
         SELECT * 
-        FROM models 
+        FROM models
+        WHERE ID IN (
+            ${filter_affiliations}
+            INTERSECT 
+            ${filter_release_years}
+            INTERSECT
+            ${filter_first_publishers}
+            INTERSECT
+            ${filter_last_publishers}
+            INTERSECT
+            ${filter_frameworks}
+            INTERSECT
+            ${filter_architectures}
+            INTERSECT
+            ${filter_visual_backbones}
+        )
         ${sorting_statement}    
     ;`;
 
-
-
+    // Execute the query
     const answer = executeQuery(query);
-    
 
     // Remove models that are in the database, but that we do not want to display
     // (answer, which is an array, so a pointer, is const, but it's 'content' may be changed)
@@ -107,39 +171,42 @@ function getModelsTable(buttons_state_dict, column_to_order_by = undefined) {
 
 
 export function modelsSetup() {
+
     const table_container = document.querySelector('div.minipage-container#models > div.table-display-box');
-
-
-
-    table_container.innerHTML = getModelsTable({});
     
-    var results_buttons_state = {};
-    /*
-    ///////////////////    below to do /////////////////////
-
-    // fai in modo che si possa ordinar eper vram.. forse devi aggiungere una colonna al database
-
     
     // Other filters include framework, architecture, and release date
-    let all_frameworks = getAllUniqueElementsInColumn('Framework', 'models');
+    let all_affiliations = getAllUniqueElementsInColumn('"Major Affiliations"', 'models');
+    let all_countries = getSetOfCountriesFromAffiliations(all_affiliations);
+    all_countries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     
-    let all_architectures = getAllUniqueElementsInColumn('Architecture', 'models');
-
-    let all_visual_backbones = getAllUniqueElementsInColumn('"Visual Backbone"', 'models');
-
     let all_release_dates = getAllUniqueElementsInColumn('"First Publication Date"', 'models');
     all_release_dates = [...new Set(all_release_dates.map(element => element.split('-')[0]) )];
     
-    // - setup buttons
-    const country_button = document.querySelector('button#models-filter-framework');
-    const frameworks_button = document.querySelector('button#models-filter-framework');
-    const architecture_button = document.querySelector('button#models-filter-architecture');
-    const visual_backbone_button = document.querySelector('button#models-filter-visual-backbone');
-    const release_dates_button = document.querySelector('button#models-filter-release-date');
-    const total_vram_button = document.querySelector('button#models-filter-release-date');
+    let all_first_publishers = getAllUniqueElementsInColumn('"First Publisher"', 'models');
+    
+    let all_last_publishers = getAllUniqueElementsInColumn('"Last Publisher"', 'models');
+    
+    let all_frameworks = getAllUniqueElementsInColumn('"Framework"', 'models');
+    
+    let all_architectures = getAllUniqueElementsInColumn('Architecture', 'models');
+    
+    let all_visual_backbones = getAllUniqueElementsInColumn('"Visual Backbone"', 'models');
 
-    const buttons = [country_button, frameworks_button, architecture_button, visual_backbone_button, release_dates_button];
-    const lists = [all_frameworks, all_architectures, all_visual_backbones, all_release_dates]; //// to do
+
+    // - locate buttons
+    const country_button = document.querySelector('div.minipage-container#models button#country-filter');
+    const release_year_button = document.querySelector('div.minipage-container#models button#release-year-filter');
+    const first_publisher_button = document.querySelector('div.minipage-container#models button#first-publisher-filter');
+    const last_publisher_button = document.querySelector('div.minipage-container#models button#last-publisher-filter');
+    const frameworks_button = document.querySelector('div.minipage-container#models button#frameworks-filter');
+    const architecture_button = document.querySelector('div.minipage-container#models button#architecture-filter');
+    const visual_backbone_button = document.querySelector('div.minipage-container#models button#backbone-filter');
+
+    // fill buttons options
+
+    const buttons = [country_button, release_year_button, first_publisher_button, last_publisher_button, frameworks_button, architecture_button, visual_backbone_button];
+    const lists = [all_countries, all_release_dates, all_first_publishers, all_last_publishers, all_frameworks, all_architectures, all_visual_backbones];
     buttons.forEach((button, i) => {
         refillButton(button, lists[i]);
         if (lists[i].length <= 5) {
@@ -147,39 +214,36 @@ export function modelsSetup() {
             searchbox.classList.add('hidden');
         }
     });
-    
-    // get area where table will be displayed
-    const results_table_container = document.querySelector('div.minipage-container#results > div.table-display-box');
 
     // trigger the display of results
-    var modelss_list_of_buttons = [ 
-                frameworks_button, architecture_button, 
-                visual_backbone_button, release_dates_button,
-                total_vram_button
-            ];
-    var results_buttons_state = getStateOfChoiches(results_list_ob_buttons);
+    var buttons_state = getStateOfChoiches(buttons);
+    var sorted_column = undefined; // no column is sorted by default
+
+    // Shot table right away
+    table_container.innerHTML = getModelsTable(buttons_state, sorted_column);
+
     window.addEventListener('click', (event) => {
         // we have to check wether the event fell on a choiche button,
         // and if the new state of choiches is different from the previous one.
-        const targetIsRelevantButton = results_list_ob_buttons.some(button =>
+        const targetIsRelevantButton = buttons.some(button =>
             button.parentNode.contains(event.target) || button.parentNode === event.target
         );
         if (!targetIsRelevantButton) {
             // Click was not on a relevant button -> do nothing
             return;
         }
-        const state = getStateOfChoiches(results_list_ob_buttons);
-        if (JSON.stringify(results_buttons_state) === JSON.stringify(state)) {
+        const state = getStateOfChoiches(buttons);
+        if (JSON.stringify(buttons_state) === JSON.stringify(state)) {
             // nothing new happened -> do nothing
             return;
         } else {
             // state of buttons changes -> update table content
-            results_buttons_state = state;
-            results_table_container.innerHTML = getResultsTable(results_buttons_state);
+            buttons_state = state;
+            table_container.innerHTML = getModelsTable(buttons_state, sorted_column);
         }
+        // known bug: when table is redrawn, focused header is lost, but sorting is kept
     });
 
-    */
 
     
 
@@ -219,10 +283,10 @@ export function modelsSetup() {
         }
 
         // Get the column name from the mapper
-        var column_name = `"${mapper[target_class]}"`;
+        sorted_column = `"${mapper[target_class]}"`;
         
         // Reprint the table
-        table_container.innerHTML = getModelsTable(results_buttons_state, column_name);
+        table_container.innerHTML = getModelsTable(buttons_state, sorted_column);
         
         // Style table pulsing header
         const new_table = document.querySelector('table.models');
