@@ -16,6 +16,11 @@ footer {
 footer > img#cc {
     height: 25px;
     width: fit-content;
+    transition: 2s ease-out;
+}
+footer > img#cc:hover {
+    height: 50px;
+    transition: 2s ease-out;
 }
 
 footer > p {

@@ -12,7 +12,7 @@ const expected_db_columns = [
 const header = `
 <thead>
     <tr>
-        <th class="name selectable">Name<br><i>Full Name</i> </th>
+        <th class="name selectable">Dataset Name<br><i>Full Name</i> </th>
         <th class="sub-datasets">Related Dataset</th>
         <th class="modality">Imaging Modality</th>
         <th class="objects">Classes</th>
@@ -152,6 +152,14 @@ function _formatRow(row) {
     return row_html;
 }
 
+const table_title = `
+    <div class="table-title">
+        <span>
+            Table of Datasets
+        </span>
+    </div>
+`;
+
 export function datasetsTableFormatter(resultsTableQueryAnswer) {
     let columns = resultsTableQueryAnswer[0]['columns'];
     let values = resultsTableQueryAnswer[0]['values'];
@@ -182,6 +190,8 @@ export function datasetsTableFormatter(resultsTableQueryAnswer) {
     out += `</table>`;
 
     out = out.replaceAll('null', ' ');
+
+    out = table_title + out;
 
     return out;
 }

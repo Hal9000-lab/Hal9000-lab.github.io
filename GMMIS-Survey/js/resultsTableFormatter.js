@@ -1,6 +1,15 @@
 import { executeQuery } from "./dbManager.js";
 import { getEmptyContentHTML } from "./emptyContent.js";
 
+
+const table_title = `
+    <div class="table-title">
+        <span>
+            Table of Best-in-literature Results
+        </span>
+    </div>
+`;
+
 export function resultsTableFormatter(resultsTableQueryAnswer) {
     let columns = resultsTableQueryAnswer[0]['columns'];
     let values = resultsTableQueryAnswer[0]['values'];
@@ -59,5 +68,8 @@ export function resultsTableFormatter(resultsTableQueryAnswer) {
     });
     out += '</tbody></table>';
     out = out.replaceAll('null', ' ');
+
+    out = table_title + out;
+
     return out;
 }

@@ -41,6 +41,13 @@ const columns_classes = [
     'params', 'resources'
 ];
 
+const table_title = `
+    <div class="table-title">
+        <span>
+            Table of Models
+        </span>
+    </div>
+`;
 
 function _formatNameTitle(row) {
     // row[0] is the model name, row[1] is the publication title
@@ -352,6 +359,8 @@ export function modelsTableFormatter(resultsTableQueryAnswer) {
     out += `</table>`;
 
     out = out.replaceAll('null', ' ');
+
+    out = table_title + out;
 
     return out;
 }

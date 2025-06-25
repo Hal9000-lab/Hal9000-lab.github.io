@@ -58,70 +58,27 @@ function getDatasetsTable(buttons_state_dict, column_to_order_by = undefined) {
         }
     }
 
-
-
-    const query = `
-        SELECT * 
-        FROM datasets
-        ${sorting_statement}
-    ;`;
-
-
-    // Execute the query
-    const answer = executeQuery(query);
-
-    console.log("db answer", answer);
-    
-
-    if (answer.length == 0) {
-        return getEmptyContentHTML('No results to be found with this query combination');
-    }
-    return datasetsTableFormatter(answer);
-    
-    /*   old
-
-
-    
-    
     // Filters
-    var affils_list = [];
-    if (! buttons_state_dict['country-filter'].length == 0) {
-        buttons_state_dict['country-filter'].forEach(country => {
-            affils_list.push(...country_to_list_of_affiliations_map[country]);
-        });
-    }
-    const filter_affiliations = _build_condition_models('"Major Affiliations"', affils_list);
-
-    const filter_release_years = _build_condition_models_date('"First Publication Date"', buttons_state_dict['release-year-filter']);
-
-    const filter_first_publishers = _build_condition_models('"First Publisher"', buttons_state_dict['first-publisher-filter']);
-
-    const filter_last_publishers = _build_condition_models('"Last Publisher"', buttons_state_dict['last-publisher-filter']);
-
-    const filter_frameworks = _build_condition_models('"Framework"', buttons_state_dict['frameworks-filter']);
-
-    const filter_architectures = _build_condition_models('"Architecture"', buttons_state_dict['architecture-filter']);
-
-    const filter_visual_backbones = _build_condition_models('"Visual Backbone"', buttons_state_dict['backbone-filter']);
+    const filter_related_datasets = _build_condition_datasets('"Sub-dataset"', buttons_state_dict['related-dataset-filter']);
+    const filter_imaging_modalities = _build_condition_datasets('"Imaging Modality"', buttons_state_dict['modality-filter']);
+    const filter_classes = _build_condition_datasets('"Objects"', buttons_state_dict['classes-filter']);
+    const filter_anatomical_structures = _build_condition_datasets('"Main Anatomical Structure"', buttons_state_dict['anatomical-structure-filter']);
+    const filter_regions = _build_condition_datasets('"Region"', buttons_state_dict['region-filter']);
 
     // Final query
     const query = `
         SELECT * 
-        FROM models
-        WHERE ID IN (
-            ${filter_affiliations}
+        FROM datasets
+        WHERE "Name" IN (
+            ${filter_related_datasets}
             INTERSECT 
-            ${filter_release_years}
+            ${filter_imaging_modalities}
             INTERSECT
-            ${filter_first_publishers}
+            ${filter_classes}
             INTERSECT
-            ${filter_last_publishers}
+            ${filter_anatomical_structures}
             INTERSECT
-            ${filter_frameworks}
-            INTERSECT
-            ${filter_architectures}
-            INTERSECT
-            ${filter_visual_backbones}
+            ${filter_regions}
         )
         ${sorting_statement}    
     ;`;
@@ -131,15 +88,9 @@ function getDatasetsTable(buttons_state_dict, column_to_order_by = undefined) {
     if (answer.length == 0) {
         return getEmptyContentHTML('No results to be found with this query combination');
     }
-    return modelsTableFormatter(answer);
-    */
+    return datasetsTableFormatter(answer);
+    
 }
-
-
-
-
-
-
 
 
 
@@ -150,44 +101,24 @@ export function datasetsSetup() {
 
     const table_container = document.querySelector('div.minipage-container#datasets > div.table-display-box');
 
+    // Filters
+    let all_related_datasets = getAllUniqueElementsInColumn('"Sub-dataset"', 'datasets');
+    let all_imaging_modalities = getAllUniqueElementsInColumn('"Imaging Modality"', 'datasets');
+    let all_classes = getAllUniqueElementsInColumn('"Objects"', 'datasets');
+    let all_anatomical_structures = getAllUniqueElementsInColumn('"Main Anatomical Structure"', 'datasets');
+    let all_regions = getAllUniqueElementsInColumn('"Region"', 'datasets');
     
+    // locate buttons
+    const related_datasets_button = document.querySelector('div.minipage-container#datasets button#related-dataset-filter');
+    const imaging_modalities_button = document.querySelector('div.minipage-container#datasets button#modality-filter');
+    const classes_button = document.querySelector('div.minipage-container#datasets button#classes-filter');
+    const anatomical_structures_button = document.querySelector('div.minipage-container#datasets button#anatomical-structure-filter');
+    const regions_button = document.querySelector('div.minipage-container#datasets button#region-filter');
     
-    
-    /*
-    
-    
-    // Other filters include framework, architecture, and release date
-    let all_affiliations = getAllUniqueElementsInColumn('"Major Affiliations"', 'models');
-    let all_countries = getSetOfCountriesFromAffiliations(all_affiliations);
-    all_countries.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    
-    let all_release_dates = getAllUniqueElementsInColumn('"First Publication Date"', 'models');
-    all_release_dates = [...new Set(all_release_dates.map(element => element.split('-')[0]) )];
-    
-    let all_first_publishers = getAllUniqueElementsInColumn('"First Publisher"', 'models');
-    
-    let all_last_publishers = getAllUniqueElementsInColumn('"Last Publisher"', 'models');
-    
-    let all_frameworks = getAllUniqueElementsInColumn('"Framework"', 'models');
-    
-    let all_architectures = getAllUniqueElementsInColumn('Architecture', 'models');
-    
-    let all_visual_backbones = getAllUniqueElementsInColumn('"Visual Backbone"', 'models');
-
-
-    // - locate buttons
-    const country_button = document.querySelector('div.minipage-container#models button#country-filter');
-    const release_year_button = document.querySelector('div.minipage-container#models button#release-year-filter');
-    const first_publisher_button = document.querySelector('div.minipage-container#models button#first-publisher-filter');
-    const last_publisher_button = document.querySelector('div.minipage-container#models button#last-publisher-filter');
-    const frameworks_button = document.querySelector('div.minipage-container#models button#frameworks-filter');
-    const architecture_button = document.querySelector('div.minipage-container#models button#architecture-filter');
-    const visual_backbone_button = document.querySelector('div.minipage-container#models button#backbone-filter');
-
     // fill buttons options
-
-    const buttons = [country_button, release_year_button, first_publisher_button, last_publisher_button, frameworks_button, architecture_button, visual_backbone_button];
-    const lists = [all_countries, all_release_dates, all_first_publishers, all_last_publishers, all_frameworks, all_architectures, all_visual_backbones];
+    const buttons = [related_datasets_button, imaging_modalities_button, classes_button, anatomical_structures_button, regions_button];
+    const lists = [all_related_datasets, all_imaging_modalities, all_classes, all_anatomical_structures, all_regions];
+    
     buttons.forEach((button, i) => {
         refillButton(button, lists[i]);
         if (lists[i].length <= 5) {
@@ -196,10 +127,6 @@ export function datasetsSetup() {
         }
     });
 
-    */    
-    const buttons = [];
-
-
     // trigger the display of results
     var buttons_state = getStateOfChoiches(buttons);
     var sorted_column = undefined; // no column is sorted by default
@@ -207,7 +134,7 @@ export function datasetsSetup() {
     // Show table right away
     table_container.innerHTML = getDatasetsTable(buttons_state, sorted_column);
     
-    /*
+    
     window.addEventListener('click', (event) => {
         // we have to check wether the event fell on a choiche button,
         // and if the new state of choiches is different from the previous one.
@@ -219,19 +146,30 @@ export function datasetsSetup() {
             return;
         }
         const state = getStateOfChoiches(buttons);
-        if (JSON.stringify(buttons_state) === JSON.stringify(state)) {
+        if (JSON.stringify(buttons_state) === JSON.stringify(state))
             // nothing new happened -> do nothing
             return;
-        } else {
-            // state of buttons changes -> update table content
-            buttons_state = state;
-            table_container.innerHTML = getDatasetsTable(buttons_state, sorted_column);
-        }
+        
+        // state of buttons changes -> update table content
+        buttons_state = state;
+        table_container.innerHTML = getDatasetsTable(buttons_state, sorted_column);
+
+        // just for the Classes button, make selected classes twinkle
+
+        const all_selected_objects = state['classes-filter'];
+        const all_displayed_classes = table_container.querySelectorAll('td.objects span');
+        all_displayed_classes.forEach(element => {
+            // - first reset them all
+            element.classList.remove('twinkle');
+            // - light up only the selected ones
+            if (all_selected_objects.some(obj => obj === element.innerHTML)) {
+                element.classList.add('twinkle');
+            }
+        });
         // known bug: when table is redrawn, focused header is lost, but sorting is kept
     });
 
 
-    /**/
 
     // when a column name is touched, whatever it is, the table will be ordered by that column
     window.addEventListener('click', (event) => {
