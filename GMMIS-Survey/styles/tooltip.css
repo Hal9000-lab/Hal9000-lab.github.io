@@ -54,3 +54,18 @@ div.tooltip div.arrow {
     z-index: 98;
 }
 
+
+
+
+
+
+/* BIBTEX in RESULTS TABLE */
+
+div.tooltip span.bibtex {
+    display: block;
+    margin: 3px;
+    padding: 4px;
+    color: rgba(250, 235, 215, 0.75);
+    background-color: rgba(0, 0, 0, 0.31);
+    border-radius: 5px;
+}

@@ -442,7 +442,27 @@ export function resultsSetup() {
 
         const model = event.target.classList[1].replaceAll('_', ' ');
         const dataset = event.target.classList[2].replaceAll('_', ' ');
-        tooltip.querySelector('span.free-text').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
+
+        // In the results_best_source table, check if the result was found in some other work (philology)
+        const query = `SELECT "${dataset}" FROM results_best_source WHERE ID="${model}"`;
+        const answer = executeQuery(query);
+        let bibtex = answer[0].values[0][0]
+        if (! bibtex)
+            tooltip.querySelector('span.free-text').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
+        else {
+            bibtex = bibtex.replaceAll('\n', '<br>')
+            tooltip.querySelector('span.free-text').innerHTML = `
+            Model: ${model}
+            <br>
+            Dataset: ${dataset}
+            <br><br>
+            Source of Dice Score:
+            <br>
+            <span class="bibtex">
+            ${bibtex}
+            </span>
+            `;
+        }
 
         tooltip.classList.remove('hidden');
     });
