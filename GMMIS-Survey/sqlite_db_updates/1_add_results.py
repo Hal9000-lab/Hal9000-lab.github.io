@@ -36,16 +36,21 @@ c.execute("""
     VALUES (?, ?, ?)
 """, (MODEL, MODEL, first_pub_date))
 
-# Now update results to inser the values of the dict
+# Now update results to insert the values of the dict
 # the dice score (float) goes into the results_primary table
 # the comment goes into the results_primary_comments table (create if not exist)
 # If the dataset is not one of the columns of the database, add the column (default null)
 #  to all the following tables (create them if not exist):
 #  - results_primary
-#  - results_primary_comments
+#  - results_primary_comments 
+#      (same as results_primary, but all fields are TEXT except for Date column)
 #  - results_best
-#  - results_best
-#  - results_primary
+#  - results_best_source
+#      (same as results_best, but all fields are TEXT except for Date column, table already exist)
+#  - results_best_comments
+#      (same structure as results_best_source)
+# Important: all results_* tables must have the same set of columns
+
 
 
 # save and close

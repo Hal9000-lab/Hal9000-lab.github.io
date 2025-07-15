@@ -18,8 +18,8 @@ TO_ADD = {
     'Framework': 'Horizontal (Foundation)',
     'Architecture': 'CNN',
     'Visual Backbone': '3D SegResNet',
-    'Millions of Parameters': 'NULL',
-    'Number of GFlops': 'NULL',
+    'Millions of Parameters': None,
+    'Number of GFlops': None,
     'Resources': '64, NVIDIA, V100 32GB',
 }
 
@@ -53,8 +53,16 @@ TO_ADD = {
 
 
 if 1:
+    # first, check if the model ID is already in the table
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    c.execute("SELECT 1 FROM models WHERE ID = ?", (TO_ADD['ID'],))
+    if c.fetchone():
+        print(f"Model with ID '{TO_ADD['ID']}' already exists.")
+        conn.close()
+        exit(0)
+
+    # go on
     columns = ', '.join(list(map(lambda x: '"' + x + '"', TO_ADD.keys())))
     placeholders = ', '.join(['?'] * len(TO_ADD))
     values = list(TO_ADD.values())
