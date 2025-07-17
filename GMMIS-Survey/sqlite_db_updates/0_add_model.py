@@ -3,24 +3,24 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_ADD = {
-    'ID': 'VISTA3D',
-    'Title': 'VISTA3D: A Unified Segmentation Foundation Model For 3D Medical Imaging',
-    'Major Affiliations': 'Nvidia, University of Arkansas for Medical Sciences, University of Oxford',
-    'First Publication Date': '2024-06-01 00:00:00',
+    'ID': 'CDPDNet',
+    'Title': 'CDPDNet: Integrating Text Guidance with Hybrid Vision Encoders for Medical Image Segmentation',
+    'Major Affiliations': 'University of Florida',
+    'First Publication Date': '2025-05-01 00:00:00',
     'First Publisher': 'arXiv',
-    'First Publication Link': 'https://doi.org/10.48550/arXiv.2406.05285',
-    'First Publication BibKey': 'he2024vista3dunifiedsegmentationfoundation',
-    'Last Publication Date': '2025-06-01 00:00:00',
-    'Last Publisher': 'IEEE/CVF CVPR',
-    'Last Publication Link': 'https://openaccess.thecvf.com/content/CVPR2025/html/He_VISTA3D_A_Unified_Segmentation_Foundation_Model_For_3D_Medical_Imaging_CVPR_2025_paper.html',
-    'Last Publication BibKey': 'He_2025_CVPR',
-    'Code': 'https://github.com/Project-MONAI/VISTA',
+    'First Publication Link': 'https://doi.org/10.48550/arXiv.2505.18958',
+    'First Publication BibKey': 'wu2025cdpdnetintegratingtextguidance',
+    'Last Publication Date': None,
+    'Last Publisher': None,
+    'Last Publication Link': None,
+    'Last Publication BibKey': None,
+    'Code': 'https://github.com/wujiong-hub/CDPDNet.git',
     'Framework': 'Horizontal (Foundation)',
-    'Architecture': 'CNN',
-    'Visual Backbone': '3D SegResNet',
+    'Architecture': 'Transformer with Convolutions',
+    'Visual Backbone': '3D U-Net, 2D DINOv2 ViT',
     'Millions of Parameters': None,
     'Number of GFlops': None,
-    'Resources': '64, NVIDIA, V100 32GB',
+    'Resources': '8, NVIDIA, A100 80GB',
 }
 
 """
@@ -51,6 +51,7 @@ TO_ADD = {
 }
 """
 
+################################ script ################################
 
 if 1:
     # first, check if the model ID is already in the table

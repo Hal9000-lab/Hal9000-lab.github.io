@@ -4,7 +4,7 @@ import sqlite3
 
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
-MODEL = 'VISTA3D'
+MODEL = 'CDPDNet'
 
 RESULTS_TO_ADD = {
     # dataset_name: dice_score
@@ -12,19 +12,25 @@ RESULTS_TO_ADD = {
     # dataset_name: (dice_score, comment)
     #
     # '': (, ''),
-    'LiTS / MSD Liver': (68.7, 'auto+point configuration.'),
-    'MSD Lung Tumors': (71.9, 'auto+point configuration.'),
-    'MSD Pancreas Tumour': (63.8, 'auto+point configuration.'),
-    'MSD Hepatic Vessels': (75.7, 'auto+point configuration.'),
-    'MSD Spleen': (95.4, 'auto+point configuration.'),
-    'MSD Colon Cancer': (63.3, 'auto+point configuration.'),
-    'BTCV': (85.9, 'auto+point configuration.'),
-    'BTCV Cervix': (77.5, 'auto+point configuration.'),
-    'VerSe': (90.6, 'auto+point configuration.'),
-    'AbdomenCT-1K': (94.0, 'auto+point configuration.'),
-    'AMOS': (85.6, 'auto+point configuration.'),
-    'TotalSegmentator': (91.8, 'auto+point configuration.'),
-    'WORD': (87.5, 'After fine tuning on 100 WORD cases.'),
+    'CHAOS': (82.88, None),
+    'LiTS / MSD Liver': (74.92,  None),
+    #'KiTS': (97.9, None),
+    'AbdomenCT-1K': (90.33,  None),
+    'Pancreas-CT': (77.03,  None),
+    'FLARE': (94.75,  None),
+    # 'MSD Lung Tumors': (71.9,  None),
+    # 'MSD Pancreas Tumour': (63.8,  None),
+    # 'MSD Hepatic Vessels': (75.7,  None),
+    # 'MSD Spleen': (95.4,  None),
+    # 'MSD Colon Cancer': (63.3,  None),
+    'BTCV': (71.69,  None),
+    # 'BTCV Cervix': (77.5,  None),
+    # 'VerSe': (90.6,  None),
+    # 'AbdomenCT-1K': (94.0,  None),
+    'AMOS': (84.35, None),
+    # 'TotalSegmentator': (89.32, '.'),
+    'WORD': (89.06, None),
+    '3D-IRCADb': (89.06, None),
 }
 
 
@@ -32,6 +38,7 @@ RESULTS_TO_ADD = {
 
 
 
+######################################## script #####################
 
 conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
@@ -115,7 +122,7 @@ for dataset in RESULTS_TO_ADD:
     )
 
     # Insert comment into comments tables if present (not into results_best)
-    if comment is not None:
+    if comment:
         c.execute(
             f'UPDATE results_primary_comments SET [{dataset}] = ? WHERE ID = ?',
             (comment, MODEL)

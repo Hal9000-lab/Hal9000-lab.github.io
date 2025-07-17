@@ -8,35 +8,42 @@ DB_PATH = './GMMIS-Survey/database.sqlite'
 
 
 SOURCE_BIBTEX = """
-@InProceedings{He_2025_CVPR,
-    author    = {He, Yufan and Guo, Pengfei and Tang, Yucheng and Myronenko, Andriy and Nath, Vishwesh and Xu, Ziyue and Yang, Dong and Zhao, Can and Simon, Benjamin and Belue, Mason and Harmon, Stephanie and Turkbey, Baris and Xu, Daguang and Li, Wenqi},
-    title     = {VISTA3D: A Unified Segmentation Foundation Model For 3D Medical Imaging},
-    booktitle = {Proceedings of the Computer Vision and Pattern Recognition Conference (CVPR)},
-    month     = {June},
-    year      = {2025},
-    pages     = {20863-20873}
+@misc{wu2025cdpdnetintegratingtextguidance,
+      title={CDPDNet: Integrating Text Guidance with Hybrid Vision Encoders for Medical Image Segmentation}, 
+      author={Jiong Wu and Yang Xing and Boxiao Yu and Wei Shao and Kuang Gong},
+      year={2025},
+      eprint={2505.18958},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2505.18958}, 
 }
 """
 
-MODEL = 'nnU-Net'
+MODEL = 'DoDNet'
 
 RESULTS_TO_MODIFY = {
     # dataset_name: (dice_score, comment)
     #
     # '': (, ''),
-    # 'LiTS / MSD Liver': (68.7, 'auto+point configuration.'),
-    # 'MSD Lung Tumors': (71.9, 'auto+point configuration.'),
-    # 'MSD Pancreas Tumour': (63.8, 'auto+point configuration.'),
-    # 'MSD Hepatic Vessels': (75.7, 'auto+point configuration.'),
-    # 'MSD Spleen': (95.4, 'auto+point configuration.'),
-    # 'MSD Colon Cancer': (63.3, 'auto+point configuration.'),
-    # 'BTCV': (85.9, 'auto+point configuration.'),
-    'BTCV Cervix': (64.0, None),
-    # 'VerSe': (90.6, 'auto+point configuration.'),
-    # 'AbdomenCT-1K': (94.0, 'auto+point configuration.'),
-    # 'AMOS': (85.6, 'auto+point configuration.'),
-    # 'TotalSegmentator': (91.8, 'auto+point configuration.'),
-    # 'WORD': (87.5, 'After fine tuning on 100 WORD cases.'),
+    'CHAOS': (78.36, 'With CLIP feature fusion (CLIP-DoDNet).'),
+    #'LiTS / MSD Liver': (74.92,  None),
+    #'KiTS': (97.9, None),
+    'AbdomenCT-1K': (89.78,  'With CLIP feature fusion (CLIP-DoDNet).'),
+    'Pancreas-CT': (75.26,  'With CLIP feature fusion (CLIP-DoDNet).'),
+    'FLARE': (94.16,  'With CLIP feature fusion (CLIP-DoDNet).'),
+    # 'MSD Lung Tumors': (71.9,  None),
+    # 'MSD Pancreas Tumour': (63.8,  None),
+    # 'MSD Hepatic Vessels': (75.7,  None),
+    # 'MSD Spleen': (95.4,  None),
+    # 'MSD Colon Cancer': (63.3,  None),
+    # 'BTCV': (71.69,  None),
+    # 'BTCV Cervix': (77.5,  None),
+    # 'VerSe': (90.6,  None),
+    # 'AbdomenCT-1K': (94.0,  None),
+    'AMOS': (82.28, 'With CLIP feature fusion (CLIP-DoDNet).'),
+    # 'TotalSegmentator': (89.32, '.'),
+    'WORD': (88.51, 'With CLIP feature fusion (CLIP-DoDNet).'),
+    '3D-IRCADb': (66.00, 'With CLIP feature fusion (CLIP-DoDNet).'),
 }
 
 
@@ -90,9 +97,9 @@ for dataset in RESULTS_TO_MODIFY:
     )
 
     # Insert comment into comments tables if present (not into results_best)
-    if comment is not None:
+    if comment:
         c.execute(
-            f'UPDATE results_primary_comments SET [{dataset}] = ? WHERE ID = ?',
+            f'UPDATE results_best_comments SET [{dataset}] = ? WHERE ID = ?',
             (comment, MODEL)
         )
 
