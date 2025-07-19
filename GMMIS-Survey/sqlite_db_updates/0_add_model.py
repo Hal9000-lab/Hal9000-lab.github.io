@@ -15,7 +15,7 @@ TO_ADD = {
     'Last Publication Link': 'https://doi.org/10.48550/arXiv.2501.11253',
     'Last Publication BibKey': 'li2025supervised3dmodelstransfer',
     'Code': 'https://github.com/MrGiovanni/SuPreM',
-    'Framework': 'Horizontal (Foundation)',
+    'Framework': 'Generalist',
     'Architecture': 'CNN, Transformer',
     'Visual Backbone': '3D U-Net, 3D SegResNet, 3D Swin-Base',
     'Millions of Parameters': 62.19,
