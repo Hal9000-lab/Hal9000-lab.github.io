@@ -6,6 +6,8 @@ DB_PATH = './GMMIS-Survey/database.sqlite'
 
 MODEL = ''
 
+# poi risultati 3dino-vit (mail) 7777777777777777777777777777777777
+
 RESULTS_TO_ADD = { 
     # dataset_name: dice_score
     # or

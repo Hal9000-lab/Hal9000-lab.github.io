@@ -1,0 +1,31 @@
+INSERT INTO datasets 
+(
+    [Name],
+    [Full Name],
+    [Description],
+    [Sub-dataset],
+    [Imaging Modality],
+    [Objects],
+    [Main Anatomical Structure],
+    [Region],
+    [Links URL],
+    [Links Text],
+    [Cit Keys],
+    [N Tot],
+    [N with Labels]
+)
+VALUES (
+    'DAP Atlas',
+    'Dense Anatomical Prediction Atlas',
+    'The DAP Atlas dataset is a comprehensive medical imaging dataset designed for full-body anatomical segmentation. It aggregates fragmented anatomical knowledge from various sources into a unified resource, providing detailed, AI-generated masks for 142 distinct anatomical structures across 533 CT scans (from the AutoPET dataset).',
+    'AutoPET',
+    '3D CT',
+    '[Too Many To List]',
+    'Whole Body',
+    'Whole Body',
+    'https://github.com/alexanderjaus/AtlasDataset, https://doi.org/10.48550/arXiv.2307.13375, https://doi.org/10.1109/ICIP51287.2024.10647307',
+    'GitHub, Preprint, Publication',
+    'jaus2023unifyinganatomysegmentationautomated, 10647307',
+    533,
+    533
+);

@@ -5,13 +5,6 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 
-# risultati voco - ok
-# poi aggiungi modello supreme - ok
-# risultati primry da supreme - ok
-# risultati best da supreme - ok
-# risultati best da voco - ok
-# aggiungi il dataset da supreme (DAP Atlas e update AbdomenAtlas 1.1)
-# poi risultati 3dino-vit (mail)
 
 SOURCE_BIBTEX = """
 
