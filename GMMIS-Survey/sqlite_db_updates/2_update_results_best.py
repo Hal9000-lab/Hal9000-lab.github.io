@@ -5,47 +5,58 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 
-
+# risultati voco - ok
+# poi aggiungi modello supreme - ok
+# risultati primry da supreme - ok
+# risultati best da supreme - ok
+# risultati best da voco - ok
+# aggiungi il dataset da supreme (DAP Atlas e update AbdomenAtlas 1.1)
+# poi risultati 3dino-vit (mail)
 
 SOURCE_BIBTEX = """
-@misc{wu2025cdpdnetintegratingtextguidance,
-      title={CDPDNet: Integrating Text Guidance with Hybrid Vision Encoders for Medical Image Segmentation}, 
-      author={Jiong Wu and Yang Xing and Boxiao Yu and Wei Shao and Kuang Gong},
-      year={2025},
-      eprint={2505.18958},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2505.18958}, 
-}
+
 """
 
-MODEL = 'DoDNet'
+MODEL = ''
 
-RESULTS_TO_MODIFY = {
+RESULTS_TO_MODIFY  = { 
+    # dataset_name: dice_score
+    # or
     # dataset_name: (dice_score, comment)
     #
     # '': (, ''),
-    'CHAOS': (78.36, 'With CLIP feature fusion (CLIP-DoDNet).'),
-    #'LiTS / MSD Liver': (74.92,  None),
-    #'KiTS': (97.9, None),
-    'AbdomenCT-1K': (89.78,  'With CLIP feature fusion (CLIP-DoDNet).'),
-    'Pancreas-CT': (75.26,  'With CLIP feature fusion (CLIP-DoDNet).'),
-    'FLARE': (94.16,  'With CLIP feature fusion (CLIP-DoDNet).'),
-    # 'MSD Lung Tumors': (71.9,  None),
-    # 'MSD Pancreas Tumour': (63.8,  None),
-    # 'MSD Hepatic Vessels': (75.7,  None),
-    # 'MSD Spleen': (95.4,  None),
-    # 'MSD Colon Cancer': (63.3,  None),
-    # 'BTCV': (71.69,  None),
-    # 'BTCV Cervix': (77.5,  None),
-    # 'VerSe': (90.6,  None),
-    # 'AbdomenCT-1K': (94.0,  None),
-    'AMOS': (82.28, 'With CLIP feature fusion (CLIP-DoDNet).'),
-    # 'TotalSegmentator': (89.32, '.'),
-    'WORD': (88.51, 'With CLIP feature fusion (CLIP-DoDNet).'),
-    '3D-IRCADb': (66.00, 'With CLIP feature fusion (CLIP-DoDNet).'),
-}
+    #
+    # 'BTCV': (85.32,  None),
+    # 'AMOS': (88.14, None),
+    # 'WORD': (85.97, None),
+    # 'FLARE': (90.67,  'Mean between FLARE 22 and FLARE 23 (91.37 and 89.98)'),
+    # 'TotalSegmentator': (84.84, None),
+    # 'AbdomenAtlas': (89.16, None),
+    
+    # 'AbdomenCT-1K': (86.40,  None),
+    # 'MM-WHS': (90.88, None),
+    # 'CHAOS': (96.42, None),
+    # '3D-IRCADb': (68.48, None),
+    # 'KiTS': (78.38, None),
+    # 'KiPA': (85.76, None),
+    # 'Pancreas-CT': (85.19,  None),
+    # 'SegTHOR': (89.70, None),
+    # 'VerSe': (89.54, None),
+    # 'AutoPET': (24.68, None),
+    # 'ACDC': (89.10, None),
+    # 'ATLAS 2023': (64.64, None),
+    # 'BraTS': (89.54, None),
 
+    # 'MSD Cardiac': (92.55, None),
+    # 'LiTS / MSD Liver': (68.20,  None),
+    # 'MSD Hippocampus': (87.40, None),
+    # 'MSD Prostate': (72.92, None),
+    # 'MSD Lung Tumors': (72.55,  None),
+    # 'MSD Pancreas Tumour': (50.02,  None),
+    # 'MSD Hepatic Vessels': (64.71,  None),
+    # 'MSD Spleen': (96.01,  None),
+    # 'MSD Colon Cancer': (38.78,  None),
+}
 
 
 
@@ -106,3 +117,5 @@ for dataset in RESULTS_TO_MODIFY:
 # save and close
 conn.commit()
 conn.close()
+
+print(f"Updated {MODEL} in table results_best and similar.")

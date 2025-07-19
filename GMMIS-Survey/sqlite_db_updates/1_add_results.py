@@ -4,36 +4,47 @@ import sqlite3
 
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
-MODEL = 'CDPDNet'
+MODEL = ''
 
-RESULTS_TO_ADD = {
+RESULTS_TO_ADD = { 
     # dataset_name: dice_score
     # or
     # dataset_name: (dice_score, comment)
     #
     # '': (, ''),
-    'CHAOS': (82.88, None),
-    'LiTS / MSD Liver': (74.92,  None),
-    #'KiTS': (97.9, None),
-    'AbdomenCT-1K': (90.33,  None),
-    'Pancreas-CT': (77.03,  None),
-    'FLARE': (94.75,  None),
-    # 'MSD Lung Tumors': (71.9,  None),
-    # 'MSD Pancreas Tumour': (63.8,  None),
-    # 'MSD Hepatic Vessels': (75.7,  None),
-    # 'MSD Spleen': (95.4,  None),
-    # 'MSD Colon Cancer': (63.3,  None),
-    'BTCV': (71.69,  None),
+    #
+    # 'BTCV': (86.64,  None),
+    # 'AMOS': (90.86, None),
+    # 'WORD': (86.88, None),
+    # 'FLARE': (91.25,  'Mean of FLA22 and FLA23 (Table 4).'),
+    # 'TotalSegmentator': (84.84, None),
+    # 'AbdomenAtlas': (90.38, None),
+    
+    # 'AbdomenCT-1K': (87.77,  None),
+    # 'MM-WHS': (91.22, None),
+    # 'CHAOS': (96.68, None),
+    # '3D-IRCADb': (74.27, None),
+    # 'KiTS': (80.81, None),
+    # 'KiPA': (87.54, None),
+    # 'Pancreas-CT': (86.57,  None),
+    # 'SegTHOR': (90.17, None),
+    # 'VerSe': (63.72, None),
+    # 'AutoPET': (32.61, None),
+    # 'ACDC': (89.51, None),
+    # 'ATLAS 2023': (69.80, None),
+    # 'BraTS': (90.23, None),
+
+    # 'MSD Cardiac': (93.72, None),
+    # 'LiTS / MSD Liver': (71.22,  None),
+    # 'MSD Hippocampus': (88.55, None),
+    # 'MSD Prostate': (75.57, None),
+    # 'MSD Lung Tumors': (75.74,  None),
+    # 'MSD Pancreas Tumour': (51.34,  None),
+    # 'MSD Hepatic Vessels': (67.25,  None),
+    # 'MSD Spleen': (96.12,  None),
+    # 'MSD Colon Cancer': (42.57,  None),
     # 'BTCV Cervix': (77.5,  None),
-    # 'VerSe': (90.6,  None),
-    # 'AbdomenCT-1K': (94.0,  None),
-    'AMOS': (84.35, None),
-    # 'TotalSegmentator': (89.32, '.'),
-    'WORD': (89.06, None),
-    '3D-IRCADb': (89.06, None),
 }
-
-
 
 
 
