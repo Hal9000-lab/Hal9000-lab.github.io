@@ -6,45 +6,53 @@ DB_PATH = './GMMIS-Survey/database.sqlite'
 
 MODEL = ''
 
-# poi risultati 3dino-vit (mail) 7777777777777777777777777777777777
-
 RESULTS_TO_ADD = { 
     # dataset_name: dice_score
     # or
     # dataset_name: (dice_score, comment)
-    #
     # '': (, ''),
     #
-    # 'BTCV': (86.64,  None),
+    # 'TotalSegmentator Organs': (89.17, None),
+    # 'TotalSegmentator Vertebrae': (87.85, None),
+    # 'TotalSegmentator Cardiac': (85.57, None),
+    # 'TotalSegmentator Muscles': (91.34, None),
+    # 'TotalSegmentator Ribs': (84.61, None),
+    # 'TotalSegmentator': (88.10, None),
+
+    # 'MSD Lung Tumors': (70.3,  None),
+    # 'MSD Pancreas Tumour': (61.04,  None),
+    # 'MSD Hepatic Vessels': (68.8,  None),
+    # 'MSD Colon Cancer': (62.8,  None),
+    # 'LiTS / MSD Liver': (66.23,  None),
+    # 'KiTS': (80.83, None),
+
+    # 'Synapse': (80.02, None),
+    # 'CHAOS': (83.30, None),
+    # 'FLARE': (90.3,  None),
+    # 'SegTHOR': (85.1, None),
+
+    #
+    # 'BraTS': (91.8, None),
+    # 'BTCV': (82.1,  None),
+    # 'LASC': (84.7, None),
     # 'AMOS': (90.86, None),
     # 'WORD': (86.88, None),
-    # 'FLARE': (91.25,  'Mean of FLA22 and FLA23 (Table 4).'),
-    # 'TotalSegmentator': (84.84, None),
     # 'AbdomenAtlas': (90.38, None),
     
     # 'AbdomenCT-1K': (87.77,  None),
     # 'MM-WHS': (91.22, None),
-    # 'CHAOS': (96.68, None),
     # '3D-IRCADb': (74.27, None),
-    # 'KiTS': (80.81, None),
     # 'KiPA': (87.54, None),
     # 'Pancreas-CT': (86.57,  None),
-    # 'SegTHOR': (90.17, None),
     # 'VerSe': (63.72, None),
     # 'AutoPET': (32.61, None),
     # 'ACDC': (89.51, None),
     # 'ATLAS 2023': (69.80, None),
-    # 'BraTS': (90.23, None),
 
     # 'MSD Cardiac': (93.72, None),
-    # 'LiTS / MSD Liver': (71.22,  None),
     # 'MSD Hippocampus': (88.55, None),
     # 'MSD Prostate': (75.57, None),
-    # 'MSD Lung Tumors': (75.74,  None),
-    # 'MSD Pancreas Tumour': (51.34,  None),
-    # 'MSD Hepatic Vessels': (67.25,  None),
     # 'MSD Spleen': (96.12,  None),
-    # 'MSD Colon Cancer': (42.57,  None),
     # 'BTCV Cervix': (77.5,  None),
 }
 
@@ -144,3 +152,5 @@ for dataset in RESULTS_TO_ADD:
 # save and close
 conn.commit()
 conn.close()
+
+print(f"Updated {MODEL} in table results_primary and similar.")
