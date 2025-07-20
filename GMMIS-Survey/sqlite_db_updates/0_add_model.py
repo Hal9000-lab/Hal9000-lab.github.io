@@ -3,13 +3,13 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_ADD = {
-    'ID': 'TAGS',
-    'Title': 'TAGS: 3D Tumor-Adaptive Guidance for SAM',
-    'Major Affiliations': 'Southern University of Science and Technology, Northwestern University',
-    'First Publication Date': '2025-05-01 00:00:00',
-    'First Publisher': 'arXiv',
-    'First Publication Link': 'https://doi.org/10.48550/arXiv.2505.17096',
-    'First Publication BibKey': 'li2025tags3dtumoradaptiveguidance',
+    'ID': 'PCaSAM',
+    'Title': 'Generalist medical foundation model improves prostate cancer segmentation from multimodal MRI images',
+    'Major Affiliations': 'Shenzhen University, The Chinese University of Hong Kong, Imperial College London, The Hong Kong University of Science and Technology',
+    'First Publication Date': '2025-06-01 00:00:00',
+    'First Publisher': 'npj Digital Medicine',
+    'First Publication Link': 'https://doi.org/10.1038/s41746-025-01756-2',
+    'First Publication BibKey': 'Zhang2025PCaSAM',
     'Last Publication Date': None,
     'Last Publisher': None,
     'Last Publication Link': None,
@@ -18,9 +18,9 @@ TO_ADD = {
     'Framework': 'Generalist',
     'Architecture': 'SAM, Transformer with Convolutions',
     'Visual Backbone': 'SAM',
-    'Millions of Parameters': 27.82,
+    'Millions of Parameters': 12.48,
     'Number of GFlops': None,
-    'Resources': '1, NVIDIA, A100 80GB',
+    'Resources': '2, NVIDIA, GeForce RTX 3090 24GB',
 }
 
 """
