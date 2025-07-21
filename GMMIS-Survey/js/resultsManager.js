@@ -208,10 +208,9 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
     //   This is not super nice when the user selects the organs, however, at least it is shown in the most basic
     //   dataset search configuration.
     columns_selector = columns_selector.replaceAll(
-        'TotalSegmentator', 
+        '"TotalSegmentator"', 
         'TotalSegmentator, [TotalSegmentator Cardiac], [TotalSegmentator Muscles], [TotalSegmentator Organs], [TotalSegmentator Ribs], [TotalSegmentator Vertebrae]'
     );
-    console.log('Columns selector:', columns_selector);
     // cross check: we need to check wether the retrieved columns are actually in the results columns
     const all_results_columns = getTableColumns('results_best');
     const column_selector_list = columns_selector.split(', ').map(e => e.replaceAll('"', ''))
