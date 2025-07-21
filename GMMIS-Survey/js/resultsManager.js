@@ -201,6 +201,16 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
     if (columns_selector.length < 2) {
         return getEmptyContentHTML('No results to be found with this query combination');
     }
+    // Known logical bug:
+    //   the TotalSegmentator subsets are not part of the datasets table.
+    //   However, results might be interesting to display.
+    //   We display all totalsegmentator subsets every time TotalSegmentator is in the list of datasets.
+    //   This is not super nice when the user selects the organs, however, at least it is shown in the most basic
+    //   dataset search configuration.
+    columns_selector = columns_selector.replaceAll(
+        'TotalSegmentator', 
+        'TotalSegmentator, [TotalSegmentator Cardiac], [TotalSegmentator Muscles], [TotalSegmentator Organs], [TotalSegmentator Ribs], [TotalSegmentator Vertebrae]'
+    );
     // cross check: we need to check wether the retrieved columns are actually in the results columns
     const all_results_columns = getTableColumns('results_best');
     const column_selector_list = columns_selector.split(', ').map(e => e.replaceAll('"', ''))
@@ -344,10 +354,10 @@ export function resultsSetup() {
 
     // trigger the display of results
     var results_list_ob_buttons = [
-                organs_or_dataset_button, object_multichoice_button, 
-                frameworks_button, architecture_button, 
-                visual_backbone_button, release_dates_button
-            ];
+        organs_or_dataset_button, object_multichoice_button, 
+        frameworks_button, architecture_button, 
+        visual_backbone_button, release_dates_button
+    ];
     var results_buttons_state = getStateOfChoiches(results_list_ob_buttons);
     var sorted_column = undefined; // no column is sorted by default
 
