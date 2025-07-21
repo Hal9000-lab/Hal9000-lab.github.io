@@ -209,8 +209,9 @@ function getResultsTable(buttons_state_dict, column_to_order_by='') {
     //   dataset search configuration.
     columns_selector = columns_selector.replaceAll(
         '"TotalSegmentator"', 
-        'TotalSegmentator, [TotalSegmentator Cardiac], [TotalSegmentator Muscles], [TotalSegmentator Organs], [TotalSegmentator Ribs], [TotalSegmentator Vertebrae]'
+        'TotalSegmentator, "TotalSegmentator Cardiac", "TotalSegmentator Muscles", "TotalSegmentator Organs", "TotalSegmentator Ribs", "TotalSegmentator Vertebrae"'
     );
+    console.log('Columns selector:', columns_selector);
     // cross check: we need to check wether the retrieved columns are actually in the results columns
     const all_results_columns = getTableColumns('results_best');
     const column_selector_list = columns_selector.split(', ').map(e => e.replaceAll('"', ''))
