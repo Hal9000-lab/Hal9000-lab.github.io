@@ -4,7 +4,6 @@ export const unwanted_models = [
     "Diff-UNet",
     "BiomedCLIP",
     "MedCLIP",
-    "GVSL",
     "TotalSegmentator",
     "TotalSegmentator MRI",
 ];
