@@ -29,6 +29,7 @@ table.styled-table.results thead th:hover {
 }
 table.results tbody td.number {
     cursor: cell;
+    text-align: center;
 }
 
 table.results td.highest {
