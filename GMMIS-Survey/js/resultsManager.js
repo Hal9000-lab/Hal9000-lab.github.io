@@ -446,17 +446,28 @@ export function resultsSetup() {
         // In the results_best_source table, check if the result was found in some other work (philology)
         const query = `SELECT [${dataset}] FROM results_best_source WHERE ID='${model}'`;
         const answer = executeQuery(query);
-        let bibtex = answer[0].values[0][0].replaceAll('\n', '<br>');
+        let bibtex;
+        try {
+            bibtex = answer[0].values[0][0];
+        } catch (e) {
+            bibtex = undefined;
+        }
         // In the results_best_comments table, check if the result has some comments
         const query_comments = `SELECT [${dataset}] FROM results_best_comments WHERE ID='${model}'`;
         const answer_comments = executeQuery(query_comments);
-        let comment = answer_comments[0].values[0][0];
+        let comment;
+        try {
+            comment = answer_comments[0].values[0][0];
+        } catch (e) {
+            comment = undefined;
+        }
         // Build tooltip text
         let tttext = `Model: ${model}<br>Dataset: ${dataset}`;
         if (comment && comment.length > 0) {
-            tttext += `<br><br>Comment: ${comment}`;
+            tttext += `<br><br>Comment: <i>${comment}</i>`;
         }
         if (bibtex && bibtex.length > 0) {
+            bibtex = bibtex.replaceAll('\n', '<br>')
             tttext += `<br><br>Source of Dice Score:<br><span class="bibtex">${bibtex}</span>`;
         }
         tooltip.querySelector('span.free-text').innerHTML = tttext;
