@@ -444,26 +444,22 @@ export function resultsSetup() {
         const dataset = event.target.classList[2].replaceAll('_', ' ');
 
         // In the results_best_source table, check if the result was found in some other work (philology)
-        const query = `SELECT "${dataset}" FROM results_best_source WHERE ID="${model}"`;
+        const query = `SELECT [${dataset}] FROM results_best_source WHERE ID='${model}'`;
         const answer = executeQuery(query);
-        let bibtex = answer[0].values[0][0]
-        if (! bibtex)
-            tooltip.querySelector('span.free-text').innerHTML = `Model: ${model}<br>Dataset: ${dataset}`;
-        else {
-            bibtex = bibtex.replaceAll('\n', '<br>')
-            tooltip.querySelector('span.free-text').innerHTML = `
-            Model: ${model}
-            <br>
-            Dataset: ${dataset}
-            <br><br>
-            Source of Dice Score:
-            <br>
-            <span class="bibtex">
-            ${bibtex}
-            </span>
-            `;
+        let bibtex = answer[0].values[0][0].replaceAll('\n', '<br>');
+        // In the results_best_comments table, check if the result has some comments
+        const query_comments = `SELECT [${dataset}] FROM results_best_comments WHERE ID='${model}'`;
+        const answer_comments = executeQuery(query_comments);
+        let comment = answer_comments[0].values[0][0];
+        // Build tooltip text
+        let tttext = `Model: ${model}<br>Dataset: ${dataset}`;
+        if (comment && comment.length > 0) {
+            tttext += `<br><br>Comment: ${comment}`;
         }
-
+        if (bibtex && bibtex.length > 0) {
+            tttext += `<br><br>Source of Dice Score:<br><span class="bibtex">${bibtex}</span>`;
+        }
+        tooltip.querySelector('span.free-text').innerHTML = tttext;
         tooltip.classList.remove('hidden');
     });
     // scroll the tooltip with the table

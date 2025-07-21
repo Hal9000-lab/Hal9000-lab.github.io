@@ -4,7 +4,7 @@ div.tooltip {
     left: 50%;
     transform: translateX(-50%) translateY(-100%);
     opacity: 100%;
-    max-width: 30%;
+    max-width: 95%;
     z-index: 99;
 }
 div.tooltip.hidden {

@@ -7,19 +7,8 @@ DB_PATH = './GMMIS-Survey/database.sqlite'
 
 
 SOURCE_BIBTEX = """
-@Article{Zhang2025PCaSAM,
-author={Zhang, Yuhan and Ma, Xiao and Li, Mingchao and Huang, Kun and Zhu, Jie and Wang, Miao and Wang, Xi and Wu, Menglin and Heng, Pheng-Ann},
-title={Generalist medical foundation model improves prostate cancer segmentation from multimodal MRI images},
-journal={npj Digital Medicine},
-year={2025},
-month={Jun},
-day={18},
-volume={8},
-number={1},
-pages={372},
-issn={2398-6352},
-doi={10.1038/s41746-025-01756-2},
-url={https://doi.org/10.1038/s41746-025-01756-2}
+@Article{
+....
 }
 """
 
