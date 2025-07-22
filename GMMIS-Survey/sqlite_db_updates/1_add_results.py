@@ -81,22 +81,11 @@ if len(MODEL) < 2:
 if not first_pub_date:
     raise RuntimeError("No date:", first_pub_date)
 
-# Insert into results_primary and results_best only if MODEL is not already present
-c.execute("SELECT 1 FROM results_primary WHERE ID = ?", (MODEL,))
-if not c.fetchone():
-    c.execute("""
-        INSERT INTO results_primary (ID, [Related Paper], Date)
-        VALUES (?, ?, ?)
-    """, (MODEL, MODEL, first_pub_date)
-    )
-c.execute("SELECT 1 FROM results_best WHERE ID = ?", (MODEL,))
-if not c.fetchone():
-    c.execute("""
-        INSERT INTO results_best (ID, [Related Paper], Date)
-        VALUES (?, ?, ?)
-    """, (MODEL, MODEL, first_pub_date)
-    )
-
+# check if model is in the tables
+for table in ['results_primary', 'results_primary_comments', 'results_best', 'results_best_source', 'results_best_comments']:
+    c.execute(f"SELECT 1 FROM {table} WHERE ID = ?", (MODEL,))
+    if not c.fetchone():
+        raise RuntimeError(f"Model {MODEL} not found in table {table}")
 
 # Now update results to insert the values of the dict
 # the dice score (float) goes into the results_primary table

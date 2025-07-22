@@ -88,3 +88,15 @@ else:
         uniques = [str(row[0]) for row in c.fetchall()]
         print(f"{col}: {', '.join(uniques)}")
     conn.close()
+
+
+# Add rows to other tables
+
+for table in ['results_primary', 'results_primary_comments', 'results_best', 'results_best_source', 'results_best_comments']:
+    c.execute(f"SELECT 1 FROM {table} WHERE ID = ?", (TO_ADD['ID'],))
+    if not c.fetchone():
+        c.execute(f"""
+            INSERT INTO {table} (ID, [Related Paper], Date)
+            VALUES (?, ?, ?)
+        """, (TO_ADD['ID'], TO_ADD['ID'], TO_ADD['First Publication Date'])
+        )
