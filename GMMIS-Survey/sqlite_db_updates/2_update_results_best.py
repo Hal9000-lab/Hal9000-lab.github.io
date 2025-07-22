@@ -7,9 +7,7 @@ DB_PATH = './GMMIS-Survey/database.sqlite'
 
 
 SOURCE_BIBTEX = """
-@Article{
-....
-}
+
 """
 
 MODEL = ''
@@ -21,34 +19,38 @@ RESULTS_TO_MODIFY  = {
     #
     # '': (, ''),
 
-    # 'TotalSegmentator Organs': (83.70, None),
-    # 'TotalSegmentator Vertebrae': (82.30, None),
-    # 'TotalSegmentator Cardiac': (77.16, None),
-    # 'TotalSegmentator Muscles': (84.27, None),
-    # 'TotalSegmentator Ribs': (79.80, None),
-    # 'TotalSegmentator': (81.99, None),
+    # 'TotalSegmentator Organs': (88.85, None),
+    # 'TotalSegmentator Vertebrae': (87.85, None),
+    # 'TotalSegmentator Cardiac': (85.57, None),
+    # 'TotalSegmentator Muscles': (91.34, None),
+    # 'TotalSegmentator Ribs': (84.61, None),
+    # 'TotalSegmentator': (88.10, None),
 
-    # 'MSD Lung Tumors': (61.8,  None),
-    # 'MSD Pancreas Tumour': (58.60,  None),
-    # 'MSD Hepatic Vessels': (69.9,  None),
-    # 'MSD Colon Cancer': (62.8,  None),
-    # 'LiTS / MSD Liver': (66.93,  None),
-    # 'KiTS': (85.4, None),
+    # 'BTCV': (79.7, None),
 
+    # 'BraTS': (64.35, None),
+    # 'LiTS / MSD Liver': (85.52,  None),
+    # 'MSD Lung Tumors': (76.60,  None),
+    # 'MSD Pancreas Tumour': (70.71,  None),
+    # 'MSD Hepatic Vessels': (68.95,  None),
+    # 'MSD Spleen': (97.43,  None),
+    # 'MSD Colon Cancer': (58.33,  None),
+    
+    # 'KiTS': (80.83, None),
+    # 'Synapse': (80.02, None),
+    # 'CHAOS': (83.30, None),
     # 'FLARE': (90.3,  None),
-    # 'SegTHOR': (72.9, None),
+    # 'SegTHOR': (85.1, None),
 
     #
-    # 'BraTS': (91.8, None),
     # 'BTCV': (82.1,  None),
-    # 'LASC': (92.4, None),
+    # 'LASC': (84.7, None),
     # 'AMOS': (90.86, None),
     # 'WORD': (86.88, None),
     # 'AbdomenAtlas': (90.38, None),
     
     # 'AbdomenCT-1K': (87.77,  None),
     # 'MM-WHS': (91.22, None),
-    # 'CHAOS': (96.68, None),
     # '3D-IRCADb': (74.27, None),
     # 'KiPA': (87.54, None),
     # 'Pancreas-CT': (86.57,  None),
@@ -60,7 +62,6 @@ RESULTS_TO_MODIFY  = {
     # 'MSD Cardiac': (93.72, None),
     # 'MSD Hippocampus': (88.55, None),
     # 'MSD Prostate': (75.57, None),
-    # 'MSD Spleen': (96.12,  None),
     # 'BTCV Cervix': (77.5,  None),
 }
 

@@ -13,27 +13,30 @@ RESULTS_TO_ADD = {
     # '': (, ''),
     #
 
-    # 'TotalSegmentator Organs': (89.17, None),
+    # 'TotalSegmentator Organs': (88.85, None),
     # 'TotalSegmentator Vertebrae': (87.85, None),
     # 'TotalSegmentator Cardiac': (85.57, None),
     # 'TotalSegmentator Muscles': (91.34, None),
     # 'TotalSegmentator Ribs': (84.61, None),
     # 'TotalSegmentator': (88.10, None),
 
-    # 'MSD Lung Tumors': (70.3,  None),
-    # 'MSD Pancreas Tumour': (61.04,  None),
-    # 'MSD Hepatic Vessels': (68.8,  None),
-    # 'MSD Colon Cancer': (62.8,  None),
-    # 'LiTS / MSD Liver': (66.23,  None),
-    # 'KiTS': (80.83, None),
+    # 'BTCV': (91.8, None),
 
+    # 'BraTS': (64.35, None),
+    # 'LiTS / MSD Liver': (85.52,  None),
+    # 'MSD Lung Tumors': (76.60,  None),
+    # 'MSD Pancreas Tumour': (70.71,  None),
+    # 'MSD Hepatic Vessels': (68.95,  None),
+    # 'MSD Spleen': (96.99,  None),
+    # 'MSD Colon Cancer': (59.45,  None),
+    
+    # 'KiTS': (80.83, None),
     # 'Synapse': (80.02, None),
     # 'CHAOS': (83.30, None),
     # 'FLARE': (90.3,  None),
     # 'SegTHOR': (85.1, None),
 
     #
-    # 'BraTS': (91.8, None),
     # 'BTCV': (82.1,  None),
     # 'LASC': (84.7, None),
     # 'AMOS': (90.86, None),
@@ -53,7 +56,6 @@ RESULTS_TO_ADD = {
     # 'MSD Cardiac': (93.72, None),
     # 'MSD Hippocampus': (88.55, None),
     # 'MSD Prostate': (75.57, None),
-    # 'MSD Spleen': (96.12,  None),
     # 'BTCV Cervix': (77.5,  None),
 }
 

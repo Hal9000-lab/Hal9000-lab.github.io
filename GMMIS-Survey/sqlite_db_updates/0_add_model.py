@@ -3,24 +3,27 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_ADD = {
-    'ID': 'PCaSAM',
-    'Title': 'Generalist medical foundation model improves prostate cancer segmentation from multimodal MRI images',
-    'Major Affiliations': 'Shenzhen University, The Chinese University of Hong Kong, Imperial College London, The Hong Kong University of Science and Technology',
-    'First Publication Date': '2025-06-01 00:00:00',
-    'First Publisher': 'npj Digital Medicine',
-    'First Publication Link': 'https://doi.org/10.1038/s41746-025-01756-2',
-    'First Publication BibKey': 'Zhang2025PCaSAM',
-    'Last Publication Date': None,
-    'Last Publisher': None,
-    'Last Publication Link': None,
-    'Last Publication BibKey': None,
-    'Code': None,
+    'ID': 'SwinUNETR SSL',
+    'Title': 'Self-Supervised Pre-Training of Swin Transformers for 3D Medical Image Analysis',
+    'Major Affiliations': 'Vanderbilt University, Nvidia',
+
+    'First Publication Date': '2021-11-01 00:00:00',
+    'First Publisher': 'arXiv',
+    'First Publication Link': 'https://doi.org/10.48550/arXiv.2111.14791',
+    'First Publication BibKey': 'tang2022selfsupervisedpretrainingswintransformers',
+
+    'Last Publication Date': '2022-09-01 00:00:00',
+    'Last Publisher': 'IEEE/CVF CVPR',
+    'Last Publication Link': 'https://doi.org/10.1109/CVPR52688.2022.02007',
+    'Last Publication BibKey': '9879123',
+
+    'Code': 'https://github.com/Project-MONAI/research-contributions/tree/main/SwinUNETR',
     'Framework': 'Generalist',
-    'Architecture': 'SAM, Transformer with Convolutions',
-    'Visual Backbone': 'SAM',
-    'Millions of Parameters': 12.48,
+    'Architecture': 'Transformer',
+    'Visual Backbone': '3D Swin-Base with U-Net Decoder',
+    'Millions of Parameters': 62.5,
     'Number of GFlops': None,
-    'Resources': '2, NVIDIA, GeForce RTX 3090 24GB',
+    'Resources': '8, NVIDIA, V100 32GB, Nvidia DXG-1 Server',
 }
 
 """
