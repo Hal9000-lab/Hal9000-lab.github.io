@@ -199,7 +199,6 @@ columns_primary = cursor.execute("PRAGMA table_info(results_primary_comments)").
 columns_primary = [col[1] for col in columns_primary]
 papers_primary = cursor.execute("SELECT ID FROM results_primary_comments").fetchall()
 papers_primary = [paper[0] for paper in papers_primary]
-print(papers_primary); quit()
 columns_best = cursor.execute("PRAGMA table_info(results_best_comments)").fetchall()
 columns_best = [col[1] for col in columns_best]
 papers_best = cursor.execute("SELECT ID FROM results_best_comments").fetchall()
