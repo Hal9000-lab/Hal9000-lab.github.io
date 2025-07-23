@@ -4,8 +4,7 @@ DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_RENAME = {
     # 'old': 'new',
-    'SwinUNETR': 'Swin UNETR',
-    'DINOv2 U-Net': 'DINOv2-UNet',
+    'MultiTalent ': 'MultiTalent',
 }
 
 ################################### sript #################################
