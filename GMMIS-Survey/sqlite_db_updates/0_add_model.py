@@ -24,6 +24,7 @@ TO_ADD = {
     'Millions of Parameters': 62.5,
     'Number of GFlops': None,
     'Resources': '8, NVIDIA, V100 32GB, Nvidia DXG-1 Server',
+    'Resources Total V-RAM': 256,
 }
 
 """
@@ -51,6 +52,7 @@ TO_ADD = {
     'Millions of Parameters': None,
     'Number of GFlops': None,
     'Resources': '64, NVIDIA, V100 32GB',
+    'Resources Total V-RAM': 256,
 }
 """
 

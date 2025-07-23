@@ -15,7 +15,7 @@ INSERT INTO datasets
     [N with Labels]
 )
 VALUES (
-    'DAP Atlas',
+    'MegaMedical',
     'Dense Anatomical Prediction Atlas',
     'The DAP Atlas dataset is a comprehensive medical imaging dataset designed for full-body anatomical segmentation. It aggregates fragmented anatomical knowledge from various sources into a unified resource, providing detailed, AI-generated masks for 142 distinct anatomical structures across 533 CT scans (from the AutoPET dataset).',
     'AutoPET',
