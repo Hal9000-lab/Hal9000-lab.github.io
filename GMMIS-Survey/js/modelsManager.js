@@ -68,7 +68,7 @@ function _build_condition_models_date(column, list_of_options) {
  * @param {String} column_to_order_by 
  * @returns 
  */
-function getModelsTable(buttons_state_dict, column_to_order_by = undefined) {
+function getModelsTable(buttons_state_dict, column_to_order_by = '"First Publication Date"') {
 
     // By default display the whole table
     // build query
