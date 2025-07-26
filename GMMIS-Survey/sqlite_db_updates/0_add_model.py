@@ -3,28 +3,28 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_ADD = {
-    'ID': 'SwinUNETR SSL',
-    'Title': 'Self-Supervised Pre-Training of Swin Transformers for 3D Medical Image Analysis',
-    'Major Affiliations': 'Vanderbilt University, Nvidia',
+    'ID': 'SemiSAM+',
+    'Title': 'SemiSAM+: Rethinking Semi-Supervised Medical Image Segmentation in the Era of Foundation Models',
+    'Major Affiliations': 'Fudan University, Shanghai Academy of Artificial Intelligence for Science',
 
-    'First Publication Date': '2021-11-01 00:00:00',
+    'First Publication Date': '2025-02-01 00:00:00',
     'First Publisher': 'arXiv',
-    'First Publication Link': 'https://doi.org/10.48550/arXiv.2111.14791',
-    'First Publication BibKey': 'tang2022selfsupervisedpretrainingswintransformers',
+    'First Publication Link': 'https://doi.org/10.48550/arXiv.2502.20749',
+    'First Publication BibKey': 'zhang2025semisamrethinkingsemisupervisedmedical',
 
-    'Last Publication Date': '2022-09-01 00:00:00',
-    'Last Publisher': 'IEEE/CVF CVPR',
-    'Last Publication Link': 'https://doi.org/10.1109/CVPR52688.2022.02007',
-    'Last Publication BibKey': '9879123',
+    'Last Publication Date': '2025-07-01 00:00:00',
+    'Last Publisher': 'Medical Image Analysis',
+    'Last Publication Link': 'https://doi.org/10.1016/j.media.2025.103733',
+    'Last Publication BibKey': 'ZHANG2025103733',
 
-    'Code': 'https://github.com/Project-MONAI/research-contributions/tree/main/SwinUNETR',
+    'Code': 'https://github.com/YichiZhang98/SemiSAM',
     'Framework': 'Generalist',
-    'Architecture': 'Transformer',
-    'Visual Backbone': '3D Swin-Base with U-Net Decoder',
-    'Millions of Parameters': 62.5,
+    'Architecture': 'CNN',
+    'Visual Backbone': '3D U-Net',
+    'Millions of Parameters': 19.07,
     'Number of GFlops': None,
-    'Resources': '8, NVIDIA, V100 32GB, Nvidia DXG-1 Server',
-    'Resources Total V-RAM': 256,
+    'Resources': '1, NVIDIA, A100 80GB',
+    'Resources Total V-RAM': 80,
 }
 
 """
@@ -65,17 +65,13 @@ if 1:
     c.execute("SELECT 1 FROM models WHERE ID = ?", (TO_ADD['ID'],))
     if c.fetchone():
         print(f"Model with ID '{TO_ADD['ID']}' already exists.")
-        conn.close()
-        exit(0)
-
-    # go on
-    columns = ', '.join(list(map(lambda x: '"' + x + '"', TO_ADD.keys())))
-    placeholders = ', '.join(['?'] * len(TO_ADD))
-    values = list(TO_ADD.values())
-    query = f"INSERT INTO models ({columns}) VALUES ({placeholders})"
-    c.execute(query, values)
-    conn.commit()
-    conn.close()
+    else:
+        # go on
+        columns = ', '.join(list(map(lambda x: '"' + x + '"', TO_ADD.keys())))
+        placeholders = ', '.join(['?'] * len(TO_ADD))
+        values = list(TO_ADD.values())
+        query = f"INSERT INTO models ({columns}) VALUES ({placeholders})"
+        c.execute(query, values)
 else:
     # get all columns and unique sets of values
     # or in sqlite3 use:
@@ -90,6 +86,7 @@ else:
         uniques = [str(row[0]) for row in c.fetchall()]
         print(f"{col}: {', '.join(uniques)}")
     conn.close()
+    quit()
 
 
 # Add rows to other tables
@@ -102,3 +99,7 @@ for table in ['results_primary', 'results_primary_comments', 'results_best', 're
             VALUES (?, ?, ?)
         """, (TO_ADD['ID'], TO_ADD['ID'], TO_ADD['First Publication Date'])
         )
+print(f"Added model {TO_ADD['ID']} to tables")
+
+conn.commit()
+conn.close()

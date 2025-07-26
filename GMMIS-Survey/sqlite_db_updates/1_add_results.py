@@ -22,7 +22,8 @@ RESULTS_TO_ADD = {
 
     # 'BTCV': (91.8, None),
 
-    # 'BraTS': (64.35, None),
+    # 'BraTS': (76.53, None),
+    # 'LASC': (79.52, None),
     # 'LiTS / MSD Liver': (85.52,  None),
     # 'MSD Lung Tumors': (76.60,  None),
     # 'MSD Pancreas Tumour': (70.71,  None),
