@@ -4,7 +4,7 @@ import sqlite3
 
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
-MODEL = 'SegAnyPET'
+MODEL = ''
 
 RESULTS_TO_ADD = { 
     # dataset_name: dice_score

@@ -15,17 +15,17 @@ INSERT INTO datasets
     [N with Labels]
 )
 VALUES (
-    'AutoPET-Organ',
-    'AutoPET-Organ from SegAnyPET',
-    'The AutoPET-Organ dataset is a subset of the public AutoPET dataset, comprising 100 whole-body CT/PET images. It is specifically annotated for the segmentation of 12 clinically important organs, including the liver, kidneys, heart, spleen, aorta, prostate, and various lung lobes.\nThe AutoPET-Organ dataset, as of July 2025, is not yet publicly accessible. Nevertheless, it is anticipated that this dataset will be made available by the authors to the broader research community subsequent to its presentation at the ICCV 2025 conference, concurrently with the larger PETS-5k dataset.',
-    'AutoPET',
-    '3D CT, 3D PET (FDG), 3D PET (PSMA)',
-    'Liver, Kidney (Left), Kidney (Right), Heart, Spleen, Aorta, Prostate, Lung (Left, Lower Lobe), Lung (Right, Lower Lobe), Lung (Left, Upper Lobe), Lung (Right, Upper Lobe), Lung (Right, Middle Lobe)',
-    'Whole Body',
-    'Whole Body',
-    'https://github.com/YichiZhang98/SegAnyPET, https://doi.org/10.48550/arXiv.2401.12974',
-    'GitHub, Preprint',
-    'zhang2025seganypet',
-    100,
-    100
+    'SPIDER',
+    'SPIDER - Lumbar spine segmentation in MR images',
+    'A publicly available multi-center lumbar spine MRI dataset with reference segmentations of vertebrae, intervertebral discs (IVDs), and spinal canal. The dataset includes sagittal T1 and T2 MRI series from 218 studies of 257 patients with a history of low back pain. The data was collected from four different hospitals. There is an additional hidden test set used in the SPIDER challenge (spider.grand-challenge.org).',
+    NULL,
+    '3D MRI (T1), 3D MRI (T2)',
+    'Spinal Canal, Intervertebral Disc (L1-L2), Intervertebral Disc (L2-L3), Intervertebral Disc (L3-L4), Intervertebral Disc (L4-L5), Intervertebral Disc (L5-L6), Vertebra L1 (First Sacral), Vertebra L2 (Second Sacral), Vertebra L3 (Third Sacral), Vertebra L4 (Fourth Sacral), Vertebra L5 (Fifth Sacral), Vertebra L6 (Sixth Sacral)',
+    'Bones',
+    'Abdomen, Pelvis',
+    'https://arxiv.org/abs/2306.12217, https://doi.org/10.1038/s41597-024-03090-w, https://doi.org/10.5281/zenodo.10159290, https://spider.grand-challenge.org/',
+    'Preprint, Publication, Dataset, Official Challenge Website',
+    'jasper_willem_van_der_graaf_2023_10159290, van_der_Graaf_2024',
+    544,
+    462
 );

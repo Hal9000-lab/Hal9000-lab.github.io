@@ -3,28 +3,28 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_ADD = {
-    'ID': 'SegAnyPET',
-    'Title': 'SegAnyPET: Universal Promptable Segmentation from Positron Emission Tomography Images',
-    'Major Affiliations': 'Fudan University, Shanghai Academy of Artificial Intelligence for Science',
+    'ID': 'SegmentAnyBone',
+    'Title': 'SegmentAnyBone: A Universal Model that Segments Any Bone at Any Location on MRI',
+    'Major Affiliations': 'Duke University',
 
-    'First Publication Date': '2025-02-01 00:00:00',
+    'First Publication Date': '2024-01-01 00:00:00',
     'First Publisher': 'arXiv',
-    'First Publication Link': 'https://doi.org/10.48550/arXiv.2502.14351',
-    'First Publication BibKey': 'zhang2025seganypet',
+    'First Publication Link': 'https://doi.org/10.48550/arXiv.2401.12974',
+    'First Publication BibKey': 'gu2024segmentanyboneuniversalmodelsegments',
 
-    'Last Publication Date': None,
-    'Last Publisher': None,
-    'Last Publication Link': None,
-    'Last Publication BibKey': None,
+    'Last Publication Date': '2025-02-01 00:00:00',
+    'Last Publisher': 'Medical Image Analysis',
+    'Last Publication Link': 'https://doi.org/10.1016/j.media.2025.103469',
+    'Last Publication BibKey': 'gu2025segmentanybone',
 
-    'Code': 'https://github.com/YichiZhang98/SegAnyPET',
+    'Code': 'https://github.com/mazurowski-lab/SegmentAnyBone',
     'Framework': 'Generalist',
-    'Architecture': 'SAM, Transformer with Convolutions',
-    'Visual Backbone': 'SAM-Med3D',
-    'Millions of Parameters': 101,
+    'Architecture': 'SAM, Transformer with Convolutions, CNN with Attention',
+    'Visual Backbone': 'SAM, 3D U-Net with Residuals and Attention',
+    'Millions of Parameters': None,
     'Number of GFlops': None,
-    'Resources': '4, NVIDIA, A100 80GB',
-    'Resources Total V-RAM': 80*4,
+    'Resources': '1, NVIDIA, RTX A6000 48GB',
+    'Resources Total V-RAM': 48,
 }
 
 """
