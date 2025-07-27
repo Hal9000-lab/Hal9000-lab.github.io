@@ -4,7 +4,7 @@ import sqlite3
 
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
-MODEL = ''
+MODEL = 'SegAnyPET'
 
 RESULTS_TO_ADD = { 
     # dataset_name: dice_score
@@ -13,6 +13,7 @@ RESULTS_TO_ADD = {
     # '': (, ''),
     #
 
+    
     # 'TotalSegmentator Organs': (88.85, None),
     # 'TotalSegmentator Vertebrae': (87.85, None),
     # 'TotalSegmentator Cardiac': (85.57, None),

@@ -15,17 +15,17 @@ INSERT INTO datasets
     [N with Labels]
 )
 VALUES (
-    'MegaMedical',
-    'Dense Anatomical Prediction Atlas',
-    'The DAP Atlas dataset is a comprehensive medical imaging dataset designed for full-body anatomical segmentation. It aggregates fragmented anatomical knowledge from various sources into a unified resource, providing detailed, AI-generated masks for 142 distinct anatomical structures across 533 CT scans (from the AutoPET dataset).',
+    'AutoPET-Organ',
+    'AutoPET-Organ from SegAnyPET',
+    'The AutoPET-Organ dataset is a subset of the public AutoPET dataset, comprising 100 whole-body CT/PET images. It is specifically annotated for the segmentation of 12 clinically important organs, including the liver, kidneys, heart, spleen, aorta, prostate, and various lung lobes.\nThe AutoPET-Organ dataset, as of July 2025, is not yet publicly accessible. Nevertheless, it is anticipated that this dataset will be made available by the authors to the broader research community subsequent to its presentation at the ICCV 2025 conference, concurrently with the larger PETS-5k dataset.',
     'AutoPET',
-    '3D CT',
-    '[Too Many To List]',
+    '3D CT, 3D PET (FDG), 3D PET (PSMA)',
+    'Liver, Kidney (Left), Kidney (Right), Heart, Spleen, Aorta, Prostate, Lung (Left, Lower Lobe), Lung (Right, Lower Lobe), Lung (Left, Upper Lobe), Lung (Right, Upper Lobe), Lung (Right, Middle Lobe)',
     'Whole Body',
     'Whole Body',
-    'https://github.com/alexanderjaus/AtlasDataset, https://doi.org/10.48550/arXiv.2307.13375, https://doi.org/10.1109/ICIP51287.2024.10647307',
-    'GitHub, Preprint, Publication',
-    'jaus2023unifyinganatomysegmentationautomated, 10647307',
-    533,
-    533
+    'https://github.com/YichiZhang98/SegAnyPET, https://doi.org/10.48550/arXiv.2401.12974',
+    'GitHub, Preprint',
+    'zhang2025seganypet',
+    100,
+    100
 );

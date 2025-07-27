@@ -3,28 +3,28 @@ import sqlite3
 DB_PATH = './GMMIS-Survey/database.sqlite'
 
 TO_ADD = {
-    'ID': 'SemiSAM+',
-    'Title': 'SemiSAM+: Rethinking Semi-Supervised Medical Image Segmentation in the Era of Foundation Models',
+    'ID': 'SegAnyPET',
+    'Title': 'SegAnyPET: Universal Promptable Segmentation from Positron Emission Tomography Images',
     'Major Affiliations': 'Fudan University, Shanghai Academy of Artificial Intelligence for Science',
 
     'First Publication Date': '2025-02-01 00:00:00',
     'First Publisher': 'arXiv',
-    'First Publication Link': 'https://doi.org/10.48550/arXiv.2502.20749',
-    'First Publication BibKey': 'zhang2025semisamrethinkingsemisupervisedmedical',
+    'First Publication Link': 'https://doi.org/10.48550/arXiv.2502.14351',
+    'First Publication BibKey': 'zhang2025seganypet',
 
-    'Last Publication Date': '2025-07-01 00:00:00',
-    'Last Publisher': 'Medical Image Analysis',
-    'Last Publication Link': 'https://doi.org/10.1016/j.media.2025.103733',
-    'Last Publication BibKey': 'ZHANG2025103733',
+    'Last Publication Date': None,
+    'Last Publisher': None,
+    'Last Publication Link': None,
+    'Last Publication BibKey': None,
 
-    'Code': 'https://github.com/YichiZhang98/SemiSAM',
+    'Code': 'https://github.com/YichiZhang98/SegAnyPET',
     'Framework': 'Generalist',
-    'Architecture': 'CNN',
-    'Visual Backbone': '3D U-Net',
-    'Millions of Parameters': 19.07,
+    'Architecture': 'SAM, Transformer with Convolutions',
+    'Visual Backbone': 'SAM-Med3D',
+    'Millions of Parameters': 101,
     'Number of GFlops': None,
-    'Resources': '1, NVIDIA, A100 80GB',
-    'Resources Total V-RAM': 80,
+    'Resources': '4, NVIDIA, A100 80GB',
+    'Resources Total V-RAM': 80*4,
 }
 
 """
