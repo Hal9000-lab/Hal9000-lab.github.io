@@ -32,7 +32,7 @@ function _build_condition_datasets(column, list_of_options) {
  * @param {String} column_to_order_by 
  * @returns 
  */
-function getDatasetsTable(buttons_state_dict, column_to_order_by = undefined) {
+function getDatasetsTable(buttons_state_dict, column_to_order_by = '"Name"') {
 
     // By default display the whole table
     // build query
