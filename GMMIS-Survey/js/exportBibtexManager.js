@@ -47,7 +47,31 @@ const bibtextArxiv = `@article{moglia2025generalistmodelsmedicalimage,\r\n\
     primaryClass={eess.IV},\r\n\
     url={https://arxiv.org/abs/2506.10825},\r\n\
 }`;
-const bibtexJournal = `Cit will go here`;
+const bibtexInffus = `@article{MOGLIALECCARDI2025103709,\r\n\
+    title = {\r\n\
+        Generalist models in medical image segmentation:\r\n\
+        A survey and performance comparison with \r\n\
+        task-specific approaches\r\n\
+    },\r\n\
+    journal = {Information Fusion},\r\n\
+    pages = {103709},\r\n\
+    year = {2025},\r\n\
+    issn = {1566-2535},\r\n\
+    doi = {https://doi.org/10.1016/j.inffus.2025.103709},\r\n\
+    url = {https://www.sciencedirect.com/science/article/pii/S156625352500781X},\r\n\
+    author = {\r\n\
+        Andrea Moglia and Matteo Leccardi and \r\n\
+        Matteo Cavicchioli and Alice Maccarini and \r\n\
+        Marco Marcon and Luca Mainardi and \r\n\
+        Pietro Cerveri\r\n\
+    },\r\n\
+    keywords = {\r\n\
+        Medical image segmentation, \r\n\
+        Foundation models, Generalist models, \r\n\
+        Artificial general intelligence, \r\n\
+        Segment anything model, U-net\r\n\
+    }\r\n\
+}`;
 
 
 
@@ -61,7 +85,13 @@ export function exportBibtexSetup() {
         });
     }
     // Journal citation export
-    // 
+    const copyButtonInffus = document.getElementById('inffus-bibtex-button'); 
+    if (copyButtonInffus) {
+        const originalTextInffus = copyButtonInffus.textContent;
+        copyButtonInffus.addEventListener('click', () => {
+            copyToClipboard(copyButtonInffus, bibtexInffus, originalTextInffus);
+        });
+    }
     // Close bibtex dialogue
     const closeBibtexButton = document.getElementById('bibtex-close');
     const bibtextDialog = document.getElementById('bibtex-container');
