@@ -20,9 +20,13 @@
     flex-grow: 1;
     padding: 15px;
     border-radius: 15px;
-    background-color: rgb(234 248 255);
+    background-color: rgb(233, 233, 233);
     box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
     box-sizing: border-box;
+}
+.publication-box#inffus {
+    border: 3px solid rgb(83, 102, 138);
+    background-color: rgb(188, 199, 219);
 }
 .publication-box#arxiv {
     border: 3px solid rgb(179, 27, 27);
@@ -61,6 +65,14 @@ button.publication:hover {
     transition: 0.3s;
 }
 
+button.publication#inffus-bibtex-button {
+    color: rgb(83, 102, 138);
+    background-color: rgb(235, 235, 235);
+}
+button.publication#inffus-bibtex-button:hover {
+    background-color: rgb(83, 102, 138);
+    color: rgb(235, 235, 235);
+}
 
 
 /* BIBTEX */

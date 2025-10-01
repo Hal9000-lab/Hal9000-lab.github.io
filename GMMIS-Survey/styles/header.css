@@ -76,6 +76,16 @@ span.fast-card > a > img {
     transform: translateY(2px);
 }
 
+span.fast-card#inffus {
+    background: none;
+}
+
+span.fast-card#inffus > a > img {
+    height: 40px;
+    min-height: 40px;
+    transform: translateY(2px) translateX(-15px);
+}
+
 span.fast-card#arxiv {
     background: rgb(179, 27, 27);
 }
