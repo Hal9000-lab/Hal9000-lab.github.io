@@ -65,11 +65,11 @@ button.publication:hover {
     transition: 0.3s;
 }
 
-button.publication#inffus-bibtex-button {
+button.publication.inffus {
     color: rgb(83, 102, 138);
     background-color: rgb(235, 235, 235);
 }
-button.publication#inffus-bibtex-button:hover {
+button.publication.inffus:hover {
     background-color: rgb(83, 102, 138);
     color: rgb(235, 235, 235);
 }
