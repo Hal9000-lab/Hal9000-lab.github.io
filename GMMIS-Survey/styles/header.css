@@ -43,7 +43,7 @@ header > p#affil > a:hover {
     color: rgb(70, 0, 199);
 }
 
-/* fast links */
+/* fast cards */
 div#fast-cards-container {
     display: flex;
     flex-wrap: wrap;
@@ -75,6 +75,11 @@ span.fast-card > a > img {
     min-height: 30px;
     transform: translateY(2px);
 }
+span.fast-card > a > span.hidden {
+    display: none;
+}
+
+/* - fast cards specifics */
 
 span.fast-card#inffus {
     background: none;
@@ -111,9 +116,17 @@ span.fast-card#sqlite > a > img {
     transform: translateY(3px);
 }
 
-span.fast-card > a > span.hidden {
-    display: none;
+span.fast-card#polimi-press-release {
+    background: rgb(200, 200, 200);
+    border: 2px solid rgb(18, 46, 85);
 }
+span.fast-card#polimi-press-release > a > img {
+    height: 38px;
+    min-height: 38px;
+    transform: translateY(4px);
+}
+
+
 
 /* graphical abstract */
 
