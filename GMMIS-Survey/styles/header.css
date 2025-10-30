@@ -76,7 +76,6 @@ span.fast-card > a > img {
     min-height: 30px;
     transform: translateY(2px);
 }
-/* - fast cards specifics */
 span.fast-card > a > span.hidden {
     display: none;
 }
