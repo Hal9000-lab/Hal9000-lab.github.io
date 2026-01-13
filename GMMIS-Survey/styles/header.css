@@ -132,8 +132,8 @@ span.fast-card#corriere-salute {
     border: 2px solid rgb(73, 114, 179);
 }
 span.fast-card#corriere-salute > a > img {
-    height: 30px;
-    min-height: 30px;
+    height: 26px;
+    min-height: 26px;
     transform: translateY(2px);
 }
 
