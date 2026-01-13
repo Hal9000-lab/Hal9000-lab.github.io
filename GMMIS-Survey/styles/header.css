@@ -127,6 +127,15 @@ span.fast-card#polimi-press-release > a > img {
     transform: translateY(2px);
 }
 
+span.fast-card#corriere-salute {
+    background: rgb(225, 225, 225);
+    border: 2px solid rgb(73, 114, 179);
+}
+span.fast-card#corriere-salute > a > img {
+    height: 30px;
+    min-height: 30px;
+    transform: translateY(2px);
+}
 
 
 /* graphical abstract */
