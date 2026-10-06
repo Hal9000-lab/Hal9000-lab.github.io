@@ -110,7 +110,7 @@ function _formatCode(row) {
     const code_link = row[11];
     if (code_link) {
         return `<a href="${code_link}" target="_blank">
-            <img src="../assets/img_icon_github.png" style="width: 20px;">
+            <img src="./assets/img_icon_github.png" style="width: 20px;">
         </a>`;
     } else {
         return '<span>&#10006;</span>';

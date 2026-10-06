@@ -1,12 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Redirecting...</title>
-    <script type="text/javascript">
-        window.location.href = "./GMMIS-Survey/";
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hal9000 Lab</title>
+    <meta name="description" content="Project pages of the Hal9000 Lab at Politecnico di Milano.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23171322'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23b31b1b'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="./landing.css">
 </head>
 <body>
-    <p>If you are not redirected automatically to more interesting content, <a href="./GMMIS-Survey/">click here</a>.</p>
+    <header>
+        <h1>Hal9000 Lab</h1>
+        <p>
+            Research projects on medical image analysis and artificial intelligence.
+            Each project below has its own page, with papers, data and resources.
+        </p>
+        <p class="affil">Politecnico di Milano</p>
+    </header>
+
+    <main>
+        <h2>Projects</h2>
+        <div class="projects">
+            <a class="project survey" href="./GMMIS-Survey/">
+                <h3>Generalist Models in Medical Image Segmentation</h3>
+                <p>
+                    A survey and performance comparison of generalist models against
+                    task-specific approaches, with an interactive app to explore
+                    models, datasets and results.
+                </p>
+                <div class="tags"><span>Survey</span><span>Segmentation</span><span>Interactive app</span></div>
+                <span class="open">Open project &rarr;</span>
+            </a>
+
+            <a class="project ostia" href="./Awakening-ImageCAS/">
+                <h3>Awakening ImageCAS</h3>
+                <p>
+                    Coronary ostia landmarks and centerline graphs for the 1000 CCTA volumes
+                    of ImageCAS, with an open benchmark of localization models.
+                </p>
+                <div class="tags"><span>Dataset</span><span>Benchmark</span><span>Coronary CTA</span></div>
+                <span class="open">Open project &rarr;</span>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <p>Hal9000 Lab and B<sup>3</sup>Lab @ Politecnico di Milano</p>
+    </footer>
 </body>
 </html>
