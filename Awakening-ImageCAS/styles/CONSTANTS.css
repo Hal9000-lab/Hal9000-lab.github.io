@@ -1,0 +1,4 @@
+/* Site-wide constants. Change the accent color here only. */
+:root {
+    --accent: #4c6273;
+}

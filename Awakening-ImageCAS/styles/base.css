@@ -14,5 +14,5 @@ p {
 }
 
 a {
-    color: rgb(70, 0, 199);
+    color: var(--accent);
 }

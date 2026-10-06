@@ -118,7 +118,7 @@ span.fast-card#dataset {
     background: rgb(30, 120, 140);
 }
 span.fast-card#weights {
-    background: rgb(70, 0, 199);
+    background: var(--accent);
 }
 
 /* links not available yet */
