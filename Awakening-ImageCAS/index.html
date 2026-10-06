@@ -114,6 +114,7 @@
         <a href="#dataset">Dataset</a>
         <a href="#centerlines">Centerlines</a>
         <a href="#animation">Animation</a>
+        <a href="#animation-detailed">In detail</a>
         <a href="#benchmark">Benchmark</a>
         <a href="#resources">Resources</a>
         <a href="#cite">Citation</a>
@@ -168,7 +169,7 @@
         </section>
 
         <section id="animation">
-            <h2>Centerline tracking, step by step</h2>
+            <h2>Centerline tracking, in brief</h2>
             <p>
                 A simplified 2D illustration of how a centerline tree is traced: from the ostia placed by the model,
                 through the distance to the vessel wall, to the rooted graph.
@@ -184,6 +185,29 @@
                 <figcaption>
                     Illustration on a synthetic vessel tree. The actual procedure works in 3D on the ImageCAS masks and includes
                     further refinement steps that are left out here.
+                </figcaption>
+            </figure>
+        </section>
+
+        <section id="animation-detailed">
+            <h2>Centerline tracking, in detail</h2>
+            <p>
+                The same procedure with every step of the pipeline: mask repair, ostium and gap bridging, distance and cost maps,
+                the two minimal-cost fronts, the two growing passes, tip trimming, smoothing and the final typed graph.
+                Use the chapter buttons to jump to a step.
+            </p>
+            <figure id="cd-figure">
+                <canvas id="cd-canvas" aria-label="Step-by-step animation of the centerline extraction on a synthetic coronary tree"></canvas>
+                <div class="cl-controls">
+                    <button type="button" id="cd-play">Play</button>
+                    <button type="button" id="cd-restart">Restart</button>
+                    <input type="range" id="cd-seek" min="0" max="59" step="0.01" value="0" aria-label="Animation position">
+                    <span id="cd-time">0:00</span>
+                </div>
+                <div id="cd-chapters" class="cl-chapters"></div>
+                <figcaption>
+                    Illustration on a synthetic vessel tree with a 0.5 mm voxel, using the parameters of the procedure (cost exponent,
+                    5 mm minimum branch length, 2 mm trimming, 2 mm smoothing sigma). The real procedure works in 3D on the ImageCAS masks.
                 </figcaption>
             </figure>
         </section>
@@ -330,5 +354,7 @@
     </script>
     <script src="./js/centerline-algo.js"></script>
     <script src="./js/centerline-demo.js"></script>
+    <script src="./js/centerline-algo-detailed.js"></script>
+    <script src="./js/centerline-demo-detailed.js"></script>
 </body>
 </html>
