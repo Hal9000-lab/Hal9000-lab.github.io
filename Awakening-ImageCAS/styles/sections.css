@@ -130,3 +130,43 @@ main pre {
 .bib-buttons > button:hover {
     background: rgb(23, 19, 34);
 }
+
+/* centerline animation */
+
+canvas#cl-canvas {
+    display: block;
+    width: 100%;
+    background: rgb(18, 16, 28);
+    border-radius: 8px 8px 0 0;
+}
+.cl-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgb(23, 19, 34);
+    border-radius: 0 0 8px 8px;
+}
+.cl-controls > button {
+    padding: 4px 14px;
+    font-family: inherit;
+    font-size: 0.85em;
+    color: white;
+    background: var(--accent);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+}
+.cl-controls > button:hover {
+    background: rgb(90, 112, 130);
+}
+.cl-controls > input[type=range] {
+    flex-grow: 1;
+    accent-color: var(--accent);
+}
+.cl-controls > span {
+    min-width: 5.5em;
+    font-size: 0.8em;
+    text-align: right;
+    color: rgb(215, 215, 225);
+}

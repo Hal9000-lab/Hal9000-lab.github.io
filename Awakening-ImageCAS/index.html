@@ -113,6 +113,7 @@
         <a href="#glance">At a glance</a>
         <a href="#dataset">Dataset</a>
         <a href="#centerlines">Centerlines</a>
+        <a href="#animation">Animation</a>
         <a href="#benchmark">Benchmark</a>
         <a href="#resources">Resources</a>
         <a href="#cite">Citation</a>
@@ -162,6 +163,27 @@
                 <figcaption>
                     Centerline extraction pipeline: from the segmentation mask and the annotated ostia to one rooted tree per side, with
                     per-node position, radius, topological type and side.
+                </figcaption>
+            </figure>
+        </section>
+
+        <section id="animation">
+            <h2>Centerline tracking, step by step</h2>
+            <p>
+                A simplified 2D illustration of how a centerline tree is traced: from the ostia placed by the model,
+                through the distance to the vessel wall, to the rooted graph.
+            </p>
+            <figure id="cl-figure">
+                <canvas id="cl-canvas" aria-label="Animation of the centerline tracking on a synthetic coronary tree"></canvas>
+                <div class="cl-controls">
+                    <button type="button" id="cl-play">Play</button>
+                    <button type="button" id="cl-restart">Restart</button>
+                    <input type="range" id="cl-seek" min="0" max="34" step="0.01" value="0" aria-label="Animation position">
+                    <span id="cl-time">0:00</span>
+                </div>
+                <figcaption>
+                    Illustration on a synthetic vessel tree. The actual procedure works in 3D on the ImageCAS masks and includes
+                    further refinement steps that are left out here.
                 </figcaption>
             </figure>
         </section>
@@ -306,5 +328,7 @@
         });
     });
     </script>
+    <script src="./js/centerline-algo.js"></script>
+    <script src="./js/centerline-demo.js"></script>
 </body>
 </html>
