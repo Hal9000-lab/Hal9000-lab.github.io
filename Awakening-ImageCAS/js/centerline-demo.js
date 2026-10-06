@@ -129,8 +129,15 @@
     var BASE = 1000, DPR = 1;
     function resize() {
         DPR = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.round(BASE * DPR);
-        canvas.height = Math.round(BASE * DPR * H / W);
+        var fig = canvas.parentNode;
+        if (document.fullscreenElement === fig) {
+            // full screen: fit the canvas to the screen, leaving room for the controls
+            var cssW = Math.floor(Math.min(window.innerWidth, (window.innerHeight - 110) * W / H));
+            canvas.style.width = cssW + "px";
+        } else canvas.style.width = "";
+        var w = canvas.clientWidth || BASE;
+        canvas.width = Math.round(Math.max(w, 400) * DPR);
+        canvas.height = Math.round(canvas.width * H / W);
     }
     resize();
 
@@ -383,6 +390,17 @@
     restartBtn.addEventListener("click", function () { time = 0; draw(); userPaused = false; setPlaying(true); });
     seek.addEventListener("input", function () { time = parseFloat(seek.value); if (playing) last = performance.now(); draw(); });
     window.addEventListener("resize", function () { resize(); draw(); });
+    var fullBtn = document.getElementById("cl-full");
+    if (fullBtn && document.fullscreenEnabled) {
+        fullBtn.addEventListener("click", function () {
+            var fig = canvas.parentNode;
+            if (document.fullscreenElement) document.exitFullscreen(); else fig.requestFullscreen();
+        });
+        document.addEventListener("fullscreenchange", function () {
+            fullBtn.textContent = document.fullscreenElement === canvas.parentNode ? "Exit full screen" : "Full screen";
+            resize(); draw();
+        });
+    } else if (fullBtn) fullBtn.style.display = "none";
 
     if ("IntersectionObserver" in window) {
         new IntersectionObserver(function (e) {

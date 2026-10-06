@@ -45,8 +45,42 @@
         { t0: 48, t1: 53, title: "Smoothing",                     sub: "Branch by branch, positions and radii are replaced by a Gaussian-weighted average along the arc length (sigma = 2 mm). Ostium, endpoints and junctions stay in place." },
         { t0: 53, t1: 59, title: "The centerline graph",          sub: "One rooted tree per side. Every node has a position, a lumen radius, a topological type and a side." }
     ];
-    var T = SCENES[SCENES.length - 1].t1;
+    var T = SCENES[SCENES.length - 1].t1;      // length of the script (script time)
     var HOLD = 1.5, CUT_FADE = 0.16;
+
+    // ---- pacing: the script is played slower than written, and every scene ends with a still hold
+    // on its completed view (just before the cut), so that it can be taken in.
+    var SLOW = 1.2, SCENE_HOLD = 1.9;
+    var segs = (function () {
+        var out = [], r = 0;
+        SCENES.forEach(function (sc, i) {
+            var last = i === SCENES.length - 1;
+            var tf = last ? sc.t1 : sc.t1 - CUT_FADE * 1.05;       // hold right before the cut dip starts
+            out.push({ r0: r, r1: r + (tf - sc.t0) * SLOW, a0: sc.t0, a1: tf });
+            r += (tf - sc.t0) * SLOW;
+            if (!last) {
+                out.push({ r0: r, r1: r + SCENE_HOLD, a0: tf, a1: tf });
+                r += SCENE_HOLD;
+                out.push({ r0: r, r1: r + (sc.t1 - tf) * SLOW, a0: tf, a1: sc.t1 });
+                r += (sc.t1 - tf) * SLOW;
+            }
+        });
+        return out;
+    })();
+    var R = segs[segs.length - 1].r1;           // real duration, seconds
+    function toScript(r) {
+        for (var i = 0; i < segs.length; i++) {
+            var g = segs[i];
+            if (r <= g.r1 || i === segs.length - 1) {
+                return g.r1 > g.r0 ? g.a0 + (g.a1 - g.a0) * clamp((r - g.r0) / (g.r1 - g.r0), 0, 1) : g.a0;
+            }
+        }
+        return T;
+    }
+    function sceneStartReal(i) {
+        for (var k = 0; k < segs.length; k++) if (Math.abs(segs[k].a0 - SCENES[i].t0) < 1e-9 && segs[k].a1 > segs[k].a0) return segs[k].r0;
+        return 0;
+    }
 
     // ---- helpers
     function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
@@ -220,8 +254,15 @@
     var BASE = 1000, DPR = 1;
     function resize() {
         DPR = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.round(BASE * DPR);
-        canvas.height = Math.round(BASE * DPR * H / W);
+        var fig = canvas.parentNode;
+        if (document.fullscreenElement === fig) {
+            // full screen: fit the canvas to the screen, leaving room for the controls
+            var cssW = Math.floor(Math.min(window.innerWidth, (window.innerHeight - 110) * W / H));
+            canvas.style.width = cssW + "px";
+        } else canvas.style.width = "";
+        var w = canvas.clientWidth || BASE;
+        canvas.width = Math.round(Math.max(w, 400) * DPR);
+        canvas.height = Math.round(canvas.width * H / W);
     }
     resize();
 
@@ -608,19 +649,20 @@
     var time = 0, playing = false, userPaused = false, last = 0, raf = 0;
     var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    seek.max = T; seek.step = 0.01;
+    seek.max = R; seek.step = 0.01;
     SCENES.forEach(function (sc, i) {
         var b = document.createElement("button");
         b.type = "button"; b.textContent = (i + 1) + ". " + sc.title.replace(/,.*$/, "");
-        b.addEventListener("click", function () { time = sc.t0 + 0.3; if (playing) last = performance.now(); draw(); });
+        b.addEventListener("click", function () { time = sceneStartReal(i); if (playing) last = performance.now(); draw(); });
         chips.appendChild(b);
     });
     function fmt(x) { return Math.floor(x / 60) + ":" + ("0" + Math.floor(x % 60)).slice(-2); }
     function draw() {
-        render(time);
-        seek.value = Math.min(time, T);
-        clock.textContent = fmt(Math.min(time, T)) + " / " + fmt(T);
-        var cs = sceneAt(Math.min(time, T));
+        var rt = Math.min(time, R), tau = toScript(rt);
+        render(tau);
+        seek.value = rt;
+        clock.textContent = fmt(rt) + " / " + fmt(R);
+        var cs = sceneAt(tau);
         for (var i = 0; i < chips.children.length; i++) chips.children[i].className = i === cs ? "on" : "";
     }
     function setPlaying(p) {
@@ -630,7 +672,7 @@
     function tick(now) {
         raf = 0; if (!playing) return;
         time += (now - last) / 1000; last = now;
-        if (time >= T + HOLD) time = 0;
+        if (time >= R + HOLD) time = 0;
         draw();
         raf = requestAnimationFrame(tick);
     }
@@ -638,6 +680,17 @@
     restartBtn.addEventListener("click", function () { time = 0; draw(); userPaused = false; setPlaying(true); });
     seek.addEventListener("input", function () { time = parseFloat(seek.value); if (playing) last = performance.now(); draw(); });
     window.addEventListener("resize", function () { resize(); draw(); });
+    var fullBtn = document.getElementById("cd-full");
+    if (fullBtn && document.fullscreenEnabled) {
+        fullBtn.addEventListener("click", function () {
+            var fig = canvas.parentNode;
+            if (document.fullscreenElement) document.exitFullscreen(); else fig.requestFullscreen();
+        });
+        document.addEventListener("fullscreenchange", function () {
+            fullBtn.textContent = document.fullscreenElement === canvas.parentNode ? "Exit full screen" : "Full screen";
+            resize(); draw();
+        });
+    } else if (fullBtn) fullBtn.style.display = "none";
 
     if ("IntersectionObserver" in window) {
         new IntersectionObserver(function (e) {
@@ -648,6 +701,6 @@
 
     var qt = parseFloat(new URLSearchParams(location.search).get("td"));
     if (!isNaN(qt)) { time = qt; userPaused = true; }
-    else if (reduced) time = T;
+    else if (reduced) time = R;
     draw();
 })();
