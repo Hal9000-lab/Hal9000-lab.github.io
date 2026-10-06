@@ -1,0 +1,19 @@
+/* TOP BAR: link back to the main landing page */
+
+nav#topbar {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 38px;
+    background-color: rgb(23, 19, 34);
+}
+nav#topbar > a {
+    font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
+    font-size: 0.95em;
+    text-decoration: none;
+    color: rgb(215, 215, 225);
+    transition: 0.2s;
+}
+nav#topbar > a:hover {
+    color: white;
+}
