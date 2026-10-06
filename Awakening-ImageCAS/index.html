@@ -190,14 +190,72 @@
 
         <section id="cite">
             <h2>Citation</h2>
-            <!-- TODO: update the entry (key, venue, year, DOI) after publication. -->
-            <pre id="bibtex">@article{leccardi_awakening_imagecas,
+            <!-- TODO: update both entries (key, venue, year, DOI) after publication / Zenodo release. -->
+            <h3>Paper</h3>
+            <pre id="bibtex-paper">@article{leccardi_awakening_imagecas,
   title   = {Awakening ImageCAS: Automated Coronary Ostia Localization Framework and Centerlines Open Dataset},
   author  = {Leccardi, Matteo and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
              Penserini, Andrea and Brandini, Christian and Marcon, Marco and Moglia, Andrea and
              Mainardi, Luca and Cerveri, Pietro},
   note    = {Under review}
 }</pre>
+            <div class="bib-buttons">
+                <button type="button" data-copy="bibtex-paper">Copy BibTeX</button>
+                <button type="button" data-download="bibtex-paper" data-filename="awakening_imagecas_paper.bib">Download .bib</button>
+            </div>
+
+            <h3>Dataset (Zenodo)</h3>
+            <pre id="bibtex-dataset">@dataset{leccardi_awakening_imagecas_dataset,
+  title     = {Awakening ImageCAS: coronary ostia and centerline annotations for ImageCAS},
+  author    = {Leccardi, Matteo and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
+               Penserini, Andrea and Brandini, Christian and Marcon, Marco and Moglia, Andrea and
+               Mainardi, Luca and Cerveri, Pietro},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.XXXXXXX},
+  note      = {DOI placeholder}
+}</pre>
+            <div class="bib-buttons">
+                <button type="button" data-copy="bibtex-dataset">Copy BibTeX</button>
+                <button type="button" data-download="bibtex-dataset" data-filename="awakening_imagecas_dataset.bib">Download .bib</button>
+            </div>
+
+            <h3>Original ImageCAS dataset</h3>
+            <p>Our annotations extend ImageCAS: please also cite the original dataset paper.</p>
+            <pre id="bibtex-imagecas">@article{zeng2023imagecas,
+  title   = {ImageCAS: A large-scale dataset and benchmark for coronary artery segmentation based on computed tomography angiography images},
+  author  = {Zeng, An and Wu, Chunbiao and Lin, Guisen and Xie, Wen and Hong, Jin and Huang, Meiping and
+             Zhuang, Jian and Bi, Shanshan and Pan, Dan and Ullah, Najeeb and Khan, Kaleem Nawaz and
+             Wang, Tianchen and Shi, Yiyu and Li, Xiaoming and Xu, Xiaowei},
+  journal = {Computerized Medical Imaging and Graphics},
+  volume  = {109},
+  pages   = {102287},
+  year    = {2023},
+  doi     = {10.1016/j.compmedimag.2023.102287}
+}</pre>
+            <div class="bib-buttons">
+                <button type="button" data-copy="bibtex-imagecas">Copy BibTeX</button>
+                <button type="button" data-download="bibtex-imagecas" data-filename="imagecas.bib">Download .bib</button>
+            </div>
+
+            <!-- Hidden on purpose: ImageCAS-X citation, kept ready. Remove the "hidden" attribute to show it. -->
+            <div id="cite-imagecasx" hidden>
+                <h3>ImageCAS-X</h3>
+                <pre id="bibtex-imagecasx">@misc{bransby2026imagecasx,
+  title         = {ImageCAS-X: a dataset and benchmark for coronary artery segmentation and centerline extraction in coronary CT angiography},
+  author        = {Bransby, Kit M. and {\O}ksnebjerg, Esther and Kj{\ae}r, Kristoffer and Kirkeby, Jacob and
+                   El Youssef, Yasmin and Jim{\'e}nez, A{\"i}da and Pedersson, Philip R. and
+                   de Knegt, Martina C. and Kofoed, Klaus F. and Paulsen, Rasmus R.},
+  year          = {2026},
+  eprint        = {2608.30404},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2608.30404}
+}</pre>
+                <div class="bib-buttons">
+                    <button type="button" data-copy="bibtex-imagecasx">Copy BibTeX</button>
+                    <button type="button" data-download="bibtex-imagecasx" data-filename="imagecas_x.bib">Download .bib</button>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -209,5 +267,42 @@
             Hal9000 Lab and B<sup>3</sup>Lab @ Politecnico di Milano
         </p>
     </footer>
+
+    <script>
+    document.querySelectorAll("button[data-copy]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var text = document.getElementById(btn.dataset.copy).textContent;
+            var done = function () {
+                var old = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(function () { btn.textContent = old; }, 1500);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(done);
+            } else {
+                var ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+                done();
+            }
+        });
+    });
+    document.querySelectorAll("button[data-download]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var text = document.getElementById(btn.dataset.download).textContent + "\n";
+            var url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = btn.dataset.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    });
+    </script>
 </body>
 </html>
