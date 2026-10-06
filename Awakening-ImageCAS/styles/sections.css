@@ -134,7 +134,8 @@ main pre {
 /* centerline animation */
 
 canvas#cl-canvas,
-canvas#cd-canvas {
+canvas#cd-canvas,
+canvas#op-canvas {
     display: block;
     width: 100%;
     background: rgb(18, 16, 28);

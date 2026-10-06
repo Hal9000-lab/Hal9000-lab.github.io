@@ -112,6 +112,7 @@
     <nav id="sections">
         <a href="#glance">At a glance</a>
         <a href="#dataset">Dataset</a>
+        <a href="#pipeline">Pipeline</a>
         <a href="#centerlines">Centerlines</a>
         <a href="#animation">Animation</a>
         <a href="#animation-detailed">In detail</a>
@@ -150,6 +151,29 @@
                 <!-- TODO: replace with an example figure (left/right ostia on a CCTA slice) -->
                 <div class="placeholder">Ostia annotation example (coming soon)</div>
                 <figcaption>Example of left and right ostium landmarks on a CCTA volume.</figcaption>
+            </figure>
+        </section>
+
+        <section id="pipeline">
+            <h2>From annotation to benchmark</h2>
+            <p>
+                How the ostia dataset was assembled and how the benchmark was trained and evaluated, step by step:
+                the two annotation stages, the assistant model, the test set, the benchmark models and the ablation studies.
+                Use the chapter buttons to jump to a step.
+            </p>
+            <figure id="op-figure">
+                <canvas id="op-canvas" aria-label="Animation of the ostia annotation pipeline and of the benchmark training"></canvas>
+                <div class="cl-controls">
+                    <button type="button" id="op-play">Play</button>
+                    <button type="button" id="op-restart">Restart</button>
+                    <button type="button" id="op-full">Full screen</button>
+                    <input type="range" id="op-seek" min="0" max="128" step="0.01" value="0" aria-label="Animation position">
+                    <span id="op-time">0:00</span>
+                </div>
+                <div id="op-chapters" class="cl-chapters"></div>
+                <figcaption>
+                    Schematic illustration: every square stands for one CCTA volume, and the order of the annotator groups is illustrative.
+                </figcaption>
             </figure>
         </section>
 
@@ -354,6 +378,7 @@
         });
     });
     </script>
+    <script src="./js/ostia-pipeline-demo.js"></script>
     <script src="./js/centerline-algo.js"></script>
     <script src="./js/centerline-demo.js"></script>
     <script src="./js/centerline-algo-detailed.js"></script>
