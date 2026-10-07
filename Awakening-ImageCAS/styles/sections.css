@@ -135,7 +135,8 @@ main pre {
 
 canvas#cl-canvas,
 canvas#cd-canvas,
-canvas#op-canvas {
+canvas#op-canvas,
+canvas#fl-canvas {
     display: block;
     width: 100%;
     background: rgb(18, 16, 28);
@@ -223,5 +224,14 @@ figure:fullscreen > .cl-chapters {
     box-sizing: border-box;
 }
 figure:fullscreen > figcaption {
+    display: none;
+}
+
+/* fluid simulation */
+canvas#fl-canvas {
+    height: auto;
+}
+#fl-figure.fl-nogl > canvas,
+#fl-figure.fl-nogl > .cl-controls {
     display: none;
 }

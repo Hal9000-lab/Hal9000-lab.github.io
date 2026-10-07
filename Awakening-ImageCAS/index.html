@@ -117,6 +117,7 @@
         <a href="#animation">Animation</a>
         <a href="#animation-detailed">In detail</a>
         <a href="#benchmark">Benchmark</a>
+        <a href="#why">Why it matters</a>
         <a href="#resources">Resources</a>
         <a href="#cite">Citation</a>
     </nav>
@@ -251,6 +252,31 @@
             </p>
         </section>
 
+        <section id="why">
+            <h2>Why it matters</h2>
+            <p>
+                An ostium and a rooted centerline tree with a lumen radius at every node are the starting point of patient-specific
+                models of the coronary circulation. The ostia mark where blood enters each tree and where an inflow condition is
+                applied; the centerline graphs give the topology and the calibre of the vessels that a flow model needs. Such models
+                underlie computational fluid dynamics of coronary blood flow, reduced-order (one-dimensional) hemodynamic models, and
+                the estimation of the functional significance of a stenosis, such as fractional flow reserve (FFR) computed from CT angiography.
+                Reliable, openly available ostia and centerlines make these pipelines easier to build, compare and reproduce.
+            </p>
+            <figure id="fl-figure">
+                <canvas id="fl-canvas" data-src-left="./assets/flow/tree_left.png" data-src-right="./assets/flow/tree_right.png" aria-label="Simulated pulsatile flow inside an unfolded coronary tree"></canvas>
+                <div class="cl-controls">
+                    <button type="button" id="fl-play">Play</button>
+                    <button type="button" id="fl-reset">Reset</button>
+                    <button type="button" id="fl-full">Full screen</button>
+                </div>
+                <figcaption id="fl-note">
+                    Illustration: a real-time WebGL simulation of pulsatile flow in an unfolded left (blue) and right (red) coronary tree, with dye released at each
+                    ostium. The heartbeat is 60 per minute and the right tree pulses 0.25 s after the left one. The flow is the incompressible, inviscid solution
+                    in the vessel geometry scaled by the pulse, with a parabolic profile across each vessel; it is illustrative, not patient-specific and not a clinical model.
+                </figcaption>
+            </figure>
+        </section>
+
         <section id="resources">
             <h2>Resources</h2>
             <!-- TODO: fill in the links below once available. -->
@@ -379,6 +405,7 @@
     });
     </script>
     <script src="./js/ostia-pipeline-demo.js"></script>
+    <script src="./js/flow-sim.js"></script>
     <script src="./js/centerline-algo.js"></script>
     <script src="./js/centerline-demo.js"></script>
     <script src="./js/centerline-algo-detailed.js"></script>
