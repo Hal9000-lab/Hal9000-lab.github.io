@@ -136,7 +136,8 @@ main pre {
 canvas#cl-canvas,
 canvas#cd-canvas,
 canvas#op-canvas,
-canvas#fl-canvas {
+canvas#fl-canvas,
+canvas#ns-canvas {
     display: block;
     width: 100%;
     background: rgb(18, 16, 28);
@@ -234,4 +235,66 @@ canvas#fl-canvas {
 #fl-figure.fl-nogl > canvas,
 #fl-figure.fl-nogl > .cl-controls {
     display: none;
+}
+
+/* interactive solver */
+canvas#ns-canvas {
+    height: auto;
+    cursor: crosshair;
+    touch-action: pan-y;
+}
+#ns-figure.fl-nogl > canvas,
+#ns-figure.fl-nogl > .cl-controls,
+#ns-figure.fl-nogl > .ns-sliders,
+#ns-figure.fl-nogl > .ns-legend {
+    display: none;
+}
+.ns-status {
+    padding: 6px 12px;
+    font-size: 0.8em;
+    color: rgb(215, 215, 225);
+    background: rgb(23, 19, 34);
+}
+.cl-controls:has(+ .ns-sliders) {
+    border-radius: 0;
+    flex-wrap: wrap;
+}
+.ns-sliders {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    padding: 0 12px 10px;
+    background: rgb(23, 19, 34);
+    border-radius: 0 0 8px 8px;
+}
+.ns-sliders > label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85em;
+    color: rgb(215, 215, 225);
+}
+.ns-sliders input[type=range] {
+    width: 150px;
+    accent-color: var(--accent);
+}
+.ns-sliders span {
+    min-width: 4.5em;
+    font-variant-numeric: tabular-nums;
+}
+.ns-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 8px;
+    font-size: 0.75em;
+    color: rgb(215, 215, 225);
+    background: rgb(23, 19, 34);
+}
+.ns-legend > i {
+    flex-grow: 1;
+    max-width: 220px;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #2f73f2, #33304d, #ff7319, #ffeb73);
 }

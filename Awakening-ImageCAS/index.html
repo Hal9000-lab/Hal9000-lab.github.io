@@ -275,6 +275,33 @@
                     in the vessel geometry scaled by the pulse, with a parabolic profile across each vessel; it is illustrative, not patient-specific and not a clinical model.
                 </figcaption>
             </figure>
+
+            <h3>Full solver (experimental)</h3>
+            <p>
+                The same trees with a real-time two-dimensional Navier-Stokes solver instead of a precomputed flow. The walls are rigid, the heartbeat
+                drives a periodic inflow at each ostium, and you can drag over the vessels to place 2x2 obstacles in the flow (Shift-drag erases them).
+            </p>
+            <figure id="ns-figure">
+                <canvas id="ns-canvas" data-src-left="./assets/flow/tree_left.png" data-src-right="./assets/flow/tree_right.png" aria-label="Interactive real-time fluid simulation inside an unfolded coronary tree"></canvas>
+                <div id="ns-status" class="ns-status" style="display: none;"></div>
+                <div class="cl-controls">
+                    <button type="button" id="ns-play">Play</button>
+                    <button type="button" id="ns-reset">Reset</button>
+                    <button type="button" id="ns-clear">Clear obstacles</button>
+                    <button type="button" id="ns-view">View: Flow</button>
+                    <button type="button" id="ns-full">Full screen</button>
+                </div>
+                <div class="ns-sliders">
+                    <label>Heart rate <input type="range" id="ns-bpm" aria-label="Heart rate"> <span id="ns-bpm-val">60 bpm</span></label>
+                    <label>Pressure <input type="range" id="ns-pressure" aria-label="Inflow pressure"> <span id="ns-pressure-val">1.50</span></label>
+                </div>
+                <div id="ns-legend" class="ns-legend"><span>negative</span><i></i><span>high pressure</span></div>
+                <figcaption id="ns-note">
+                    Experimental, in real time (WebGL2): a viscous, incompressible solver on the unfolded left (blue) and right (red) trees, with no-slip rigid walls,
+                    dye released at each ostium and the right tree lagging the left one by a delay that depends on the heart rate. The pressure view shows the solver's
+                    pressure per unit time, in arbitrary units. It is a two-dimensional illustration: not patient-specific and not a clinical model.
+                </figcaption>
+            </figure>
         </section>
 
         <section id="resources">
@@ -406,6 +433,7 @@
     </script>
     <script src="./js/ostia-pipeline-demo.js"></script>
     <script src="./js/flow-sim.js"></script>
+    <script src="./js/flow-ns.js"></script>
     <script src="./js/centerline-algo.js"></script>
     <script src="./js/centerline-demo.js"></script>
     <script src="./js/centerline-algo-detailed.js"></script>
