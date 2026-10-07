@@ -293,12 +293,12 @@
                 </div>
                 <div class="ns-sliders">
                     <label>Heart rate <input type="range" id="ns-bpm" aria-label="Heart rate"> <span id="ns-bpm-val">60 bpm</span></label>
-                    <label>Pressure <input type="range" id="ns-pressure" aria-label="Inflow pressure"> <span id="ns-pressure-val">1.50</span></label>
+                    <label>Blood pressure <input type="range" id="ns-pressure" aria-label="Blood pressure, systolic"> <span id="ns-pressure-val">120/80 mmHg</span></label>
                 </div>
-                <div id="ns-legend" class="ns-legend"><span>negative</span><i></i><span>inlet pressure</span></div>
+                <div id="ns-legend" class="ns-legend"><span>negative</span><i></i><span>120 mmHg (systolic)</span></div>
                 <figcaption id="ns-note">
                     Experimental, in real time (WebGL2): a viscous, incompressible solver on the unfolded left (blue) and right (red) trees, with rigid no-slip walls.
-                    The pressure is applied at the ostium (green dot) with the heartbeat, and each endpoint (red dot) is an outlet with a resistance, so the flow divides
+                    The blood pressure (120/80 mmHg by default) is applied at the ostium (green disk) with the heartbeat, and each endpoint (red dot) is an outlet with a resistance, so the flow divides
                     between the branches according to their geometry and a higher pressure gives a higher flow. The right tree lags the left one by a delay that depends on the heart rate.
                     The pressure view shows the solver's pressure relative to the peak inlet pressure. It is a two-dimensional illustration: not patient-specific and not a clinical model.
                 </figcaption>
