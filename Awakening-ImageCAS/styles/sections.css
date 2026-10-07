@@ -296,5 +296,22 @@ canvas#ns-canvas {
     max-width: 220px;
     height: 8px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #2f73f2, #33304d, #ff7319, #ffeb73);
+    background: linear-gradient(90deg, #333059, #2e73f2, #ff7319, #ffeb73);
+}
+
+.ns-version {
+    margin-left: auto;
+    align-self: flex-end;
+    font-size: 0.65em;
+    color: #fff;
+}
+
+.ns-debug {
+    margin-left: 0;
+    flex: 1 1 100%;
+    order: 5;
+    font-family: monospace;
+}
+.ns-version {
+    order: 6;
 }

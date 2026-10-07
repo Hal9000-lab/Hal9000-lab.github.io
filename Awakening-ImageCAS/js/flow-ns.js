@@ -98,7 +98,7 @@
             ["L", "R"].forEach(function (side, ti) {
                 var m = trees[side], openT = new Uint8Array(N), i;
                 for (i = 0; i < N; i++) if (m[i]) { tree[i] = ti; if (!obst || !obst[i]) { openT[i] = 1; open[i] = 1; } }
-                var r0 = rootStatic[side], rr = Math.max(prm.inletMin || 3, (prm.inletFactor || 1.6) * edt[side][r0]);
+                var r0 = rootStatic[side], rr = Math.min(Math.max(prm.inletMin || 3, (prm.inletFactor || 1.6) * edt[side][r0]), prm.inletMax || 1e9);
                 out.rr[side] = rr;
                 var r = openT[r0] ? r0 : nearestIn(openT, W, H, r0 % W, (r0 / W) | 0);
                 out.root[side] = r;
@@ -118,8 +118,12 @@
                 if (!eps.length) { var far = r, fd = -1; for (i = 0; i < N; i++) if (openT[i] && isFinite(dist[i]) && dist[i] > fd) { fd = dist[i]; far = i; } eps.push({ cell: far, radius: 3 }); }
                 var rbar = 0; for (k = 0; k < eps.length; k++) rbar += dist[eps[k].cell]; rbar = Math.max(rbar / eps.length, 1e-9);
                 out.rbar[side] = rbar;
-                var Rout = prm.rho * rbar, Rin = prm.rhoIn * rbar;
+                // outlet resistance: rho * mean path resistance, plus a share (balance) of what the endpoint lacks to the farthest path, so that
+                // balance = 1 gives every endpoint the same flow (equal perfusion) and balance = 0 the flow set by the geometry alone
+                var Rin = prm.rhoIn * rbar, rmax = 0, bal = prm.balance === undefined ? 0 : prm.balance;
+                for (k = 0; k < eps.length; k++) rmax = Math.max(rmax, dist[eps[k].cell]);
                 eps.forEach(function (ep) {
+                    var Rout = prm.rho * rbar + bal * (rmax - dist[ep.cell]);
                     var ex = ep.cell % W, ey = (ep.cell / W) | 0, rad = ep.radius, cells = [];
                     for (var dy = -Math.ceil(rad); dy <= Math.ceil(rad); dy++) for (var dx = -Math.ceil(rad); dx <= Math.ceil(rad); dx++) {
                         if (dx * dx + dy * dy > rad * rad) continue;
@@ -133,7 +137,11 @@
                 var rx = r % W, ry = (r / W) | 0, inlet = [], rr2 = rr * rr;
                 for (i = 0; i < N; i++) if (openT[i] && isFinite(dist[i])) { var dx2 = i % W - rx, dy2 = ((i / W) | 0) - ry; if (dx2 * dx2 + dy2 * dy2 <= rr2) inlet.push(i); }
                 if (!inlet.length) inlet.push(r);
-                for (k = 0; k < inlet.length; k++) { kind[inlet[k]] = 1; kappa[inlet[k]] = 1 / (Rin * inlet.length); }
+                for (k = 0; k < inlet.length; k++) {
+                    var ic = inlet[k], ddx = ic % W - rx, ddy = ((ic / W) | 0) - ry;
+                    kind[ic] = (ddx * ddx + ddy * ddy <= 0.3 * rr2) ? 3 : 1;     // 3: core of the inlet, where the dye is released
+                    kappa[ic] = 1 / (Rin * inlet.length);
+                }
             });
             return out;
         }
@@ -204,7 +212,7 @@
                 segTree[sg] = tree[members[start[sg]]];
                 for (var mm = start[sg]; mm < start[sg + 1]; mm++) {
                     var cc = members[mm], kk2 = bnd.kappa[cc]; if (!kk2) continue;
-                    kap[sg] += kk2; if (bnd.kind[cc] === 1) kin[sg] += kk2; else kout[sg] += kk2;
+                    kap[sg] += kk2; if (bnd.kind[cc] === 1 || bnd.kind[cc] === 3) kin[sg] += kk2; else kout[sg] += kk2;
                 }
             }
             return { n: n, seg: seg, members: Int32Array.from(members), start: Int32Array.from(start), gstart: gstart, nbr: nbr, cond: cond, diag: diag, pcond: pcond, pdiag: pdiag,
@@ -244,7 +252,7 @@
         function equivalentResistance(G) {
             var n = G.n, extra = new Float64Array(n), b = new Float64Array(n), k;
             for (k = 0; k < n; k++) { extra[k] = G.kin[k] + G.kout[k]; b[k] = G.kin[k]; }
-            var pi = solveSegments(G, b, null, 600, 1e-22, extra, true), Q = [0, 0];
+            var pi = solveSegments(G, b, null, 20000, 1e-24, extra, true), Q = [0, 0];       // many iterations: with dominant outlet resistances the system is badly conditioned
             for (k = 0; k < n; k++) Q[G.segTree[k]] += G.kin[k] * (1 - pi[k]);
             return { L: Q[0] > 0 ? 1 / Q[0] : Infinity, R: Q[1] > 0 ? 1 / Q[1] : Infinity };
         }
@@ -269,23 +277,44 @@
     var K1 = SIM_MAX / 720, K2 = K1 * K1;              // speeds, flows and viscosity are tuned on a 720-cell grid
     var BPM_MIN = 40, BPM_MAX = 180, BPM_DEFAULT = 60;
     var SYSTOLIC_MIN = 80, SYSTOLIC_MAX = 200, SYSTOLIC_DEFAULT = 120;     // blood pressure knob: systolic in mmHg
+    var SYSTOLIC_FRACTION = 0.4, PULSE_EDGE = 0.03;                          // the pulse is a step: systolic for 40% of the beat, diastolic for the rest (edges smoothed over 3% of the beat)
+    var OUTLET_BACK_RATIO = 0.8;                                            // pressure at the endpoints (outlets) = this * diastolic pressure
     var DIASTOLIC_RATIO = 80 / 120;                                         // diastolic = systolic * this (120/80, 150/100, 90/60 ...)
-    var V_PEAK = 110;                        // cells/s: steady speed in the trunk at the default systolic pressure (sets the pressure units)
-    var OUTLET_RESISTANCE = 1.0;             // outlet resistance / mean resistance of the paths to the endpoints ("perfusion resistance")
+    // Physical units. The scale (mm per cell) follows from the width of the arteries close to the ostium, the viscosity is that of blood, and
+    // the flow is shown SLOWMO times slower than real (real coronary blood crosses the whole tree in well under a second).
+    var ARTERY_DIAMETER_MM = 2.5;            // width of the arteries close to the ostium
+    var BLOOD_VISCOSITY_MM2_S = 3.3;         // kinematic viscosity of blood: 3.5 mPa s / 1060 kg/m3
+    var SLOWMO = 4;                          // animation seconds per real second of flow
+    var V_PEAK_MM_S = 250;                   // real speed in the artery near the ostium at the default systolic pressure (typical peak coronary velocity)
+    var OUTLET_RESISTANCE = 10;              // outlet (microvascular) resistance / mean resistance of the epicardial paths to the endpoints (it dominates in a real tree; a very high
+                                             // value makes the pressure almost uniform, a low one lets the endpoints near the ostium take the flow)
     var INLET_RESISTANCE = 0.05;             // resistance between the ostium pressure and the first cells, same unit (small = stiff)
-    var INLET_MIN_RADIUS = 8, INLET_RADIUS_FACTOR = 2.2;     // the inlet is a bulky disk around the ostium: radius = max(min, factor * local half-width), cells at 720
-    var NU = 30 * K2;                        // kinematic viscosity, cells^2/s
+    var INLET_MIN_RADIUS = 8, INLET_RADIUS_FACTOR = 2.2, INLET_MAX_RADIUS = 14;     // bulky inlet disk around the ostium: radius = clamp(factor * local half-width, min, max), cells at 720
+    var PERFUSION_BALANCE = 1.0;             // outlet resistance = OUTLET_RESISTANCE * mean + BALANCE * (longest path - path of this endpoint), from the Dijkstra path resistances:
+                                             // 0: the flow divides by the geometry alone, 1: every endpoint gets the same flow, >1: the far endpoints are favoured
+    var NU = 30 * K2;                        // kinematic viscosity, cells^2/s (recomputed from the blood viscosity once the scale is known)
+    var mmPerCell = 0.14, vPeakCells = 300, hOst = { L: 17, R: 17 };
     var JACOBI = 24, DIFFUSE = 6;            // sweeps per step (reduced automatically on slow devices)
-    var DYE_RATE = 120, DYE_BASE = 0.3, DYE_DECAY = 0.06, DYE_DIFFUSION = 0.03, DYE_OUTLET = 0.93;     // the dye leaves through the outlets
+    var DYE_RATE = 240, DYE_BASE = 0.3, DYE_DECAY = 0.06, DYE_DIFFUSION = 0.03, DYE_OUTLET = 0.93;     // the dye leaves through the outlets
     var DYE_GAIN = 7;                        // display sensitivity to small dye amounts: colour = 1 - exp(-gain * dye)
-    var PARTICLES_SIDE = 16, PARTICLE_LIFE = 30, PARTICLE_SIZE = 7;   // tracer particles carried by the flow: side^2 of them (0 = none), seconds, pixels
+    var PARTICLES_SIDE = 16, PARTICLE_LIFE = 30, PARTICLE_SIZE = 8;   // tracer particles carried by the flow: side^2 of them (0 = none), seconds, pixels
+    var PARTICLE_INLET_SHARE = 0.5;          // share of the particles (re)born in the inlet disk; the others are born anywhere in the vessels of their tree
+    var PARTICLE_JITTER = 4;                 // random motion of the particles, cells / sqrt(s) at 720: they meet the artery walls and bounce off them
+    var NS_VERSION = "v1.7";                // shown at the bottom right of the figure: bump it at every modification of this file
+    var BOID_WALL_K = 200, BOID_WALL_RANGE = 8; // wall repulsion on the particles: acceleration K/D^2 (D = distance to the wall, in cells at 720), felt within RANGE
+    var PARTICLE_MAX_SPEED = 40;             // cells/s at 720: the particles never move faster than this, so that they can drift across the width of the artery
+    var BOID_RADIUS = 18, BOID_SEPARATION = 9;          // boids: neighbourhood and personal-space radius, cells at 720
+    var BOID_SEPARATE = 400, BOID_ALIGN = 1.5, BOID_COHESION = 0.25, BOID_TAU = 0.3;      // separation (cells/s^2), alignment and cohesion (1/s), time to follow the flow (s)
     var OBSTACLE_COLOR = [0.69, 0.49, 0.18]; // yellowish ochre-brown
-    var OBSTACLE_SIZE = 2;                   // cells
+    var OBSTACLE_SIZE = 4;                   // cells (the brush is OBSTACLE_SIZE x OBSTACLE_SIZE)
     var SWAP_SIDES = false;                  // unused with one image per tree
 
     // The right tree lags the left one by 0.15 / F seconds, F = 20 * (BPM - 40) / (180 - 40) (F is kept >= 0.6: 40 bpm -> 0.25 s).
     function rightDelay(bpm) { var F = Math.max(20 * (bpm - 40) / (180 - 40), 0.6); return 0.15 / F; }
-    function beat(ph) { var s = ph < 0.38 ? Math.sin(Math.PI * ph / 0.38) : 0; return s * s; }          // flow during one beat
+    function beat(ph) {                                                                               // pressure pulse during one beat: 1 = systolic, 0 = diastolic
+        var e = PULSE_EDGE, a = Math.min(Math.max(ph / e, 0), 1), b = Math.min(Math.max((ph - SYSTOLIC_FRACTION) / e, 0), 1);
+        return a * a * (3 - 2 * a) - b * b * (3 - 2 * b);
+    }
     function bolus(ph) { var s = ph < 0.3 ? Math.sin(Math.PI * ph / 0.3) : 0; return s * s; }          // dye released at the start of systole
 
     var note = document.getElementById("ns-note"), status = document.getElementById("ns-status");
@@ -376,7 +405,7 @@
     }
 
     // ---- 2. geometry state on the CPU
-    var W, H, N, trees, edt = {}, edtAll = null, rootStatic = {}, epStatic = {}, baseMask, obst, G = null, field = null, geoData = null, piPrev = null, PU = null;
+    var W, H, N, trees, edt = {}, edtAll = null, rootStatic = {}, epStatic = {}, baseMask, obst, G = null, field = null, geoData = null, piPrev = null, PU = null, PUt = { L: 1, R: 1 };
     var SEGW = 1024, SEGH = 8, MEMW = 1024, MEMH = 128, MAXK = 128;      // capacity: 8192 segments, 131072 members
 
     // geo texture data: R = conductance of the link to the reservoir (inlet or outlet), G = kind (1 inlet, 2 outlet), B = tree id, A = vessel cell.
@@ -400,15 +429,16 @@
         return { idx: idx, mem: mem, info: info };
     }
     function computeGeometry() {
-        var f = Core.buildBoundary(trees, edt, rootStatic, epStatic, obst, W, H, { nu: NU, rho: OUTLET_RESISTANCE, rhoIn: INLET_RESISTANCE, inletMin: INLET_MIN_RADIUS * K1, inletFactor: INLET_RADIUS_FACTOR });
+        var f = Core.buildBoundary(trees, edt, rootStatic, epStatic, obst, W, H, { nu: NU, rho: OUTLET_RESISTANCE, rhoIn: INLET_RESISTANCE, inletMin: INLET_MIN_RADIUS * K1, inletFactor: INLET_RADIUS_FACTOR, inletMax: INLET_MAX_RADIUS * K1, balance: PERFUSION_BALANCE });
         var Gs = Core.buildSegments(f.open, f.tree, f.root, W, H, MAXK, f, edtAll, NU);
         if (Gs.n > SEGW * SEGH || Gs.members.length > MEMW * MEMH) return null;
-        if (PU === null) {        // pressure units per mmHg, fixed once on the unobstructed trees: the default systolic pressure gives V_PEAK in the trunk
-            var Req = Core.equivalentResistance(Gs), sum = 0, cnt = 0;
+        if (PU === null) {        // pressure units per mmHg of each tree, fixed once on the unobstructed trees: the default systolic pressure gives V_PEAK_MM_S
+                                  // (real speed, shown SLOWMO times slower) in an artery of the width it has close to the ostium
+            var Req = Core.equivalentResistance(Gs);
             ["L", "R"].forEach(function (side) {
-                if (f.root[side] >= 0 && isFinite(Req[side])) { sum += V_PEAK * K1 * 2 * edt[side][rootStatic[side]] * Req[side]; cnt++; }
+                PUt[side] = isFinite(Req[side]) ? vPeakCells * hOst[side] * Req[side] / (SYSTOLIC_DEFAULT * (1 - OUTLET_BACK_RATIO * DIASTOLIC_RATIO)) : 100;   // peak flow set by (systolic - outlet pressure)
             });
-            PU = cnt ? sum / cnt / SYSTOLIC_DEFAULT : 100;
+            PU = 0.5 * (PUt.L + PUt.R);
         }
         return { f: f, G: Gs };
     }
@@ -458,12 +488,12 @@
         "  o = vec4(openU(c) ? v.x : 0.0, openV(c) ? v.y : 0.0, 0.0, 1.0); }";
 
     // right-hand side of the pressure equation:  div u - kappa * P_reservoir  (the inlet reservoir is at the applied pressure, the outlets at 0)
-    var S_DIV = HEAD + COMMON + VELFN + "uniform vec2 uPin;\n" +
+    var S_DIV = HEAD + COMMON + VELFN + "uniform vec2 uPin, uPout;\n" +
         "void main(){ SZ = textureSize(uGeo, 0); ivec2 c = ivec2(gl_FragCoord.xy);\n" +
         "  if (fluid(c) < 0.5) { o = vec4(0.0); return; }\n" +
         "  vec4 g = texelFetch(uGeo, c, 0);\n" +
         "  float div = U(c + ivec2(1,0)) - U(c) + Vf(c + ivec2(0,1)) - Vf(c);\n" +
-        "  float src = (g.g > 0.5 && g.g < 1.5) ? g.r * (g.b < 0.5 ? uPin.x : uPin.y) : 0.0;\n" +
+        "  float src = g.g < 0.5 ? 0.0 : g.r * (g.g > 1.5 && g.g < 2.5 ? (g.b < 0.5 ? uPout.x : uPout.y) : (g.b < 0.5 ? uPin.x : uPin.y));\n" +
         "  o = vec4(div - src, 0.0, 0.0, 1.0); }";
 
     // sum of the right-hand side over every segment (one texel per segment)
@@ -503,51 +533,91 @@
         "vec2 cv(ivec2 c){ c = clamp(c, ivec2(0), SZ - 1); if (fluid(c) < 0.5) return vec2(0.0); return vec2(0.5 * (U(c) + U(c + ivec2(1,0))), 0.5 * (Vf(c) + Vf(c + ivec2(0,1)))); }\n" +
         "vec2 bil(vec2 p){ vec2 q = p - 0.5; ivec2 i = ivec2(floor(q)); vec2 f = q - vec2(i);\n" +
         "  return mix(mix(cv(i), cv(i + ivec2(1,0)), f.x), mix(cv(i + ivec2(0,1)), cv(i + ivec2(1,1)), f.x), f.y); }\n" +
+        "vec2 dsamp(vec2 p){ vec2 q = p - 0.5; ivec2 i = ivec2(floor(q)); vec2 f = q - vec2(i);          // bilinear over the fluid cells only: walls do not drain the dye\n" +
+        "  float w0 = fluid(i) * (1.0 - f.x) * (1.0 - f.y), w1 = fluid(i + ivec2(1,0)) * f.x * (1.0 - f.y), w2 = fluid(i + ivec2(0,1)) * (1.0 - f.x) * f.y, w3 = fluid(i + ivec2(1,1)) * f.x * f.y;\n" +
+        "  float ws = w0 + w1 + w2 + w3; if (ws < 1e-6) return vec2(0.0);\n" +
+        "  return (texelFetch(uDye, clamp(i, ivec2(0), SZ - 1), 0).rg * w0 + texelFetch(uDye, clamp(i + ivec2(1,0), ivec2(0), SZ - 1), 0).rg * w1 + texelFetch(uDye, clamp(i + ivec2(0,1), ivec2(0), SZ - 1), 0).rg * w2 + texelFetch(uDye, clamp(i + ivec2(1,1), ivec2(0), SZ - 1), 0).rg * w3) / ws; }\n" +
         "void main(){ SZ = textureSize(uGeo, 0); ivec2 c = ivec2(gl_FragCoord.xy); vec4 g = texelFetch(uGeo, c, 0);\n" +
         "  if (fluid(c) < 0.5) { o = vec4(0.0); return; }\n" +
         "  vec2 mid = vec2(c) + 0.5 - 0.5 * uDt * cv(c);\n" +
-        "  vec2 d = texture(uDye, (vec2(c) + 0.5 - uDt * bil(mid)) / vec2(SZ)).rg;\n" +
+        "  vec2 d = dsamp(vec2(c) + 0.5 - uDt * bil(mid));\n" +
         "  vec2 nb = vec2(0.0); float n = 0.0; ivec2 e[4] = ivec2[4](ivec2(1,0), ivec2(-1,0), ivec2(0,1), ivec2(0,-1));\n" +
         "  for (int k = 0; k < 4; k++) { if (fluid(c + e[k]) > 0.5) { nb += texelFetch(uDye, c + e[k], 0).rg; n += 1.0; } }\n" +
         "  d = mix(d, n > 0.0 ? nb / n : d, uDiff) * uDecay;\n" +
-        "  if (g.g > 0.5 && g.g < 1.5) d += (g.b < 0.5 ? vec2(uInj.x, 0.0) : vec2(0.0, uInj.y));\n" +
-        "  if (g.g > 1.5) d *= uOutlet;\n" +
+        "  if (g.g > 2.5) d += (g.b < 0.5 ? vec2(uInj.x, 0.0) : vec2(0.0, uInj.y));\n" +
+        "  if (g.g > 1.5 && g.g < 2.5) d *= uOutlet;\n" +
         "  o = vec4(d, 0.0, 1.0); }";
 
-    // tracer particles: position (cells), tree, age. They follow the flow, and are re-injected in the inlet disk when they reach an outlet,
-    // leave the vessels (wall or obstacle) or get too old
+    // tracer particles: position (cells), tree, age. They are boids: their velocity relaxes towards the flow (time BOID_TAU) and is changed by separation from
+    // close neighbours, alignment with the velocity of the neighbours and a little cohesion, so that they spread out instead of clumping on one streamline.
+    // They are re-injected in the inlet disk or anywhere in the vessels when they reach an outlet, hit an obstacle or get too old.
     var PS = PARTICLES_SIDE;
-    var S_PART = HEAD + COMMON + VELFN + VELSAMPLE + "uniform sampler2D uPart; uniform float uDt, uTime, uMaxAge; uniform vec4 uRoot; uniform vec2 uRad;\n" +
+    var S_BOID = HEAD + COMMON + VELFN + VELSAMPLE + "uniform sampler2D uPart, uPartV; uniform float uDt, uRadius, uSep, uASep, uAAl, uACoh, uTau, uVmax, uWallK, uWallR, uScale;\n" +
+        "void main(){ SZ = textureSize(uGeo, 0); ivec2 c = ivec2(gl_FragCoord.xy); vec2 p = texelFetch(uPart, c, 0).xy; vec2 v = texelFetch(uPartV, c, 0).xy; int id = c.y * " + PS + " + c.x;\n" +
+        "  vec2 f = at(p); vec2 sep = vec2(0.0), avgV = vec2(0.0), avgP = vec2(0.0); float cnt = 0.0;\n" +
+        "  for (int j = 0; j < " + (PS * PS) + "; j++) { if (j == id) continue; ivec2 cj = ivec2(j % " + PS + ", j / " + PS + "); vec2 pj = texelFetch(uPart, cj, 0).xy; vec2 d = p - pj; float dist = length(d);\n" +
+        "    if (dist < uRadius && dist > 1e-4) { cnt += 1.0; avgV += texelFetch(uPartV, cj, 0).xy; avgP += pj; if (dist < uSep) sep += (d / dist) * (1.0 - dist / uSep); } }\n" +
+        "  vec2 wall = vec2(0.0);\n" +
+        "  for (int k = 0; k < 8; k++) { float a = float(k) * 0.785398; vec2 dir = vec2(cos(a), sin(a));\n" +
+        "    for (int m = 1; m <= 32; m++) { float r = float(m) * 0.5; if (r > uWallR) break; vec2 q = p + dir * r; ivec2 qi = ivec2(floor(q));\n" +
+        "      if (!inb(qi) || texelFetch(uGeo, qi, 0).a < 0.5) { float D = max(r, 0.5) / uScale; wall -= dir * (uWallK / (D * D)); break; } } }\n" +
+        "  vec2 acc = sep * uASep + wall * uScale; if (cnt > 0.0) acc += (avgV / cnt - v) * uAAl + (avgP / cnt - p) * uACoh;\n" +
+        "  vec2 nv = mix(v, f, 1.0 - exp(-uDt / uTau)) + acc * uDt; float sp = length(nv); if (sp > uVmax) nv *= uVmax / sp;\n" +
+        "  o = vec4(nv, 0.0, 1.0); }";
+    var S_PART = HEAD + COMMON + VELFN + VELSAMPLE + "uniform sampler2D uPart, uPartV, uCells; uniform float uDt, uTime, uMaxAge, uJitter, uShare; uniform vec4 uRoot; uniform vec2 uRad, uCnt, uOff;\n" +
         "vec2 hash2(vec2 p){ p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3))); return fract(sin(p) * 43758.5453); }\n" +
+        "bool vessel(vec2 p){ ivec2 q = ivec2(floor(p)); return inb(q) && texelFetch(uGeo, q, 0).a > 0.5; }\n" +
         "void main(){ SZ = textureSize(uGeo, 0); ivec2 c = ivec2(gl_FragCoord.xy); vec4 pt = texelFetch(uPart, c, 0); int id = c.y * " + PS + " + c.x;\n" +
-        "  vec2 pos = pt.xy; float age = pt.w + uDt; float tree = pt.z; bool dead = age > uMaxAge || pt.x < 0.0;\n" +
-        "  if (!dead) { vec2 v0 = at(pos); vec2 pm = pos + 0.5 * uDt * v0; pos += uDt * at(pm); ivec2 ci = ivec2(floor(pos));\n" +
-        "    if (fluid(ci) < 0.5) dead = true; else if (texelFetch(uGeo, ci, 0).g > 1.5) dead = true; }\n" +
-        "  if (dead) { tree = float(id & 1); vec2 rc = tree < 0.5 ? uRoot.xy : uRoot.zw; float rad = tree < 0.5 ? uRad.x : uRad.y; vec2 h = hash2(vec2(float(id), uTime));\n" +
-        "    float ang = 6.2832 * h.x, rr = rad * sqrt(h.y); pos = rc + rr * vec2(cos(ang), sin(ang));\n" +
-        "    if (fluid(ivec2(floor(pos))) < 0.5) pos = rc; age = 0.0; }\n" +
+        "  vec2 old = pt.xy; float age = pt.w + uDt; float tree = pt.z; bool dead = age > uMaxAge || pt.x < 0.0; vec2 pos = old;\n" +
+        "  if (!dead) {\n" +
+        "    vec2 dsp = uDt * texelFetch(uPartV, c, 0).xy + (hash2(vec2(float(id) * 7.3, uTime * 61.0)) - 0.5) * 2.0 * uJitter * sqrt(uDt);\n" +
+        "    pos = old + dsp;\n" +
+        "    if (!vessel(pos)) {                                   // artery wall: bounce (reflect the displacement)\n" +
+        "      bool okX = vessel(vec2(pos.x, old.y)), okY = vessel(vec2(old.x, pos.y));\n" +
+        "      if (okX && !okY) pos = vec2(old.x + dsp.x, old.y - dsp.y);\n" +
+        "      else if (okY && !okX) pos = vec2(old.x - dsp.x, old.y + dsp.y);\n" +
+        "      else pos = old - dsp;\n" +
+        "      if (!vessel(pos)) pos = old;\n" +
+        "    }\n" +
+        "    ivec2 ci = ivec2(floor(pos));\n" +
+        "    if (texelFetch(uObst, ci, 0).r > 0.5) dead = true;                       // a drawn obstacle: no bounce, the particle is born again\n" +
+        "    else { float kk = texelFetch(uGeo, ci, 0).g; if (kk > 1.5 && kk < 2.5) dead = true; }     // reached an outlet\n" +
+        "  }\n" +
+        "  if (dead) {\n" +
+        "    tree = float(id & 1); vec2 h = hash2(vec2(float(id), uTime)); vec2 h3 = hash2(vec2(float(id) * 3.1 + 9.0, uTime * 1.7 + 3.0));\n" +
+        "    float cnt = tree < 0.5 ? uCnt.x : uCnt.y, off = tree < 0.5 ? uOff.x : uOff.y;\n" +
+        "    vec2 rc = tree < 0.5 ? uRoot.xy : uRoot.zw; float rad = tree < 0.5 ? uRad.x : uRad.y;\n" +
+        "    if (h3.x < uShare || cnt < 1.0) {                                        // in the inlet disk\n" +
+        "      float ang = 6.2832 * h.x, rr = rad * sqrt(h.y); pos = rc + rr * vec2(cos(ang), sin(ang));\n" +
+        "    } else {                                                                  // anywhere in the vessels of the tree\n" +
+        "      int k = int(off + floor(h.x * cnt)); int cc = int(texelFetch(uCells, ivec2(k % " + MEMW + ", k / " + MEMW + "), 0).x + 0.5);\n" +
+        "      pos = vec2(float(cc % SZ.x), float(cc / SZ.x)) + vec2(fract(h.x * cnt), h.y);\n" +
+        "    }\n" +
+        "    if (!vessel(pos) || texelFetch(uObst, ivec2(floor(pos)), 0).r > 0.5) pos = rc;\n" +
+        "    age = 0.0;\n" +
+        "  }\n" +
         "  o = vec4(pos, tree, age); }";
-    var VS_PART = "#version 300 es\nprecision highp float; precision highp sampler2D;\nuniform sampler2D uPart; uniform vec2 uSz; uniform float uSize, uMaxAge;\nout float vTree; out float vFade;\n" +
+    var VS_PART = "#version 300 es\nprecision highp float; precision highp sampler2D;\nuniform sampler2D uPart; uniform vec2 uSz; uniform float uSize, uMaxAge, uClock;\nout float vTree; out float vFade;\n" +
         "void main(){ int id = gl_VertexID; vec4 p = texelFetch(uPart, ivec2(id % " + PS + ", id / " + PS + "), 0);\n" +
         "  gl_Position = vec4(p.xy / uSz * 2.0 - 1.0, 0.0, 1.0); gl_PointSize = uSize; vTree = p.z;\n" +
-        "  vFade = smoothstep(0.0, 0.6, p.w) * (1.0 - smoothstep(uMaxAge - 3.0, uMaxAge, p.w)); }";
+        "  float tw = 0.72 + 0.28 * sin(uClock * (2.2 + float(id % 7) * 0.55) + float(id) * 1.913);\n" +
+        "  vFade = smoothstep(0.0, 0.6, p.w) * (1.0 - smoothstep(uMaxAge - 3.0, uMaxAge, p.w)) * tw; }";
     var FS_PART = "#version 300 es\nprecision highp float; in float vTree; in float vFade; out vec4 o;\n" +
-        "void main(){ float a = smoothstep(0.5, 0.18, length(gl_PointCoord - 0.5)) * vFade; vec3 col = vTree < 0.5 ? vec3(0.8, 0.93, 1.0) : vec3(1.0, 0.88, 0.88); o = vec4(col * a, a); }";
+        "void main(){ float a = smoothstep(0.5, 0.18, length(gl_PointCoord - 0.5)) * vFade; vec3 col = vTree < 0.5 ? vec3(0.02, 0.17, 0.55) : vec3(0.55, 0.03, 0.09); o = vec4(col * a, a); }";
 
     // smoothed pressure per unit time, for display
     var S_PD = HEAD + "uniform sampler2D uP, uPd; uniform float uInvDt, uMixF;\n" +
         "void main(){ ivec2 c = ivec2(gl_FragCoord.xy); o = vec4(mix(texelFetch(uPd, c, 0).x, texelFetch(uP, c, 0).x * uInvDt, uMixF), 0.0, 0.0, 1.0); }";
 
-    var S_SHOW = HEAD + "uniform sampler2D uDye, uMask, uGeo, uObst, uPd; uniform vec2 uBeat; uniform vec3 uObstCol; uniform int uView; uniform float uPScale;\n" +
-        "vec3 pcol(float v){ vec3 base = vec3(0.2, 0.19, 0.3), neg = vec3(0.18, 0.45, 0.95), p0 = vec3(1.0, 0.45, 0.1), p1 = vec3(1.0, 0.92, 0.45);\n" +
-        "  if (v < 0.0) return mix(base, neg, clamp(-v, 0.0, 1.0));\n" +
-        "  return mix(mix(base, p0, clamp(v * 1.6, 0.0, 1.0)), p1, clamp((v - 0.55) * 2.2, 0.0, 1.0)); }\n" +
+    var S_SHOW = HEAD + "uniform sampler2D uDye, uMask, uGeo, uObst, uPd; uniform vec2 uBeat; uniform vec3 uObstCol; uniform int uView; uniform vec4 uRange; uniform vec2 uPU;\n" +
+        "vec3 pseq(float t){ t = clamp(t, 0.0, 1.0); vec3 c0 = vec3(0.20, 0.19, 0.36), c1 = vec3(0.18, 0.45, 0.95), c2 = vec3(1.0, 0.45, 0.10), c3 = vec3(1.0, 0.92, 0.45);\n" +
+        "  if (t < 0.33) return mix(c0, c1, t / 0.33); if (t < 0.66) return mix(c1, c2, (t - 0.33) / 0.33); return mix(c2, c3, (t - 0.66) / 0.34); }\n" +
         "void main(){\n" +
         "  vec2 uv = vUv; ivec2 sz = textureSize(uGeo, 0); ivec2 c = clamp(ivec2(uv * vec2(sz)), ivec2(0), sz - 1);\n" +
-        "  float b = texelFetch(uGeo, c, 0).b < 0.5 ? uBeat.x : uBeat.y;\n" +
+        "  float b0 = texelFetch(uGeo, c, 0).b; float b = b0 < 0.5 ? uBeat.x : uBeat.y;\n" +
         "  float m = smoothstep(0.35, 0.65, texture(uMask, uv).r);\n" +
         "  vec3 bg = vec3(0.07, 0.063, 0.11), vessel = vec3(0.16, 0.15, 0.22), col;\n" +
-        "  float kd = texelFetch(uGeo, c, 0).g; vec3 tint = kd > 1.5 ? vec3(0.75, 0.12, 0.12) : vec3(0.13, 0.55, 0.13); float ta = kd > 0.5 ? 0.42 : 0.0;\n" +
+        "  float kd = texelFetch(uGeo, c, 0).g; bool isOut = kd > 1.5 && kd < 2.5; vec3 tint = isOut ? vec3(0.75, 0.12, 0.12) : vec3(0.13, 0.55, 0.13); float ta = kd > 0.5 ? 0.42 : 0.0;\n" +
         "  vec3 vesselC = mix(vessel, tint, ta);\n" +
         "  if (uView == 0) {\n" +
         "    vec2 d = texture(uDye, uv).rg;\n" +
@@ -557,13 +627,16 @@
         "    glow *= 0.8 + 0.35 * b;\n" +
         "    col = bg + m * (vesselC + 0.06 * b - bg) + m * glow * 1.1;\n" +
         "  } else {\n" +
-        "    col = bg + m * (mix(pcol(texture(uPd, uv).r / uPScale), tint, ta * 0.3) - bg);\n" +
+        "    float mmHg = texture(uPd, uv).r / (b0 < 0.5 ? uPU.x : uPU.y);\n" +
+        "    float tp = b0 < 0.5 ? (mmHg - uRange.x) / max(uRange.y - uRange.x, 1.0) : (mmHg - uRange.z) / max(uRange.w - uRange.z, 1.0);\n" +
+        "    vec3 pc = pseq(tp) * (0.9 + 0.1 * cos(clamp(tp, -0.2, 1.2) * 62.83));         // faint iso-pressure bands: they travel along the vessels as the pressure changes\n" +
+        "    col = bg + m * (mix(pc, tint, ta * 0.3) - bg);\n" +
         "  }\n" +
         "  float ob = texelFetch(uObst, c, 0).r;\n" +
         "  col = mix(col, uObstCol * (0.9 + 0.1 * b), ob);\n" +
         "  o = vec4(col, 1.0); }";
 
-    var progs = {}, TEX = {}, pool, pres, dye, pd, parts, simT = 0, rhsRT, segE, vao, cur, piData = new Float32Array(SEGW * SEGH), readBuf = new Float32Array(SEGW * SEGH * 4);
+    var progs = {}, TEX = {}, pool, pres, dye, pd, parts, partsV, simT = 0, partCnt = [0, 0], pRange = [64, 120, 64, 120], rhsRT, segE, vao, cur, piData = new Float32Array(SEGW * SEGH), readBuf = new Float32Array(SEGW * SEGH * 4);
     function makeTex(w, h, internal, format, type, filter, data) {
         var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -600,6 +673,7 @@
             data[i * 4] = (c % W) + Math.random(); data[i * 4 + 1] = (H - 1 - ((c / W) | 0)) + Math.random(); data[i * 4 + 2] = t; data[i * 4 + 3] = Math.random() * PARTICLE_LIFE;
         }
         [parts.a, parts.b].forEach(function (rt) { gl.bindTexture(gl.TEXTURE_2D, rt.tex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, PS, PS, gl.RGBA, gl.FLOAT, data); });
+        [partsV.a, partsV.b].forEach(function (rt) { clearRT(rt); });
     }
     function makeR32(w, h, data) { return makeTex(w, h, gl.R32F, gl.RED, gl.FLOAT, gl.NEAREST, data); }
     function uploadR32(tex, w, h, data) { gl.bindTexture(gl.TEXTURE_2D, tex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, w, h, gl.RED, gl.FLOAT, data); }
@@ -616,14 +690,19 @@
         var a = segmentArrays(G);
         TEX.segIdx = makeR32(W, H, a.idx); TEX.members = makeR32(MEMW, MEMH, a.mem); TEX.pi = makeR32(SEGW, SEGH, null);
         TEX.info = makeTex(SEGW, SEGH, gl.RGBA32F, gl.RGBA, gl.FLOAT, gl.NEAREST, a.info);
+        // list of the vessel cells of each tree (texture cell indices), for the particles born anywhere in the vessels
+        var cl = new Float32Array(MEMW * MEMH), nL = 0, nR = 0, ii;
+        for (ii = 0; ii < N; ii++) if (trees.L[ii] && nL < MEMW * MEMH / 2) cl[nL++] = texIndex(ii);
+        for (ii = 0; ii < N; ii++) if (trees.R[ii] && !trees.L[ii] && nL + nR < MEMW * MEMH) cl[nL + nR++] = texIndex(ii);
+        partCnt = [nL, nR]; TEX.cells = makeR32(MEMW, MEMH, cl);
         TEX.obst = makeTex(W, H, gl.R8, gl.RED, gl.UNSIGNED_BYTE, gl.NEAREST, flipU8(obst, 255));
         TEX.mask = makeTex(W, H, gl.R8, gl.RED, gl.UNSIGNED_BYTE, gl.LINEAR, flipU8(baseMask, 255));
         progs.advect = prog(S_ADVECT); progs.diffuse = prog(S_DIFFUSE); progs.div = prog(S_DIV); progs.segsum = prog(S_SEGSUM); progs.pseg = prog(S_PSEG);
         progs.jacobi = prog(S_JACOBI); progs.grad = prog(S_GRAD); progs.dye = prog(S_DYE); progs.pd = prog(S_PD); progs.show = prog(S_SHOW);
-        if (PS) { progs.part = prog(S_PART); progs.partDraw = prog(FS_PART, VS_PART); }
+        if (PS) { progs.part = prog(S_PART); progs.boid = prog(S_BOID); progs.partDraw = prog(FS_PART, VS_PART); }
         pool = [makeRT(W, H), makeRT(W, H), makeRT(W, H)]; cur = pool[0];
         pres = makePair(W, H); rhsRT = makeRT(W, H); segE = makeRT(SEGW, SEGH);
-        dye = makePair(W, H, true, true); pd = makePair(W, H, true, true); if (PS) parts = makePair(PS, PS);
+        dye = makePair(W, H, true, true); pd = makePair(W, H, true, true); if (PS) { parts = makePair(PS, PS); partsV = makePair(PS, PS); }
         vao = gl.createVertexArray(); gl.bindVertexArray(vao);
         canvas.width = W * 2; canvas.height = H * 2; canvas.style.aspectRatio = W + " / " + H;
         resetFlow();
@@ -638,11 +717,14 @@
     function uploadGeo() { gl.bindTexture(gl.TEXTURE_2D, TEX.geo); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, W, H, gl.RGBA, gl.FLOAT, geoData); }
 
     // ---- 4. one time step
+    var dbgText = "", dbgEl = document.getElementById("ns-debug");
     var bpm = BPM_DEFAULT, systolic = SYSTOLIC_DEFAULT, view = 0, phaseL = 0, phaseR = 0;
     function diastolic() { return systolic * DIASTOLIC_RATIO; }
     function step(dt) {
         // pressure applied at the ostia: diastolic + (systolic - diastolic) * pulse, in mmHg, times the pressure units per mmHg
-        var dia = diastolic(), pL = PU * (dia + (systolic - dia) * beat(phaseL)), pR = PU * (dia + (systolic - dia) * beat(phaseR)), invDt = 1 / dt;
+        var dia = diastolic(), pL = PUt.L * (dia + (systolic - dia) * beat(phaseL)), pR = PUt.R * (dia + (systolic - dia) * beat(phaseR)), invDt = 1 / dt;
+        // colour range of the pressure view: fixed at an absolute scale (endpoint pressure to systolic), so that the pulse is visible as a change of colour
+        pRange[0] = pRange[2] = dia * OUTLET_BACK_RATIO; pRange[1] = pRange[3] = systolic;
         var pg, i, free = pool.filter(function (r) { return r !== cur; });
         // 1. advect the velocity
         pg = use(progs.advect); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); gl.uniform1f(pg.u.uDt, dt);
@@ -653,7 +735,7 @@
         for (i = 0; i < DIFFUSE; i++) { var out = targets[i % 2]; bindTex(pg, "uVk", 3, k.tex); drawTo(out); k = out; }
         cur = k; free = pool.filter(function (r) { return r !== cur; });
         // 3. right-hand side of the pressure equation (pressure inlet, resistive outlets)
-        pg = use(progs.div); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); gl.uniform2f(pg.u.uPin, pL, pR); drawTo(rhsRT);
+        pg = use(progs.div); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); gl.uniform2f(pg.u.uPin, pL, pR); gl.uniform2f(pg.u.uPout, PUt.L * dia * OUTLET_BACK_RATIO, PUt.R * dia * OUTLET_BACK_RATIO); drawTo(rhsRT);
         // 4. coarse pressure: sum of the residual per tree layer (GPU), small graph solve (CPU), seed the pressure (GPU)
         if (G.n > 0) {
             pg = use(progs.segsum); bindTex(pg, "uRhs", 0, rhsRT.tex); bindTex(pg, "uInfo", 1, TEX.info); bindTex(pg, "uMembers", 2, TEX.members); gl.uniform1i(pg.u.uN, G.n);
@@ -663,6 +745,11 @@
             var bs = new Float64Array(G.n), extra = new Float64Array(G.n);
             for (i = 0; i < G.n; i++) { bs[i] = -readBuf[i * 4]; extra[i] = G.kappa[i] * invDt; }
             var pi = Core.solveSegments(G, bs, piPrev, 100, 1e-18, extra, false); piPrev = pi;
+            // numbers for the on-screen readout (pressure of the coarse solve, mmHg): at the ostium, mean and minimum over each tree
+            var st = [{ r: 0, lo: 1e30, sum: 0, n: 0 }, { r: 0, lo: 1e30, sum: 0, n: 0 }];
+            for (i = 0; i < G.n; i++) { var tt = G.segTree[i] === 0 ? 0 : 1, mv = pi[i] * invDt / (tt ? PUt.R : PUt.L); st[tt].sum += mv; st[tt].n++; if (mv < st[tt].lo) st[tt].lo = mv; }
+            ["L", "R"].forEach(function (sd, ti) { var sg = G.seg ? G.seg[field.root[sd]] : -1; st[ti].r = sg >= 0 ? pi[sg] * invDt / PUt[sd] : NaN; });
+            dbgText = "L: ostium " + st[0].r.toFixed(0) + ", mean " + (st[0].sum / Math.max(st[0].n, 1)).toFixed(0) + ", min " + st[0].lo.toFixed(0) + "  |  R: ostium " + st[1].r.toFixed(0) + ", mean " + (st[1].sum / Math.max(st[1].n, 1)).toFixed(0) + ", min " + st[1].lo.toFixed(0) + " mmHg  |  applied " + (pL / PUt.L).toFixed(0) + "/" + (pR / PUt.R).toFixed(0) + ", endpoints " + (dia * OUTLET_BACK_RATIO).toFixed(0);
             piData.fill(0); piData.set(pi);
             uploadR32(TEX.pi, SEGW, rows, piData.subarray(0, SEGW * rows));
         }
@@ -683,7 +770,12 @@
         drawTo(pd.b); pd.swap();
         // 9. tracer particles
         if (PS) {
-            pg = use(progs.part); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); bindTex(pg, "uPart", 3, parts.a.tex);
+            pg = use(progs.boid); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); bindTex(pg, "uPart", 3, parts.a.tex); bindTex(pg, "uPartV", 4, partsV.a.tex);
+            gl.uniform1f(pg.u.uDt, dt); gl.uniform1f(pg.u.uRadius, BOID_RADIUS * K1); gl.uniform1f(pg.u.uSep, BOID_SEPARATION * K1); gl.uniform1f(pg.u.uASep, BOID_SEPARATE * K1);
+            gl.uniform1f(pg.u.uAAl, BOID_ALIGN); gl.uniform1f(pg.u.uACoh, BOID_COHESION); gl.uniform1f(pg.u.uTau, BOID_TAU); gl.uniform1f(pg.u.uVmax, PARTICLE_MAX_SPEED * K1); gl.uniform1f(pg.u.uWallK, BOID_WALL_K); gl.uniform1f(pg.u.uWallR, BOID_WALL_RANGE * K1); gl.uniform1f(pg.u.uScale, K1);
+            drawTo(partsV.b); partsV.swap();
+            pg = use(progs.part); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); bindTex(pg, "uPart", 3, parts.a.tex); bindTex(pg, "uCells", 4, TEX.cells); bindTex(pg, "uPartV", 5, partsV.a.tex);
+            gl.uniform2f(pg.u.uCnt, partCnt[0], partCnt[1]); gl.uniform2f(pg.u.uOff, 0, partCnt[0]); gl.uniform1f(pg.u.uJitter, PARTICLE_JITTER * K1); gl.uniform1f(pg.u.uShare, PARTICLE_INLET_SHARE);
             gl.uniform1f(pg.u.uDt, dt); gl.uniform1f(pg.u.uTime, simT); gl.uniform1f(pg.u.uMaxAge, PARTICLE_LIFE);
             gl.uniform4f(pg.u.uRoot, partRoot[0], partRoot[1], partRoot[2], partRoot[3]); gl.uniform2f(pg.u.uRad, partRad[0], partRad[1]);
             drawTo(parts.b); parts.swap();
@@ -695,13 +787,13 @@
     }
     function show() {
         var pg = use(progs.show); geoUnits(pg);
-        bindTex(pg, "uDye", 2, dye.a.tex); bindTex(pg, "uMask", 3, TEX.mask); bindTex(pg, "uPd", 4, pd.a.tex); gl.uniform1f(pg.u.uPScale, Math.max(PU * systolic, 1e-6));
+        bindTex(pg, "uDye", 2, dye.a.tex); bindTex(pg, "uMask", 3, TEX.mask); bindTex(pg, "uPd", 4, pd.a.tex); gl.uniform4f(pg.u.uRange, pRange[0], pRange[1], pRange[2], pRange[3]); gl.uniform2f(pg.u.uPU, PUt.L, PUt.R);
         gl.uniform2f(pg.u.uBeat, beat(phaseL), beat(phaseR)); gl.uniform3f(pg.u.uObstCol, OBSTACLE_COLOR[0], OBSTACLE_COLOR[1], OBSTACLE_COLOR[2]); gl.uniform1i(pg.u.uView, view);
         drawTo(null, canvas.width, canvas.height);
         if (PS) {                  // particles on top, soft white dots
             gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             var pp = use(progs.partDraw); bindTex(pp, "uPart", 0, parts.a.tex);
-            gl.uniform2f(pp.u.uSz, W, H); gl.uniform1f(pp.u.uSize, PARTICLE_SIZE); gl.uniform1f(pp.u.uMaxAge, PARTICLE_LIFE);
+            gl.uniform2f(pp.u.uSz, W, H); gl.uniform1f(pp.u.uSize, PARTICLE_SIZE); gl.uniform1f(pp.u.uMaxAge, PARTICLE_LIFE); gl.uniform1f(pp.u.uClock, performance.now() / 1000);   // wall clock: the particles twinkle even when paused
             gl.drawArrays(gl.POINTS, 0, PS * PS); gl.disable(gl.BLEND);
         }
     }
@@ -741,7 +833,9 @@
     var playBtn = $("ns-play"), resetBtn = $("ns-reset"), clearBtn = $("ns-clear"), viewBtn = $("ns-view"), fullBtn = $("ns-full");
     var bpmIn = $("ns-bpm"), bpmVal = $("ns-bpm-val"), presIn = $("ns-pressure"), presVal = $("ns-pressure-val"), legend = $("ns-legend");
     function bpText() { return Math.round(systolic) + "/" + Math.round(diastolic()) + " mmHg"; }
-    function bpUpdate() { if (presVal) presVal.textContent = bpText(); if (legend && legend.lastElementChild) legend.lastElementChild.textContent = Math.round(systolic) + " mmHg (systolic)"; }
+    var verEl = document.getElementById("ns-version"); if (verEl) verEl.textContent = NS_VERSION;
+    function bpUpdate() { if (presVal) presVal.textContent = bpText(); }
+    function legendUpdate() { if (legend && legend.firstElementChild && legend.lastElementChild) { legend.firstElementChild.textContent = Math.round(pRange[0]) + " mmHg"; legend.lastElementChild.textContent = Math.round(pRange[1]) + " mmHg"; } }
     var running = false, userPaused = false, last = 0, raf = 0, frames = 0, accum = 0, adjustments = 0;
     var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -749,6 +843,8 @@
         raf = 0; if (!running) return;
         var dt = Math.min((now - last) / 1000, 1 / 30); last = now;
         step(dt); show();
+        if (view === 1 && (frames & 7) === 0) legendUpdate();
+        if (dbgEl && (frames & 15) === 0) dbgEl.textContent = dbgText;
         // slow device: fewer solver sweeps
         if (++frames > 30) { accum += dt; if (frames === 150) { var avg = accum / 120; if (avg > 0.026 && adjustments < 2) { JACOBI = Math.max(10, JACOBI - 10); DIFFUSE = Math.max(2, DIFFUSE - 2); adjustments++; } frames = 0; accum = 0; } }
         raf = requestAnimationFrame(frame);
@@ -767,7 +863,7 @@
     if (resetBtn) resetBtn.addEventListener("click", function () { resetFlow(); show(); });
     if (clearBtn) clearBtn.addEventListener("click", clearObstacles);
     if (viewBtn) viewBtn.addEventListener("click", function () {
-        view = view ? 0 : 1; viewBtn.textContent = view ? "View: Pressure" : "View: Flow"; if (legend) legend.style.display = view ? "" : "none"; if (!running) show();
+        view = view ? 0 : 1; viewBtn.textContent = view ? "View: Pressure" : "View: Flow"; if (legend) legend.style.display = view ? "" : "none"; legendUpdate(); if (!running) show();
     });
     if (fullBtn && document.fullscreenEnabled) {
         fullBtn.addEventListener("click", function () { if (document.fullscreenElement) document.exitFullscreen(); else figure.requestFullscreen(); });
@@ -792,13 +888,25 @@
             (model.endpoints[side] || []).forEach(function (pt) { var c = Core.nearestIn(trees[side], W, H, pt[0], pt[1]); if (c >= 0 && !seen[c]) { seen[c] = 1; epStatic[side].push(c); } });
         });
         obst = new Uint8Array(N);
+        // scale: the arteries close to the ostium are ARTERY_DIAMETER_MM wide; viscosity of blood; speeds of the real flow shown SLOWMO times slower
+        var hs = [];
+        ["L", "R"].forEach(function (side) {
+            var b = Core.bfs4(trees[side], W, H, rootStatic[side]), vals = [], k;
+            for (k = 0; k < b.count; k++) if (b.g[b.queue[k]] <= 60 * K1) vals.push(edt[side][b.queue[k]]);
+            vals.sort(function (x, y) { return x - y; });
+            hOst[side] = 2 * (vals.length ? vals[vals.length >> 1] : 4); hs.push(hOst[side]);
+        });
+        mmPerCell = ARTERY_DIAMETER_MM / (0.5 * (hs[0] + hs[1]));
+        NU = BLOOD_VISCOSITY_MM2_S / (SLOWMO * mmPerCell * mmPerCell);
+        vPeakCells = V_PEAK_MM_S / (mmPerCell * SLOWMO);
         var r = computeGeometry();
         if (!r) { bail("The geometry is too large for this simulation."); return; }
         field = r.f; G = r.G; geoData = geoArray(field);
         try { setupGL(); } catch (err) { if (window.console) console.error(err); bail("The simulation could not start on this device."); return; }
         setRoots(field);
         var params = new URLSearchParams(location.search), pre = parseInt(params.get("nssteps"), 10);
-        window.__ns = { paint: function (cx, cy) { paintAt({ clientX: cx, clientY: cy, shiftKey: false }); }, view: function (v) { view = v; show(); }, step: function (n) { for (var k = 0; k < n; k++) step(1 / 60); show(); }, segments: G.n, endpoints: { L: epStatic.L.length, R: epStatic.R.length }, pu: PU, particles: PS * PS };
+        window.__ns = {
+          paint: function (cx, cy) { paintAt({ clientX: cx, clientY: cy, shiftKey: false }); }, view: function (v) { view = v; show(); }, step: function (n) { for (var k = 0; k < n; k++) step(1 / 60); show(); }, segments: G.n, endpoints: { L: epStatic.L.length, R: epStatic.R.length }, pu: PUt, particles: PS * PS, mmPerCell: mmPerCell, nu: NU, vPeakCells: vPeakCells };
         if (!isNaN(pre)) { for (var k = 0; k < pre; k++) step(1 / 60); show(); userPaused = true; return; }
         if (reduced) { for (var j = 0; j < 240; j++) step(1 / 60); show(); userPaused = true; return; }
         show();
