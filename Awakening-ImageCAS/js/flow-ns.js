@@ -1,15 +1,17 @@
 // Real-time 2D viscous incompressible flow (WebGL2) inside the unfolded left and right coronary trees.
 //
 // - The fluid can only move inside the vessel masks (rigid, no-slip walls); the mouse adds 2x2 rigid obstacles.
-// - A pulsatile inflow enters at the ostium of each tree (a source on a small disk) and leaves along the tree (distributed sinks).
+// - Boundary conditions: the ostium (green dot) is a PRESSURE inlet, P_in(t) = knob * pulse(t), linked to the first cells of the
+//   tree through a stiff conductance; every endpoint (red dot) is a resistive outlet, a link to zero pressure whose resistance is
+//   proportional to the Poiseuille resistance of the path from the ostium (so the flow divides between the branches by their
+//   geometry, and a higher pressure means a higher flow). These links are Robin terms of the pressure equation.
 // - Staggered (MAC) grid, semi-Lagrangian advection, implicit viscous diffusion, pressure projection.
 // - Long-range pressure: a thin 600-cell tree is far too long for a Jacobi solve (errors with wavelengths of tens of cells never
 //   decay and the flow stalls). The pressure is therefore solved in two levels. Coarse level: one unknown per BFS layer of each tree
 //   (one cell thick, split in connected pieces), i.e. the 1D tree-shaped reduction of the problem. Every step the GPU sums the
 //   divergence residual of each layer, a small graph system (~1-3k unknowns) is solved on the CPU (Jacobi-preconditioned CG,
-//   warm-started) and its solution seeds the pressure; Jacobi sweeps on the GPU then smooth the local residual. This removes the
-//   flux error at every cross-section of every vessel.
-// - Views: dye (live flow) or the solver's pressure per unit time.
+//   warm-started) and its solution seeds the pressure; Jacobi sweeps on the GPU then smooth the local residual.
+// - Views: dye (live flow) or the solver's pressure.
 (function (root) {
     "use strict";
 
@@ -56,30 +58,82 @@
             return best;
         }
 
-        // Source/sink field of both trees for the current obstacles.
-        //  trees  {L, R}: vessel masks      edt {L, R}: wall distance of each mask     rootStatic {L, R}: root cell without obstacles
-        //  obst: obstacle cells (or null)    Returns s (unit inflow on a disk at the root, minus sinks ~ geodesic^2, zero-sum per tree),
-        //  tree (0 left, 1 right, -1 none), open (fluid, not obstacle), root cells and inlet radii.
-        function buildSource(trees, edt, rootStatic, obst, W, H) {
-            var N = W * H, s = new Float32Array(N), tree = new Int8Array(N).fill(-1), open = new Uint8Array(N);
-            var out = { s: s, tree: tree, open: open, root: {}, rr: {} };
+        // minimal binary heap (keys: path resistance)
+        function Heap() { this.k = []; this.v = []; }
+        Heap.prototype.push = function (key, val) {
+            var k = this.k, v = this.v, i = k.length; k.push(key); v.push(val);
+            while (i > 0) { var p = (i - 1) >> 1; if (k[p] <= key) break; k[i] = k[p]; v[i] = v[p]; i = p; }
+            k[i] = key; v[i] = val;
+        };
+        Heap.prototype.pop = function () {
+            var k = this.k, v = this.v, tk = k[0], tv = v[0], lk = k.pop(), lv = v.pop(), n = k.length;
+            if (n) { var i = 0; for (;;) { var c = 2 * i + 1; if (c >= n) break; if (c + 1 < n && k[c + 1] < k[c]) c++; if (k[c] >= lk) break; k[i] = k[c]; v[i] = v[c]; i = c; } k[i] = lk; v[i] = lv; }
+            return { key: tk, val: tv };
+        };
+        // Poiseuille resistance of the path from the root to every cell: a step between two cells of a channel of width h = D_a + D_b
+        // (D = distance to the wall) has the resistance 12 nu / h^3 (2D plane Poiseuille flow, per unit length and depth)
+        function dijkstraRes(open, edtSide, W, H, root, nu) {
+            var N = W * H, dist = new Float64Array(N).fill(Infinity), hp = new Heap();
+            dist[root] = 0; hp.push(0, root);
+            while (hp.k.length) {
+                var t = hp.pop(), u = t.val; if (t.key > dist[u]) continue;
+                var x = u % W, y = (u / W) | 0, nbs = [x > 0 ? u - 1 : -1, x < W - 1 ? u + 1 : -1, y > 0 ? u - W : -1, y < H - 1 ? u + W : -1];
+                for (var q = 0; q < 4; q++) {
+                    var nb = nbs[q]; if (nb < 0 || !open[nb]) continue;
+                    var h = Math.max(edtSide[u] + edtSide[nb], 1.5), nd = t.key + 12 * nu / (h * h * h);
+                    if (nd < dist[nb]) { dist[nb] = nd; hp.push(nd, nb); }
+                }
+            }
+            return dist;
+        }
+
+        // Boundary field of both trees for the current obstacles.
+        //  trees {L, R}: vessel masks   edt {L, R}: wall distance of each mask   rootStatic {L, R}: ostium cell   epStatic {L, R}: endpoint cells
+        //  prm {nu, rho, rhoIn}: viscosity, outlet resistance / mean path resistance, inlet resistance / mean path resistance
+        // Returns kappa (conductance of the link of each cell to its reservoir), kind (0 none, 1 inlet disk, 2 outlet patch),
+        // tree (0 left, 1 right, -1 none), open (fluid, not obstacle), root cells, endpoint cells and the mean path resistance.
+        function buildBoundary(trees, edt, rootStatic, epStatic, obst, W, H, prm) {
+            var N = W * H, kappa = new Float32Array(N), kind = new Uint8Array(N), tree = new Int8Array(N).fill(-1), open = new Uint8Array(N);
+            var out = { kappa: kappa, kind: kind, tree: tree, open: open, root: {}, rr: {}, endpoints: { L: [], R: [] }, rbar: {} };
             ["L", "R"].forEach(function (side, ti) {
                 var m = trees[side], openT = new Uint8Array(N), i;
                 for (i = 0; i < N; i++) if (m[i]) { tree[i] = ti; if (!obst || !obst[i]) { openT[i] = 1; open[i] = 1; } }
-                var r0 = rootStatic[side];
-                out.rr[side] = Math.max(3, 1.6 * edt[side][r0]);
+                var r0 = rootStatic[side], rr = Math.max(3, 1.6 * edt[side][r0]);
+                out.rr[side] = rr;
                 var r = openT[r0] ? r0 : nearestIn(openT, W, H, r0 % W, (r0 / W) | 0);
                 out.root[side] = r;
-                if (r < 0) return;                                   // the whole tree is blocked
-                var b = bfs4(openT, W, H, r), gmax = 1, k;
-                for (k = 0; k < b.count; k++) if (b.g[b.queue[k]] > gmax) gmax = b.g[b.queue[k]];
-                var sink = 0;
-                for (k = 0; k < b.count; k++) { var c = b.queue[k], w = Math.pow(b.g[c] / gmax, 2); s[c] = -w; sink += w; }
-                for (k = 0; k < b.count; k++) s[b.queue[k]] /= sink;       // sinks sum to -1
-                var rx = r % W, ry = (r / W) | 0, inlet = [], rr2 = out.rr[side] * out.rr[side];
-                for (k = 0; k < b.count; k++) { var c2 = b.queue[k], dx = c2 % W - rx, dy = ((c2 / W) | 0) - ry; if (dx * dx + dy * dy <= rr2) inlet.push(c2); }
+                if (r < 0) return;                                           // the whole tree is blocked
+                var dist = dijkstraRes(openT, edt[side], W, H, r, prm.nu);
+                // endpoints: the given cells (or the nearest reachable open cell); none given: the farthest cell
+                var eps = [], used = {}, k;
+                (epStatic[side] || []).forEach(function (e0) {
+                    var e = -1, bd = 1e9, ex = e0 % W, ey = (e0 / W) | 0;
+                    for (var dy = -8; dy <= 8; dy++) for (var dx = -8; dx <= 8; dx++) {
+                        var xx = ex + dx, yy = ey + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+                        var c = yy * W + xx; if (!openT[c] || !isFinite(dist[c])) continue;
+                        var d = dx * dx + dy * dy; if (d < bd) { bd = d; e = c; }
+                    }
+                    if (e >= 0 && !used[e]) { used[e] = 1; eps.push({ cell: e, radius: Math.max(2.2, 1.2 * edt[side][e0]) }); }
+                });
+                if (!eps.length) { var far = r, fd = -1; for (i = 0; i < N; i++) if (openT[i] && isFinite(dist[i]) && dist[i] > fd) { fd = dist[i]; far = i; } eps.push({ cell: far, radius: 3 }); }
+                var rbar = 0; for (k = 0; k < eps.length; k++) rbar += dist[eps[k].cell]; rbar = Math.max(rbar / eps.length, 1e-9);
+                out.rbar[side] = rbar;
+                var Rout = prm.rho * rbar, Rin = prm.rhoIn * rbar;
+                eps.forEach(function (ep) {
+                    var ex = ep.cell % W, ey = (ep.cell / W) | 0, rad = ep.radius, cells = [];
+                    for (var dy = -Math.ceil(rad); dy <= Math.ceil(rad); dy++) for (var dx = -Math.ceil(rad); dx <= Math.ceil(rad); dx++) {
+                        if (dx * dx + dy * dy > rad * rad) continue;
+                        var xx = ex + dx, yy = ey + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+                        var c = yy * W + xx; if (openT[c] && isFinite(dist[c]) && !kind[c]) cells.push(c);
+                    }
+                    if (!cells.length) cells.push(ep.cell);
+                    for (var q = 0; q < cells.length; q++) { kind[cells[q]] = 2; kappa[cells[q]] = 1 / (Rout * cells.length); }
+                    out.endpoints[side].push(ep.cell);
+                });
+                var rx = r % W, ry = (r / W) | 0, inlet = [], rr2 = rr * rr;
+                for (i = 0; i < N; i++) if (openT[i] && isFinite(dist[i])) { var dx2 = i % W - rx, dy2 = ((i / W) | 0) - ry; if (dx2 * dx2 + dy2 * dy2 <= rr2) inlet.push(i); }
                 if (!inlet.length) inlet.push(r);
-                for (k = 0; k < inlet.length; k++) s[inlet[k]] += 1 / inlet.length;   // inflow sums to +1
+                for (k = 0; k < inlet.length; k++) { kind[inlet[k]] = 1; kappa[inlet[k]] = 1 / (Rin * inlet.length); }
             });
             return out;
         }
@@ -87,7 +141,7 @@
         // Coarse space of the pressure solve: one unknown per BFS layer (one cell thick) of each tree, split in connected pieces of at most
         // maxMembers cells. Aggregating over layers (not over 2x2 blocks) keeps the coarse operator consistent along thin vessels: the coarse
         // problem is the 1D (tree-shaped) reduction of the pressure problem. Returns the segments, their members and the coarse graph.
-        function buildSegments(open, tree, root, W, H, maxMembers) {
+        function buildSegments(open, tree, root, W, H, maxMembers, bnd, edtAll, nu) {
             var N = W * H, seg = new Int32Array(N).fill(-1), members = [], start = [0], n = 0;
             ["L", "R"].forEach(function (side, ti) {
                 var r = root[side]; if (r < 0) return;
@@ -118,53 +172,84 @@
                 }
             });
             // coupling: every fine link between two different segments adds one unit of conductance
-            var map = {}, i2;
-            function link(a, b2) { if (a === b2) return; var lo = a < b2 ? a : b2, hi = a < b2 ? b2 : a, key = lo * 65536 + hi; map[key] = (map[key] || 0) + 1; }
+            // (also the physical conductance of every link, h^2 / (12 nu): the flux of a channel of width h is h^3 / (12 nu) per unit pressure gradient)
+            var map = {}, pmap = {}, i2;
+            function link(a, b2, c1, c2) {
+                if (a === b2) return; var lo = a < b2 ? a : b2, hi = a < b2 ? b2 : a, key = lo * 65536 + hi;
+                var hh = Math.max(edtAll[c1] + edtAll[c2], 1.5);
+                map[key] = (map[key] || 0) + 1; pmap[key] = (pmap[key] || 0) + hh * hh / (12 * nu);
+            }
             for (i2 = 0; i2 < N; i2++) {
                 var sa = seg[i2]; if (sa < 0) continue;
-                if (i2 % W < W - 1 && seg[i2 + 1] >= 0) link(sa, seg[i2 + 1]);
-                if (i2 + W < N && seg[i2 + W] >= 0) link(sa, seg[i2 + W]);
+                if (i2 % W < W - 1 && seg[i2 + 1] >= 0) link(sa, seg[i2 + 1], i2, i2 + 1);
+                if (i2 + W < N && seg[i2 + W] >= 0) link(sa, seg[i2 + W], i2, i2 + W);
             }
             var deg = new Int32Array(n + 1), keys = Object.keys(map), e;
             for (e = 0; e < keys.length; e++) { var kk = +keys[e], lo2 = Math.floor(kk / 65536), hi2 = kk % 65536; deg[lo2]++; deg[hi2]++; }
             var gstart = new Int32Array(n + 1), tot = 0;
             for (i2 = 0; i2 < n; i2++) { gstart[i2] = tot; tot += deg[i2]; } gstart[n] = tot;
-            var nbr = new Int32Array(tot), cond = new Float32Array(tot), fill = new Int32Array(n), diag = new Float64Array(n);
+            var nbr = new Int32Array(tot), cond = new Float32Array(tot), pcond = new Float64Array(tot), fill = new Int32Array(n), diag = new Float64Array(n), pdiag = new Float64Array(n);
             for (e = 0; e < keys.length; e++) {
-                var key2 = +keys[e], l = Math.floor(key2 / 65536), h = key2 % 65536, c2 = map[key2];
-                nbr[gstart[l] + fill[l]] = h; cond[gstart[l] + fill[l]++] = c2; nbr[gstart[h] + fill[h]] = l; cond[gstart[h] + fill[h]++] = c2; diag[l] += c2; diag[h] += c2;
+                var key2 = +keys[e], l = Math.floor(key2 / 65536), h = key2 % 65536, c2 = map[key2], pc = pmap[key2];
+                pcond[gstart[l] + fill[l]] = pc; pcond[gstart[h] + fill[h]] = pc;
+                nbr[gstart[l] + fill[l]] = h; cond[gstart[l] + fill[l]++] = c2; nbr[gstart[h] + fill[h]] = l; cond[gstart[h] + fill[h]++] = c2; diag[l] += c2; diag[h] += c2; pdiag[l] += pc; pdiag[h] += pc;
             }
             // connected components of the coarse graph (to remove the mean of the right-hand side per component)
             var comp2 = new Int32Array(n).fill(-1), nc = 0, st = [];
             for (i2 = 0; i2 < n; i2++) { if (comp2[i2] >= 0) continue; comp2[i2] = nc; st.push(i2);
                 while (st.length) { var u = st.pop(); for (var t = gstart[u]; t < gstart[u + 1]; t++) if (comp2[nbr[t]] < 0) { comp2[nbr[t]] = nc; st.push(nbr[t]); } } nc++; }
-            return { n: n, seg: seg, members: Int32Array.from(members), start: Int32Array.from(start), gstart: gstart, nbr: nbr, cond: cond, diag: diag, comp: comp2, ncomp: nc };
+            // boundary conductance of every segment (sum over its cells), and the tree of each segment
+            var kap = new Float64Array(n), kin = new Float64Array(n), kout = new Float64Array(n), segTree = new Int8Array(n);
+            for (var sg = 0; sg < n; sg++) {
+                segTree[sg] = tree[members[start[sg]]];
+                for (var mm = start[sg]; mm < start[sg + 1]; mm++) {
+                    var cc = members[mm], kk2 = bnd.kappa[cc]; if (!kk2) continue;
+                    kap[sg] += kk2; if (bnd.kind[cc] === 1) kin[sg] += kk2; else kout[sg] += kk2;
+                }
+            }
+            return { n: n, seg: seg, members: Int32Array.from(members), start: Int32Array.from(start), gstart: gstart, nbr: nbr, cond: cond, diag: diag, pcond: pcond, pdiag: pdiag,
+                     comp: comp2, ncomp: nc, kappa: kap, kin: kin, kout: kout, segTree: segTree };
         }
 
-        // Coarse problem  A pi = b  on the segment graph (graph Laplacian), Jacobi-preconditioned CG, warm-started from x0.
-        function solveSegments(G, b, x0, maxIt, tol) {
-            var n = G.n, x = new Float64Array(n), r = new Float64Array(n), z = new Float64Array(n), p = new Float64Array(n), Ap = new Float64Array(n), k, t;
-            var sum = new Float64Array(G.ncomp), cnt = new Float64Array(G.ncomp), bb = new Float64Array(n);
+        // Coarse problem  (A + diag(extra)) pi = b  on the segment graph (graph Laplacian with unit or physical conductances),
+        // Jacobi-preconditioned CG warm-started from x0. Without extra, b is made zero-mean per component (singular Neumann problem).
+        function solveSegments(G, b, x0, maxIt, tol, extra, phys) {
+            var n = G.n, cond = phys ? G.pcond : G.cond, base = phys ? G.pdiag : G.diag;
+            var dg = new Float64Array(n), x = new Float64Array(n), r = new Float64Array(n), z = new Float64Array(n), p = new Float64Array(n), Ap = new Float64Array(n), bb = new Float64Array(n), k, t;
+            for (k = 0; k < n; k++) dg[k] = base[k] + (extra ? extra[k] : 0);
+            var sum = new Float64Array(G.ncomp), cnt = new Float64Array(G.ncomp);
             for (k = 0; k < n; k++) { sum[G.comp[k]] += b[k]; cnt[G.comp[k]]++; }
-            for (k = 0; k < n; k++) { bb[k] = b[k] - sum[G.comp[k]] / cnt[G.comp[k]]; if (x0) x[k] = x0[k]; }
-            function mv(v, out) { for (var a = 0; a < n; a++) { var s = G.diag[a] * v[a]; for (var q = G.gstart[a]; q < G.gstart[a + 1]; q++) s -= G.cond[q] * v[G.nbr[q]]; out[a] = s; } }
+            for (k = 0; k < n; k++) { bb[k] = extra ? b[k] : b[k] - sum[G.comp[k]] / cnt[G.comp[k]]; if (x0) x[k] = x0[k]; }
+            function mv(v, out) { for (var a = 0; a < n; a++) { var s = dg[a] * v[a]; for (var q = G.gstart[a]; q < G.gstart[a + 1]; q++) s -= cond[q] * v[G.nbr[q]]; out[a] = s; } }
             mv(x, Ap);
             var rz = 0, bn = 0;
-            for (k = 0; k < n; k++) { r[k] = bb[k] - Ap[k]; z[k] = G.diag[k] > 0 ? r[k] / G.diag[k] : 0; p[k] = z[k]; rz += r[k] * z[k]; bn += bb[k] * bb[k]; }
+            for (k = 0; k < n; k++) { r[k] = bb[k] - Ap[k]; z[k] = dg[k] > 0 ? r[k] / dg[k] : 0; p[k] = z[k]; rz += r[k] * z[k]; bn += bb[k] * bb[k]; }
             for (t = 0; t < (maxIt || 80) && rz > (tol || 1e-18) * Math.max(bn, 1e-30); t++) {
                 mv(p, Ap); var pAp = 0; for (k = 0; k < n; k++) pAp += p[k] * Ap[k];
                 if (!(pAp > 0)) break;
                 var alpha = rz / pAp, rzn = 0;
-                for (k = 0; k < n; k++) { x[k] += alpha * p[k]; r[k] -= alpha * Ap[k]; z[k] = G.diag[k] > 0 ? r[k] / G.diag[k] : 0; rzn += r[k] * z[k]; }
+                for (k = 0; k < n; k++) { x[k] += alpha * p[k]; r[k] -= alpha * Ap[k]; z[k] = dg[k] > 0 ? r[k] / dg[k] : 0; rzn += r[k] * z[k]; }
                 var beta = rzn / rz; rz = rzn; for (k = 0; k < n; k++) p[k] = z[k] + beta * p[k];
             }
-            var xm = new Float64Array(G.ncomp), out = new Float32Array(n);
+            var out = new Float32Array(n);
+            if (extra) { for (k = 0; k < n; k++) out[k] = x[k]; return out; }
+            var xm = new Float64Array(G.ncomp);
             for (k = 0; k < n; k++) xm[G.comp[k]] += x[k];
             for (k = 0; k < n; k++) out[k] = x[k] - xm[G.comp[k]] / cnt[G.comp[k]];
             return out;
         }
 
-        return { chamfer: chamfer, bfs4: bfs4, nearestIn: nearestIn, buildSource: buildSource, buildSegments: buildSegments, solveSegments: solveSegments };
+        // Equivalent resistance of each tree from the inlet (pressure 1) to the outlets (pressure 0), on the physical resistor network of
+        // the segment graph: used to scale the reference pressure so that the default flow has a sensible speed.
+        function equivalentResistance(G) {
+            var n = G.n, extra = new Float64Array(n), b = new Float64Array(n), k;
+            for (k = 0; k < n; k++) { extra[k] = G.kin[k] + G.kout[k]; b[k] = G.kin[k]; }
+            var pi = solveSegments(G, b, null, 600, 1e-22, extra, true), Q = [0, 0];
+            for (k = 0; k < n; k++) Q[G.segTree[k]] += G.kin[k] * (1 - pi[k]);
+            return { L: Q[0] > 0 ? 1 / Q[0] : Infinity, R: Q[1] > 0 ? 1 / Q[1] : Infinity };
+        }
+
+        return { chamfer: chamfer, bfs4: bfs4, nearestIn: nearestIn, dijkstraRes: dijkstraRes, buildBoundary: buildBoundary, buildSegments: buildSegments, solveSegments: solveSegments, equivalentResistance: equivalentResistance };
     })();
 
     if (typeof document === "undefined") { if (typeof module !== "undefined" && module.exports) module.exports = Core; return; }
@@ -181,16 +266,19 @@
     var SIM_MAX = 640;                       // longest side of the grid, in cells
     var RES_PARAM = parseFloat(new URLSearchParams(location.search).get("res"));     // ?res=360: coarser grid for slow devices
     if (!isNaN(RES_PARAM)) SIM_MAX = RES_PARAM;
-    var K2 = (SIM_MAX / 720) * (SIM_MAX / 720);        // flows and viscosity are tuned on a 720-cell grid
+    var K1 = SIM_MAX / 720, K2 = K1 * K1;              // speeds, flows and viscosity are tuned on a 720-cell grid
     var BPM_MIN = 40, BPM_MAX = 180, BPM_DEFAULT = 60;
-    var PRESSURE_MIN = 0.25, PRESSURE_MAX = 4, PRESSURE_DEFAULT = 1.5;      // scales the inflow of every beat
-    var Q_BASE = 350, Q_PEAK = 7000;         // inflow per tree at pressure 1, in cells^2/s (720-cell grid)
+    var PRESSURE_MIN = 0.2, PRESSURE_MAX = 3, PRESSURE_DEFAULT = 1;        // multiplies the pressure applied at the ostia
+    var P_BASE = 0.1, P_PEAK = 1.0;          // inlet pressure over the beat: knob * Pref * (P_BASE + P_PEAK * pulse)
+    var V_PEAK = 200;                        // cells/s: steady speed in the trunk produced by the peak pressure at knob = 1 (sets Pref)
+    var OUTLET_RESISTANCE = 1.0;             // outlet resistance / mean resistance of the paths to the endpoints ("perfusion resistance")
+    var INLET_RESISTANCE = 0.05;             // resistance between the ostium pressure and the first cells, same unit (small = stiff)
     var NU = 30 * K2;                        // kinematic viscosity, cells^2/s
-    var JACOBI = 28, DIFFUSE = 6;            // sweeps per step (reduced automatically on slow devices)
-    var DYE_RATE = 40, DYE_DECAY = 0.12, DYE_DIFFUSION = 0.06;
+    var JACOBI = 24, DIFFUSE = 6;            // sweeps per step (reduced automatically on slow devices)
+    var DYE_RATE = 40, DYE_DECAY = 0.12, DYE_DIFFUSION = 0.06, DYE_OUTLET = 0.93;     // the dye leaves through the outlets
     var OBSTACLE_COLOR = [0.69, 0.49, 0.18]; // yellowish ochre-brown
     var OBSTACLE_SIZE = 2;                   // cells
-    var SWAP_SIDES = false;                  // true: the leftmost tree of a single image is the right coronary
+    var SWAP_SIDES = false;                  // unused with one image per tree
 
     // The right tree lags the left one by 0.15 / F seconds, F = 20 * (BPM - 40) / (180 - 40) (F is kept >= 0.6: 40 bpm -> 0.25 s).
     function rightDelay(bpm) { var F = Math.max(20 * (bpm - 40) / (180 - 40), 0.6); return 0.15 / F; }
@@ -209,12 +297,28 @@
     function binarize(im) {
         var c = document.createElement("canvas"); c.width = im.naturalWidth; c.height = im.naturalHeight;
         var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0);
-        var d = x.getImageData(0, 0, c.width, c.height).data, w = c.width, h = c.height, b = new Uint8Array(w * h), mx = 0, my = 0, mn = 0;
-        for (var i = 0; i < w * h; i++) {
+        var d = x.getImageData(0, 0, c.width, c.height).data, w = c.width, h = c.height, b = new Uint8Array(w * h), red = new Uint8Array(w * h), gx = 0, gy = 0, gn = 0, i;
+        for (i = 0; i < w * h; i++) {
             var r = d[i * 4], g = d[i * 4 + 1], bl = d[i * 4 + 2];
-            if (Math.max(r, g, bl) - Math.min(r, g, bl) > 40) { b[i] = 1; mx += i % w; my += (i / w) | 0; mn++; } else if (r < 128) b[i] = 1;
+            if (g > 100 && r < 90 && bl < 90 && g > r + 40) { b[i] = 1; gx += i % w; gy += (i / w) | 0; gn++; }           // green: ostium
+            else if (r > 140 && g < 90 && bl < 90) { b[i] = 1; red[i] = 1; }                                                // red: endpoint (or ring)
+            else if ((bl > 90 && r < 60 && g < 60) || r < 128) b[i] = 1;                                                    // navy ring, vessel
         }
-        return { w: w, h: h, b: b, marker: mn > 20 ? [mx / mn, my / mn] : null };
+        var marker = gn > 20 ? [gx / gn, gy / gn] : null, lab = new Uint8Array(w * h), endpoints = [], stack = [];
+        for (i = 0; i < w * h; i++) {
+            if (!red[i] || lab[i]) continue;
+            var sx = 0, sy = 0, cn = 0; stack.push(i); lab[i] = 1;
+            while (stack.length) {
+                var p = stack.pop(), px = p % w, py = (p / w) | 0; sx += px; sy += py; cn++;
+                for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+                    var xx = px + dx, yy = py + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+                    var q = yy * w + xx; if (red[q] && !lab[q]) { lab[q] = 1; stack.push(q); }
+                }
+            }
+            var cx = sx / cn, cy = sy / cn;
+            if (cn >= 6 && (!marker || Math.hypot(cx - marker[0], cy - marker[1]) > 30)) endpoints.push([cx, cy]);       // not the ostium's ring
+        }
+        return { w: w, h: h, b: b, marker: marker, endpoints: endpoints };
     }
     function components(img) {
         var w = img.w, h = img.h, lab = new Int32Array(w * h).fill(-1), comps = [], stack = [];
@@ -245,7 +349,7 @@
         });
         var xo = 0; picked.forEach(function (t) { t.ox = xo; t.oy = 0; xo += t.cw + gap; }); totalW = xo - gap;
         var s = SIM_MAX / Math.max(totalW, totalH), SW = Math.round(totalW * s), SH = Math.round(totalH * s);
-        var out = { W: SW, H: SH, trees: {}, markers: {} };
+        var out = { W: SW, H: SH, trees: {}, markers: {}, endpoints: {} };
         picked.forEach(function (t) {
             var src = document.createElement("canvas"); src.width = totalW; src.height = totalH;
             var sx = src.getContext("2d"), id = sx.createImageData(totalW, totalH);
@@ -263,20 +367,22 @@
             for (var j = 0; j < SW * SH; j++) m[j] = d[j * 4] < 140 ? 1 : 0;
             out.trees[t.side] = m;
             if (t.img.marker) out.markers[t.side] = [(t.img.marker[0] - t.bb.x0 + t.ox) * s, (t.img.marker[1] - t.bb.y0 + t.oy) * s];
+            out.endpoints[t.side] = (t.img.endpoints || []).map(function (e) { return [(e[0] - t.bb.x0 + t.ox) * s, (e[1] - t.bb.y0 + t.oy) * s]; });
         });
         return out;
     }
 
     // ---- 2. geometry state on the CPU
-    var W, H, N, trees, edt = {}, rootStatic = {}, baseMask, obst, G = null, field = null, geoData = null, piPrev = null;
+    var W, H, N, trees, edt = {}, edtAll = null, rootStatic = {}, epStatic = {}, baseMask, obst, G = null, field = null, geoData = null, piPrev = null, Pref = null;
     var SEGW = 1024, SEGH = 8, MEMW = 1024, MEMH = 128, MAXK = 128;      // capacity: 8192 segments, 131072 members
 
-    // geo texture data: R = unit source, G = unused, B = tree id, A = vessel cell. Rows are flipped (texture row 0 = bottom)
+    // geo texture data: R = conductance of the link to the reservoir (inlet or outlet), G = kind (1 inlet, 2 outlet), B = tree id, A = vessel cell.
+    // Rows are flipped (texture row 0 = bottom)
     function geoArray(f) {
         var g = new Float32Array(N * 4);
         for (var i = 0; i < N; i++) {
             var x = i % W, y = (i / W) | 0, o = ((H - 1 - y) * W + x) * 4;
-            g[o] = f.s[i]; g[o + 2] = f.tree[i] > 0 ? 1 : 0; g[o + 3] = baseMask[i];
+            g[o] = f.kappa[i]; g[o + 1] = f.kind[i]; g[o + 2] = f.tree[i] > 0 ? 1 : 0; g[o + 3] = baseMask[i];
         }
         return g;
     }
@@ -291,9 +397,16 @@
         return { idx: idx, mem: mem, info: info };
     }
     function computeGeometry() {
-        var f = Core.buildSource(trees, edt, rootStatic, obst, W, H);
-        var Gs = Core.buildSegments(f.open, f.tree, f.root, W, H, MAXK);
+        var f = Core.buildBoundary(trees, edt, rootStatic, epStatic, obst, W, H, { nu: NU, rho: OUTLET_RESISTANCE, rhoIn: INLET_RESISTANCE });
+        var Gs = Core.buildSegments(f.open, f.tree, f.root, W, H, MAXK, f, edtAll, NU);
         if (Gs.n > SEGW * SEGH || Gs.members.length > MEMW * MEMH) return null;
+        if (Pref === null) {      // reference pressure, fixed once on the unobstructed trees: the peak pressure gives V_PEAK in the trunk
+            var Req = Core.equivalentResistance(Gs), sum = 0, cnt = 0;
+            ["L", "R"].forEach(function (side) {
+                if (f.root[side] >= 0 && isFinite(Req[side])) { sum += V_PEAK * K1 * 2 * edt[side][rootStatic[side]] * Req[side]; cnt++; }
+            });
+            Pref = cnt ? sum / cnt / (P_BASE + P_PEAK) : 1e4;
+        }
         return { f: f, G: Gs };
     }
 
@@ -339,15 +452,15 @@
         "  vec2 v = (v0 + uA * sum) / (1.0 + 4.0 * uA);\n" +
         "  o = vec4(openU(c) ? v.x : 0.0, openV(c) ? v.y : 0.0, 0.0, 1.0); }";
 
-    // right-hand side of the pressure equation:  div u - q s
-    var S_DIV = HEAD + COMMON + VELFN + "uniform vec2 uQ;\n" +
+    // right-hand side of the pressure equation:  div u - kappa * P_reservoir  (the inlet reservoir is at the applied pressure, the outlets at 0)
+    var S_DIV = HEAD + COMMON + VELFN + "uniform vec2 uPin;\n" +
         "void main(){ SZ = textureSize(uGeo, 0); ivec2 c = ivec2(gl_FragCoord.xy);\n" +
         "  if (fluid(c) < 0.5) { o = vec4(0.0); return; }\n" +
         "  vec4 g = texelFetch(uGeo, c, 0);\n" +
         "  float div = U(c + ivec2(1,0)) - U(c) + Vf(c + ivec2(0,1)) - Vf(c);\n" +
-        "  o = vec4(div - (g.b < 0.5 ? uQ.x : uQ.y) * g.r, 0.0, 0.0, 1.0); }";
+        "  float src = (g.g > 0.5 && g.g < 1.5) ? g.r * (g.b < 0.5 ? uPin.x : uPin.y) : 0.0;\n" +
+        "  o = vec4(div - src, 0.0, 0.0, 1.0); }";
 
-    var WIN = 26;                            // half-size of the window around each ostium used by the pressure-peak meter
     // sum of the right-hand side over every segment (one texel per segment)
     var S_SEGSUM = HEAD + "uniform sampler2D uRhs, uInfo, uMembers; uniform int uN;\nconst int MAXK = " + MAXK + ";\n" +
         "void main(){ ivec2 f = ivec2(gl_FragCoord.xy); int k = f.y * " + SEGW + " + f.x; if (k >= uN) { o = vec4(0.0); return; }\n" +
@@ -364,12 +477,13 @@
         "  int k = int(texelFetch(uSegIdx, c, 0).x + 0.5) - 1;\n" +
         "  o = vec4(k >= 0 ? texelFetch(uPi, ivec2(k % " + SEGW + ", k / " + SEGW + "), 0).x : 0.0, 0.0, 0.0, 1.0); }";
 
-    var S_JACOBI = HEAD + COMMON + "uniform sampler2D uP, uRhs;\n" +
+    var S_JACOBI = HEAD + COMMON + "uniform sampler2D uP, uRhs; uniform float uInvDt;\n" +
         "void main(){ SZ = textureSize(uGeo, 0); ivec2 c = ivec2(gl_FragCoord.xy);\n" +
         "  if (fluid(c) < 0.5) { o = vec4(0.0); return; }\n" +
         "  float s = 0.0, n = 0.0; ivec2 d[4] = ivec2[4](ivec2(1,0), ivec2(-1,0), ivec2(0,1), ivec2(0,-1));\n" +
         "  for (int k = 0; k < 4; k++) { ivec2 q = c + d[k]; if (fluid(q) > 0.5) { s += texelFetch(uP, q, 0).x; n += 1.0; } }\n" +
-        "  o = vec4(n > 0.0 ? (s - texelFetch(uRhs, c, 0).x) / n : 0.0, 0.0, 0.0, 1.0); }";
+        "  float den = n + texelFetch(uGeo, c, 0).r * uInvDt;\n" +
+        "  o = vec4(den > 0.0 ? (s - texelFetch(uRhs, c, 0).x) / den : 0.0, 0.0, 0.0, 1.0); }";
 
     var S_GRAD = HEAD + COMMON + VELFN + "uniform sampler2D uP;\n" +
         "float P(ivec2 c){ return texelFetch(uP, c, 0).x; }\n" +
@@ -380,7 +494,7 @@
         "  o = vec4(nu, nv, 0.0, 1.0); }";
 
     // dye (red channel: left tree, green channel: right tree)
-    var S_DYE = HEAD + COMMON + VELFN + "uniform sampler2D uDye; uniform vec2 uInj; uniform float uDt, uDecay, uDiff;\n" +
+    var S_DYE = HEAD + COMMON + VELFN + "uniform sampler2D uDye; uniform vec2 uInj; uniform float uDt, uDecay, uDiff, uOutlet;\n" +
         "vec2 cv(ivec2 c){ c = clamp(c, ivec2(0), SZ - 1); if (fluid(c) < 0.5) return vec2(0.0); return vec2(0.5 * (U(c) + U(c + ivec2(1,0))), 0.5 * (Vf(c) + Vf(c + ivec2(0,1)))); }\n" +
         "vec2 bil(vec2 p){ vec2 q = p - 0.5; ivec2 i = ivec2(floor(q)); vec2 f = q - vec2(i);\n" +
         "  return mix(mix(cv(i), cv(i + ivec2(1,0)), f.x), mix(cv(i + ivec2(0,1)), cv(i + ivec2(1,1)), f.x), f.y); }\n" +
@@ -391,23 +505,15 @@
         "  vec2 nb = vec2(0.0); float n = 0.0; ivec2 e[4] = ivec2[4](ivec2(1,0), ivec2(-1,0), ivec2(0,1), ivec2(0,-1));\n" +
         "  for (int k = 0; k < 4; k++) { if (fluid(c + e[k]) > 0.5) { nb += texelFetch(uDye, c + e[k], 0).rg; n += 1.0; } }\n" +
         "  d = mix(d, n > 0.0 ? nb / n : d, uDiff) * uDecay;\n" +
-        "  if (g.r > 0.0) d += (g.b < 0.5 ? vec2(uInj.x, 0.0) : vec2(0.0, uInj.y));\n" +
+        "  if (g.g > 0.5 && g.g < 1.5) d += (g.b < 0.5 ? vec2(uInj.x, 0.0) : vec2(0.0, uInj.y));\n" +
+        "  if (g.g > 1.5) d *= uOutlet;\n" +
         "  o = vec4(d, 0.0, 1.0); }";
 
     // smoothed pressure per unit time, for display
     var S_PD = HEAD + "uniform sampler2D uP, uPd; uniform float uInvDt, uMixF;\n" +
         "void main(){ ivec2 c = ivec2(gl_FragCoord.xy); o = vec4(mix(texelFetch(uPd, c, 0).x, texelFetch(uP, c, 0).x * uInvDt, uMixF), 0.0, 0.0, 1.0); }";
 
-    // slowly decaying peak of |pressure| around each ostium (2x1 target), used to scale the pressure view
-    var S_PEAK = HEAD + COMMON + "uniform sampler2D uPd, uPrev; uniform vec4 uRoot; uniform vec2 uRad;\nconst int WIN = " + WIN + ";\n" +
-        "void main(){ SZ = textureSize(uGeo, 0); int t = int(gl_FragCoord.x); vec2 rc = t == 0 ? uRoot.xy : uRoot.zw; float rad = (t == 0 ? uRad.x : uRad.y) * 1.6; float m = 0.0;\n" +
-        "  for (int dy = -WIN; dy <= WIN; dy++) for (int dx = -WIN; dx <= WIN; dx++) {\n" +
-        "    if (float(dx * dx + dy * dy) > rad * rad) continue;\n" +
-        "    ivec2 c = ivec2(rc) + ivec2(dx, dy); if (fluid(c) < 0.5) continue;\n" +
-        "    m = max(m, abs(texelFetch(uPd, c, 0).x)); }\n" +
-        "  o = vec4(max(m, texelFetch(uPrev, ivec2(t, 0), 0).x * 0.996), 0.0, 0.0, 1.0); }";
-
-    var S_SHOW = HEAD + "uniform sampler2D uDye, uMask, uGeo, uObst, uPd, uPeak; uniform vec2 uBeat; uniform vec3 uObstCol; uniform int uView;\n" +
+    var S_SHOW = HEAD + "uniform sampler2D uDye, uMask, uGeo, uObst, uPd; uniform vec2 uBeat; uniform vec3 uObstCol; uniform int uView; uniform float uPScale;\n" +
         "vec3 pcol(float v){ vec3 base = vec3(0.2, 0.19, 0.3), neg = vec3(0.18, 0.45, 0.95), p0 = vec3(1.0, 0.45, 0.1), p1 = vec3(1.0, 0.92, 0.45);\n" +
         "  if (v < 0.0) return mix(base, neg, clamp(-v, 0.0, 1.0));\n" +
         "  return mix(mix(base, p0, clamp(v * 1.6, 0.0, 1.0)), p1, clamp((v - 0.55) * 2.2, 0.0, 1.0)); }\n" +
@@ -424,14 +530,13 @@
         "    glow *= 0.8 + 0.35 * b;\n" +
         "    col = bg + m * (vessel + 0.06 * b - bg) + m * glow * 1.1;\n" +
         "  } else {\n" +
-        "    float scale = max(max(texelFetch(uPeak, ivec2(0, 0), 0).x, texelFetch(uPeak, ivec2(1, 0), 0).x), 1e-6);\n" +
-        "    col = bg + m * (pcol(texture(uPd, uv).r / scale) - bg);\n" +
+        "    col = bg + m * (pcol(texture(uPd, uv).r / uPScale) - bg);\n" +
         "  }\n" +
         "  float ob = texelFetch(uObst, c, 0).r;\n" +
         "  col = mix(col, uObstCol * (0.9 + 0.1 * b), ob);\n" +
         "  o = vec4(col, 1.0); }";
 
-    var progs = {}, TEX = {}, pool, pres, dye, pd, peak, rhsRT, segE, vao, cur, piData = new Float32Array(SEGW * SEGH), readBuf = new Float32Array(SEGW * SEGH * 4);
+    var progs = {}, TEX = {}, pool, pres, dye, pd, rhsRT, segE, vao, cur, piData = new Float32Array(SEGW * SEGH), readBuf = new Float32Array(SEGW * SEGH * 4);
     function makeTex(w, h, internal, format, type, filter, data) {
         var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -450,14 +555,6 @@
     function drawTo(rt, w, h) { gl.bindFramebuffer(gl.FRAMEBUFFER, rt ? rt.fbo : null); gl.viewport(0, 0, rt ? rt.w : w, rt ? rt.h : h); gl.drawArrays(gl.TRIANGLES, 0, 3); }
     function geoUnits(pg) { bindTex(pg, "uGeo", 0, TEX.geo); bindTex(pg, "uObst", 1, TEX.obst); }
 
-    var rootUniform = [0, 0, 0, 0], radUniform = [3, 3];
-    function setRoots(f) {
-        ["L", "R"].forEach(function (side, i) {
-            var r = f.root[side];
-            if (r >= 0) { rootUniform[i * 2] = (r % W) + 0.5; rootUniform[i * 2 + 1] = (H - 1 - ((r / W) | 0)) + 0.5; }
-            radUniform[i] = f.rr[side];
-        });
-    }
     function makeR32(w, h, data) { return makeTex(w, h, gl.R32F, gl.RED, gl.FLOAT, gl.NEAREST, data); }
     function uploadR32(tex, w, h, data) { gl.bindTexture(gl.TEXTURE_2D, tex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, w, h, gl.RED, gl.FLOAT, data); }
     function uploadSegments() {
@@ -476,17 +573,17 @@
         TEX.obst = makeTex(W, H, gl.R8, gl.RED, gl.UNSIGNED_BYTE, gl.NEAREST, flipU8(obst, 255));
         TEX.mask = makeTex(W, H, gl.R8, gl.RED, gl.UNSIGNED_BYTE, gl.LINEAR, flipU8(baseMask, 255));
         progs.advect = prog(S_ADVECT); progs.diffuse = prog(S_DIFFUSE); progs.div = prog(S_DIV); progs.segsum = prog(S_SEGSUM); progs.pseg = prog(S_PSEG);
-        progs.jacobi = prog(S_JACOBI); progs.grad = prog(S_GRAD); progs.dye = prog(S_DYE); progs.pd = prog(S_PD); progs.peak = prog(S_PEAK); progs.show = prog(S_SHOW);
+        progs.jacobi = prog(S_JACOBI); progs.grad = prog(S_GRAD); progs.dye = prog(S_DYE); progs.pd = prog(S_PD); progs.show = prog(S_SHOW);
         pool = [makeRT(W, H), makeRT(W, H), makeRT(W, H)]; cur = pool[0];
         pres = makePair(W, H); rhsRT = makeRT(W, H); segE = makeRT(SEGW, SEGH);
-        dye = makePair(W, H, true, true); pd = makePair(W, H, true, true); peak = makePair(2, 1);
+        dye = makePair(W, H, true, true); pd = makePair(W, H, true, true);
         vao = gl.createVertexArray(); gl.bindVertexArray(vao);
         canvas.width = W * 2; canvas.height = H * 2; canvas.style.aspectRatio = W + " / " + H;
         resetFlow();
     }
     function clearRT(rt) { gl.bindFramebuffer(gl.FRAMEBUFFER, rt.fbo); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
     function resetFlow() {
-        pool.forEach(clearRT); [pres.a, pres.b, rhsRT, segE, dye.a, dye.b, pd.a, pd.b, peak.a, peak.b].forEach(clearRT);
+        pool.forEach(clearRT); [pres.a, pres.b, rhsRT, segE, dye.a, dye.b, pd.a, pd.b].forEach(clearRT);
         piPrev = null;
         phaseL = 0;
     }
@@ -496,7 +593,7 @@
     // ---- 4. one time step
     var bpm = BPM_DEFAULT, pressureKnob = PRESSURE_DEFAULT, view = 0, phaseL = 0, phaseR = 0;
     function step(dt) {
-        var q = K2 * pressureKnob, qL = q * (Q_BASE + Q_PEAK * beat(phaseL)), qR = q * (Q_BASE + Q_PEAK * beat(phaseR));
+        var pk = pressureKnob * Pref, pL = pk * (P_BASE + P_PEAK * beat(phaseL)), pR = pk * (P_BASE + P_PEAK * beat(phaseR)), invDt = 1 / dt;
         var pg, i, free = pool.filter(function (r) { return r !== cur; });
         // 1. advect the velocity
         pg = use(progs.advect); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); gl.uniform1f(pg.u.uDt, dt);
@@ -506,45 +603,42 @@
         var targets = [free[1], cur], k = adv;
         for (i = 0; i < DIFFUSE; i++) { var out = targets[i % 2]; bindTex(pg, "uVk", 3, k.tex); drawTo(out); k = out; }
         cur = k; free = pool.filter(function (r) { return r !== cur; });
-        // 3. right-hand side of the pressure equation
-        pg = use(progs.div); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); gl.uniform2f(pg.u.uQ, qL, qR); drawTo(rhsRT);
+        // 3. right-hand side of the pressure equation (pressure inlet, resistive outlets)
+        pg = use(progs.div); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); gl.uniform2f(pg.u.uPin, pL, pR); drawTo(rhsRT);
         // 4. coarse pressure: sum of the residual per tree layer (GPU), small graph solve (CPU), seed the pressure (GPU)
         if (G.n > 0) {
             pg = use(progs.segsum); bindTex(pg, "uRhs", 0, rhsRT.tex); bindTex(pg, "uInfo", 1, TEX.info); bindTex(pg, "uMembers", 2, TEX.members); gl.uniform1i(pg.u.uN, G.n);
             drawTo(segE);
             var rows = Math.ceil(G.n / SEGW);
             gl.bindFramebuffer(gl.FRAMEBUFFER, segE.fbo); gl.readPixels(0, 0, SEGW, rows, gl.RGBA, gl.FLOAT, readBuf);
-            var bs = new Float64Array(G.n);
-            for (i = 0; i < G.n; i++) bs[i] = -readBuf[i * 4];
-            var pi = Core.solveSegments(G, bs, piPrev, 60, 1e-18); piPrev = pi;
+            var bs = new Float64Array(G.n), extra = new Float64Array(G.n);
+            for (i = 0; i < G.n; i++) { bs[i] = -readBuf[i * 4]; extra[i] = G.kappa[i] * invDt; }
+            var pi = Core.solveSegments(G, bs, piPrev, 100, 1e-18, extra, false); piPrev = pi;
             piData.fill(0); piData.set(pi);
             uploadR32(TEX.pi, SEGW, rows, piData.subarray(0, SEGW * rows));
         }
         pg = use(progs.pseg); geoUnits(pg); bindTex(pg, "uSegIdx", 2, TEX.segIdx); bindTex(pg, "uPi", 3, TEX.pi); drawTo(pres.a);
         // 5. local Jacobi sweeps
-        pg = use(progs.jacobi); geoUnits(pg); bindTex(pg, "uRhs", 3, rhsRT.tex);
+        pg = use(progs.jacobi); geoUnits(pg); bindTex(pg, "uRhs", 3, rhsRT.tex); gl.uniform1f(pg.u.uInvDt, invDt);
         for (i = 0; i < JACOBI; i++) { bindTex(pg, "uP", 2, pres.a.tex); drawTo(pres.b); pres.swap(); }
         // 6. subtract the pressure gradient on the faces
         pg = use(progs.grad); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); bindTex(pg, "uP", 3, pres.a.tex);
         var nxt = free[0]; drawTo(nxt); cur = nxt;
         // 7. dye
         pg = use(progs.dye); geoUnits(pg); bindTex(pg, "uVel", 2, cur.tex); bindTex(pg, "uDye", 3, dye.a.tex);
-        gl.uniform1f(pg.u.uDt, dt); gl.uniform1f(pg.u.uDecay, Math.exp(-DYE_DECAY * dt)); gl.uniform1f(pg.u.uDiff, DYE_DIFFUSION);
+        gl.uniform1f(pg.u.uDt, dt); gl.uniform1f(pg.u.uDecay, Math.exp(-DYE_DECAY * dt)); gl.uniform1f(pg.u.uDiff, DYE_DIFFUSION); gl.uniform1f(pg.u.uOutlet, DYE_OUTLET);
         gl.uniform2f(pg.u.uInj, DYE_RATE * bolus(phaseL) * dt, DYE_RATE * bolus(phaseR) * dt);
         drawTo(dye.b); dye.swap();
-        // 8. pressure for display and its peak
+        // 8. pressure for display
         pg = use(progs.pd); bindTex(pg, "uP", 0, pres.a.tex); bindTex(pg, "uPd", 1, pd.a.tex); gl.uniform1f(pg.u.uInvDt, 1 / dt); gl.uniform1f(pg.u.uMixF, 0.15);
         drawTo(pd.b); pd.swap();
-        pg = use(progs.peak); geoUnits(pg); bindTex(pg, "uPd", 2, pd.a.tex); bindTex(pg, "uPrev", 3, peak.a.tex);
-        gl.uniform4f(pg.u.uRoot, rootUniform[0], rootUniform[1], rootUniform[2], rootUniform[3]); gl.uniform2f(pg.u.uRad, radUniform[0], radUniform[1]);
-        drawTo(peak.b); peak.swap();
         // heartbeat
         var period = 60 / bpm; phaseL = (phaseL + dt / period) % 1;
         phaseR = (((phaseL - rightDelay(bpm) / period) % 1) + 1) % 1;
     }
     function show() {
         var pg = use(progs.show); geoUnits(pg);
-        bindTex(pg, "uDye", 2, dye.a.tex); bindTex(pg, "uMask", 3, TEX.mask); bindTex(pg, "uPd", 4, pd.a.tex); bindTex(pg, "uPeak", 5, peak.a.tex);
+        bindTex(pg, "uDye", 2, dye.a.tex); bindTex(pg, "uMask", 3, TEX.mask); bindTex(pg, "uPd", 4, pd.a.tex); gl.uniform1f(pg.u.uPScale, Math.max(pressureKnob * Pref * (P_BASE + P_PEAK), 1e-6));
         gl.uniform2f(pg.u.uBeat, beat(phaseL), beat(phaseR)); gl.uniform3f(pg.u.uObstCol, OBSTACLE_COLOR[0], OBSTACLE_COLOR[1], OBSTACLE_COLOR[2]); gl.uniform1i(pg.u.uView, view);
         drawTo(null, canvas.width, canvas.height);
     }
@@ -567,7 +661,7 @@
     function scheduleRebuild() { clearTimeout(rebuildTimer); rebuildTimer = setTimeout(rebuildFlowField, 180); }
     function rebuildFlowField() {
         var r = computeGeometry(); if (!r) return;
-        field = r.f; G = r.G; geoData = geoArray(field); uploadGeo(); uploadSegments(); setRoots(field); if (!running) show();
+        field = r.f; G = r.G; geoData = geoArray(field); uploadGeo(); uploadSegments(); if (!running) show();
     }
     function clearObstacles() { obst.fill(0); uploadObst(); rebuildFlowField(); if (!running) show(); }
 
@@ -626,15 +720,19 @@
             if (mk) rootStatic[side] = Core.nearestIn(m, W, H, mk[0], mk[1]);
             else { var best = -1, bi = 0; for (var i = 0; i < N; i++) if (m[i] && edt[side][i] > best) { best = edt[side][i]; bi = i; } rootStatic[side] = bi; }
         });
-        baseMask = new Uint8Array(N); for (var i = 0; i < N; i++) baseMask[i] = trees.L[i] || trees.R[i] ? 1 : 0;
+        baseMask = new Uint8Array(N); edtAll = new Float32Array(N);
+        for (var i = 0; i < N; i++) { baseMask[i] = trees.L[i] || trees.R[i] ? 1 : 0; edtAll[i] = Math.max(edt.L[i], edt.R[i]); }
+        ["L", "R"].forEach(function (side) {
+            var seen = {}; epStatic[side] = [];
+            (model.endpoints[side] || []).forEach(function (pt) { var c = Core.nearestIn(trees[side], W, H, pt[0], pt[1]); if (c >= 0 && !seen[c]) { seen[c] = 1; epStatic[side].push(c); } });
+        });
         obst = new Uint8Array(N);
         var r = computeGeometry();
         if (!r) { bail("The geometry is too large for this simulation."); return; }
         field = r.f; G = r.G; geoData = geoArray(field);
         try { setupGL(); } catch (err) { if (window.console) console.error(err); bail("The simulation could not start on this device."); return; }
-        setRoots(field);
         var params = new URLSearchParams(location.search), pre = parseInt(params.get("nssteps"), 10);
-        window.__ns = { paint: function (cx, cy) { paintAt({ clientX: cx, clientY: cy, shiftKey: false }); }, view: function (v) { view = v; show(); }, step: function (n) { for (var k = 0; k < n; k++) step(1 / 60); show(); }, segments: G.n };
+        window.__ns = { paint: function (cx, cy) { paintAt({ clientX: cx, clientY: cy, shiftKey: false }); }, view: function (v) { view = v; show(); }, step: function (n) { for (var k = 0; k < n; k++) step(1 / 60); show(); }, segments: G.n, endpoints: { L: epStatic.L.length, R: epStatic.R.length }, pref: Pref };
         if (!isNaN(pre)) { for (var k = 0; k < pre; k++) step(1 / 60); show(); userPaused = true; return; }
         if (reduced) { for (var j = 0; j < 240; j++) step(1 / 60); show(); userPaused = true; return; }
         show();

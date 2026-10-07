@@ -278,11 +278,11 @@
 
             <h3>Full solver (experimental)</h3>
             <p>
-                The same trees with a real-time two-dimensional Navier-Stokes solver instead of a precomputed flow. The walls are rigid, the heartbeat
-                drives a periodic inflow at each ostium, and you can drag over the vessels to place 2x2 obstacles in the flow (Shift-drag erases them).
+                The same trees with a real-time two-dimensional Navier-Stokes solver instead of a precomputed flow. The walls are rigid, the heartbeat drives a
+                periodic pressure at each ostium, the endpoints are resistive outlets, and you can drag over the vessels to place 2x2 obstacles in the flow (Shift-drag erases them).
             </p>
             <figure id="ns-figure">
-                <canvas id="ns-canvas" data-src-left="./assets/flow/tree_left.png" data-src-right="./assets/flow/tree_right.png" aria-label="Interactive real-time fluid simulation inside an unfolded coronary tree"></canvas>
+                <canvas id="ns-canvas" data-src-left="./assets/flow/tree_left_endpoints.png" data-src-right="./assets/flow/tree_right_endpoints.png" aria-label="Interactive real-time fluid simulation inside an unfolded coronary tree"></canvas>
                 <div id="ns-status" class="ns-status" style="display: none;"></div>
                 <div class="cl-controls">
                     <button type="button" id="ns-play">Play</button>
@@ -295,11 +295,12 @@
                     <label>Heart rate <input type="range" id="ns-bpm" aria-label="Heart rate"> <span id="ns-bpm-val">60 bpm</span></label>
                     <label>Pressure <input type="range" id="ns-pressure" aria-label="Inflow pressure"> <span id="ns-pressure-val">1.50</span></label>
                 </div>
-                <div id="ns-legend" class="ns-legend"><span>negative</span><i></i><span>high pressure</span></div>
+                <div id="ns-legend" class="ns-legend"><span>negative</span><i></i><span>inlet pressure</span></div>
                 <figcaption id="ns-note">
-                    Experimental, in real time (WebGL2): a viscous, incompressible solver on the unfolded left (blue) and right (red) trees, with no-slip rigid walls,
-                    dye released at each ostium and the right tree lagging the left one by a delay that depends on the heart rate. The pressure view shows the solver's
-                    pressure per unit time, in arbitrary units. It is a two-dimensional illustration: not patient-specific and not a clinical model.
+                    Experimental, in real time (WebGL2): a viscous, incompressible solver on the unfolded left (blue) and right (red) trees, with rigid no-slip walls.
+                    The pressure is applied at the ostium (green dot) with the heartbeat, and each endpoint (red dot) is an outlet with a resistance, so the flow divides
+                    between the branches according to their geometry and a higher pressure gives a higher flow. The right tree lags the left one by a delay that depends on the heart rate.
+                    The pressure view shows the solver's pressure relative to the peak inlet pressure. It is a two-dimensional illustration: not patient-specific and not a clinical model.
                 </figcaption>
             </figure>
         </section>
