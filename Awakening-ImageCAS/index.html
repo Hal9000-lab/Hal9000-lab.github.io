@@ -21,6 +21,9 @@
             Matteo Leccardi<sup>1</sup>
                 <a target="_blank" href="https://orcid.org/0009-0002-3434-0559"><img src="./assets/orcid.ico" class="auth-ico-orcid" alt="ORCID"/></a>
                 <a target="_blank" href="https://scholar.google.com/citations?user=wOjE0VUAAAAJ&hl=en"><img src="./assets/scholar.ico" class="auth-ico-scholar" alt="Google Scholar"/></a>,
+            Andrea Moglia<sup>1</sup>
+                <a target="_blank" href="https://orcid.org/0000-0002-3365-580X"><img src="./assets/orcid.ico" class="auth-ico-orcid" alt="ORCID"/></a>
+                <a target="_blank" href="https://scholar.google.com/citations?user=J5VLBNIAAAAJ&hl=en"><img src="./assets/scholar.ico" class="auth-ico-scholar" alt="Google Scholar"/></a>,
             Marco Morandini<sup>1</sup>,
             Michele Brembilla<sup>1</sup>,
             <br/>
@@ -31,9 +34,6 @@
             Marco Marcon<sup>1</sup>
                 <a target="_blank" href="https://orcid.org/0000-0001-6557-2120"><img src="./assets/orcid.ico" class="auth-ico-orcid" alt="ORCID"/></a>
                 <a target="_blank" href="https://scholar.google.com/citations?hl=en&user=caRWcc4AAAAJ"><img src="./assets/scholar.ico" class="auth-ico-scholar" alt="Google Scholar"/></a>,
-            Andrea Moglia<sup>1</sup>
-                <a target="_blank" href="https://orcid.org/0000-0002-3365-580X"><img src="./assets/orcid.ico" class="auth-ico-orcid" alt="ORCID"/></a>
-                <a target="_blank" href="https://scholar.google.com/citations?user=J5VLBNIAAAAJ&hl=en"><img src="./assets/scholar.ico" class="auth-ico-scholar" alt="Google Scholar"/></a>,
             <br/>
             Luca Mainardi<sup>1</sup>
                 <a target="_blank" href="https://orcid.org/0000-0002-6276-6314"><img src="./assets/orcid.ico" class="auth-ico-orcid" alt="ORCID"/></a>
@@ -99,6 +99,7 @@
                 graded against thresholds derived from the ostial anatomy and from the variability between annotators. The best models,
                 SwinUNETRv2 and nnResUNet, localized all the ostia without any failure, with median errors of 0.74&nbsp;mm (right) and
                 0.85&nbsp;mm (left) for SwinUNETRv2 and of 0.70&nbsp;mm and 0.87&nbsp;mm for nnResUNet.
+                A training-set-size ablation shows that the new annotations are what makes the task learnable: without ImageCAS images the model fails on 34.5% of the right and 53.4% of the left ostia of the test set, whereas 250 ImageCAS volumes are enough to remove all the failures and to bring the median errors below 1&nbsp;mm, with little further change up to the 1000 volumes of the complete dataset.
             </p>
             <p>
                 The extended dataset annotations, the annotation protocol, the code and the model weights are made publicly available,
@@ -324,8 +325,8 @@
             <h3>Paper</h3>
             <pre id="bibtex-paper">@article{leccardi_awakening_imagecas,
   title   = {Awakening ImageCAS: Automated Coronary Ostia Localization Framework and Centerlines Open Dataset},
-  author  = {Leccardi, Matteo and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
-             Penserini, Andrea and Brandini, Christian and Marcon, Marco and Moglia, Andrea and
+  author  = {Leccardi, Matteo and Moglia, Andrea and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
+             Penserini, Andrea and Brandini, Christian and Marcon, Marco and
              Mainardi, Luca and Cerveri, Pietro},
   note    = {Under review}
 }</pre>
@@ -337,8 +338,8 @@
             <h3>Dataset (Zenodo)</h3>
             <pre id="bibtex-dataset">@dataset{leccardi_awakening_imagecas_dataset,
   title     = {Awakening ImageCAS: coronary ostia and centerline annotations for ImageCAS},
-  author    = {Leccardi, Matteo and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
-               Penserini, Andrea and Brandini, Christian and Marcon, Marco and Moglia, Andrea and
+  author    = {Leccardi, Matteo and Moglia, Andrea and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
+               Penserini, Andrea and Brandini, Christian and Marcon, Marco and
                Mainardi, Luca and Cerveri, Pietro},
   publisher = {Zenodo},
   doi       = {10.5281/zenodo.XXXXXXX},
