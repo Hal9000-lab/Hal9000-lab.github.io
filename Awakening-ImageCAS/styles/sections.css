@@ -315,3 +315,22 @@ canvas#ns-canvas {
 .ns-version {
     order: 6;
 }
+
+/* call to action: the mini-challenge pill (same pill as in the header, see header.css) */
+p.challenge-line span.fast-card {
+    display: inline-flex;
+    vertical-align: middle;
+    margin: 6px 8px 6px 4px;
+}
+nav#sections a.nav-challenge {
+    font-weight: bold;
+    animation: nav-challenge-blink 3.2s linear infinite;
+}
+@keyframes nav-challenge-blink {
+    0%, 70% { color: #8a8f98; }
+    74%, 96% { color: #ff7a1a; }
+    100% { color: #8a8f98; }
+}
+@media (prefers-reduced-motion: reduce) {
+    nav#sections a.nav-challenge { animation: none; color: #ff7a1a; }
+}

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ostia Challenge</title>
+    <meta name="description" content="Place the coronary ostia on real CT scans and compare your accuracy with our models.">
+    <link rel="icon" href="../assets/paper.png">
+    <link rel="stylesheet" href="../styles/CONSTANTS.css">
+    <link rel="stylesheet" href="../styles/topbar.css">
+    <link rel="stylesheet" href="./css/challenge.css">
+</head>
+<body>
+    <nav id="topbar"><a href="../">&larr; Awakening ImageCAS</a></nav>
+
+    <main id="app">
+        <noscript><p class="card">This challenge needs JavaScript.</p></noscript>
+
+        <!-- LANDING -->
+        <section id="screen-landing" class="screen" hidden>
+            <h1>Ostia Challenge <span class="smile">:)</span></h1>
+            <p class="lead">Can you find the coronary ostia as accurately as our deep learning models?</p>
+            <div class="card">
+                <p>
+                    The <b>coronary ostia</b> are the two points where the right and the left coronary arteries leave the aorta.
+                    You will scroll through <b>12 real cardiac CT scans</b> and click where you think the <b>right</b> and the <b>left</b> ostium are.
+                    After every scan we show the expert reference and the predictions of our models, and your running statistics.
+                    Three more scans of a rare pediatric disease are mixed in near the end: those are not scored, they just help research.
+                </p>
+                <ol class="steps">
+                    <li>Scroll the two views (axial and sagittal) until you see the aortic root.</li>
+                    <li>Click the <b>right</b> ostium, then the <b>left</b> one. Refine each point in the second view.</li>
+                    <li>Submit and see how close you were, in millimetres.</li>
+                </ol>
+                <div class="row">
+                    <label>Nickname (optional, shown on the leaderboard)
+                        <input id="nickname" type="text" maxlength="24" autocomplete="off" placeholder="e.g. ostium_hunter">
+                    </label>
+                </div>
+                <div id="landing-actions" class="row">
+                    <button id="btn-start" class="btn primary" type="button">Start the challenge</button>
+                    <button id="btn-tutorial" class="btn" type="button">Show the tutorial first</button>
+                    <button id="btn-board" class="btn" type="button">Leaderboard</button>
+                </div>
+                <p id="cooldown-msg" class="cooldown" hidden></p>
+                <p class="notice">Only your nickname, your clicks and your timing are stored, and results appear on a public leaderboard. No personal data is collected.</p>
+                <p id="demo-msg" class="notice demo" hidden>Demo mode: synthetic images and a local leaderboard.</p>
+            </div>
+        </section>
+
+        <!-- TUTORIAL -->
+        <section id="screen-tutorial" class="screen" hidden>
+            <div class="topline">
+                <h2>Tutorial <span id="tut-step"></span></h2>
+                <button id="tut-skip" class="btn" type="button">Skip tutorial</button>
+            </div>
+            <div class="card tut-text" id="tut-text"></div>
+            <div class="stage">
+                <div class="viewer-wrap">
+                    <div id="viewer-tut" class="viewer"></div>
+                </div>
+                <div class="side">
+                    <canvas id="orient-tut" class="orient" aria-label="Orientation of the planes"></canvas>
+                    <button class="btn r" id="tut-r" type="button">Go to the right ostium</button>
+                    <button class="btn l" id="tut-l" type="button">Go to the left ostium</button>
+                    <p class="hint">The coloured balls mark the expert reference. Scroll through the slices and see how the ostium looks like: a small opening in the wall of the aortic root.</p>
+                    <button id="tut-next" class="btn primary" type="button">Next &rarr;</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CASE -->
+        <section id="screen-case" class="screen" hidden>
+            <div class="topline">
+                <h2>Case <span id="case-n"></span> <span id="case-kind" class="chip"></span></h2>
+                <div class="progress"><i id="progress-bar"></i></div>
+            </div>
+            <div class="stage">
+                <div class="viewer-wrap">
+                    <div id="viewer" class="viewer"></div>
+                    <p id="zoom-hint" class="zoom-hint" hidden>&#9995; grab the image and move it around</p>
+                </div>
+                <div class="side">
+                    <canvas id="orient" class="orient" aria-label="Orientation of the planes"></canvas>
+                    <div id="place-panel">
+                        <button class="btn r" id="btn-r" type="button">1. Place RIGHT ostium<small class="mb">right mouse button</small></button>
+                        <button class="btn l" id="btn-l" type="button">2. Place LEFT ostium<small class="mb">left mouse button</small></button>
+                        <label class="check"><input type="checkbox" id="opt-mouse" checked> Use the mouse buttons: left click places the LEFT ostium, right click the RIGHT one</label>
+                        <div class="row small">
+                            <button id="btn-clear" class="btn" type="button">Clear points</button>
+                            <label class="zoom">Zoom <input id="zoom" type="range" min="1" max="4" step="0.25" value="1"></label>
+                        </div>
+                        <button id="btn-submit" class="btn primary" type="button" disabled>Submit this case</button>
+                        <p id="place-hint" class="hint"></p>
+                    </div>
+                    <div id="reveal-panel" hidden>
+                        <div id="legend" class="legend"></div>
+                        <div class="row small">
+                            <button class="btn r" id="jump-r" type="button">Show right</button>
+                            <button class="btn l" id="jump-l" type="button">Show left</button>
+                        </div>
+                        <div id="case-table"></div>
+                        <button id="btn-next" class="btn primary" type="button">Next case &rarr;</button>
+                    </div>
+                    <div id="thanks-panel" hidden>
+                        <p class="thanks">Thank you! This scan has no reference, your points will help research. It is not part of your score.</p>
+                        <button id="btn-next2" class="btn primary" type="button">Next case &rarr;</button>
+                    </div>
+                </div>
+            </div>
+            <div id="running" class="card" hidden></div>
+        </section>
+
+        <!-- FINAL -->
+        <section id="screen-final" class="screen" hidden>
+            <h2>Your results</h2>
+            <div id="final-table" class="card"></div>
+            <div class="card" id="save-card">
+                <label>Nickname for the leaderboard
+                    <input id="final-nick" type="text" maxlength="24" autocomplete="off" placeholder="optional">
+                </label>
+                <button id="btn-save" class="btn primary" type="button">Save to the leaderboard</button>
+                <p id="save-msg" class="notice"></p>
+            </div>
+        </section>
+
+        <!-- LEADERBOARD -->
+        <section id="screen-board" class="screen" hidden>
+            <div class="topline">
+                <h2>Leaderboard</h2>
+                <div class="board-tools">
+                    <span class="seg" role="group" aria-label="Which trials to show">
+                        <button id="board-all" class="btn active" type="button">Everyone</button><button id="board-me" class="btn" type="button">Only me</button>
+                    </span>
+                    <button id="board-home" class="btn" type="button">Back</button>
+                </div>
+            </div>
+            <p class="notice">Ranked by the median error over both ostia (mm, lower is better). Every completed trial is listed and your own trials are highlighted; click a nickname to see all the trials of that name. Models are evaluated on the same 12 cases.</p>
+            <p id="board-filter" class="notice" hidden></p>
+            <div id="board-cooldown" class="cooldown" hidden></div>
+            <div id="board-table" class="card"></div>
+        </section>
+
+        <p id="error-msg" class="error" hidden></p>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="./js/stats.js"></script>
+    <script src="./demo/phantom.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/orient.js"></script>
+    <script src="./js/viewer.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>

@@ -69,6 +69,22 @@
             </span>
         </div>
 
+        <!-- labs row. The ETH D-ITET CVL card is hidden for now: remove the "hidden" attribute to show it. -->
+        <div class="fast-cards-row" id="lab-cards">
+            <span class="fast-card" id="b3lab">
+                <a target="_blank" rel="noopener" href="https://www.b3lab.deib.polimi.it/"><img src="./assets/b3lab-favicon.gif" alt=""><span>B<sup>3</sup>Lab</span></a>
+            </span>
+            <span class="fast-card" id="cvl" hidden>
+                <a target="_blank" rel="noopener" href="https://vision.ee.ethz.ch/"><img src="./assets/cvl-logo.png" alt=""><span>CVL - ETHZ</span></a>
+            </span>
+        </div>
+
+        <div class="fast-cards-row" id="challenge-row">
+            <span class="fast-card challenge" id="challenge">
+                <a href="./challenge/"><span class="face" aria-hidden="true">&#128578;</span>Ostia mini-challenge</a>
+            </span>
+        </div>
+
         <div id="graphical-abstract">
             <img src="./assets/Figure_1.png" alt="Overview of the work: datasets, annotation protocol, benchmark and public release">
         </div>
@@ -114,6 +130,7 @@
         <a href="#glance">At a glance</a>
         <a href="#dataset">Dataset</a>
         <a href="#pipeline">Pipeline</a>
+        <a href="./challenge/" class="nav-challenge">Challenge</a>
         <a href="#centerlines">Centerlines</a>
         <a href="#animation">Animation</a>
         <a href="#animation-detailed">In detail</a>
@@ -162,6 +179,10 @@
                 How the ostia dataset was assembled and how the benchmark was trained and evaluated, step by step:
                 the two annotation stages, the assistant model, the test set, the benchmark models and the ablation studies.
                 Use the chapter buttons to jump to a step.
+            </p>
+            <p class="challenge-line">
+                Want to try it yourself? Place the ostia on real CT scans and compare your accuracy with our models:
+                <span class="fast-card challenge"><a href="./challenge/"><span class="face" aria-hidden="true">&#128578;</span>Ostia mini-challenge</a></span>
             </p>
             <figure id="op-figure">
                 <canvas id="op-canvas" aria-label="Animation of the ostia annotation pipeline and of the benchmark training"></canvas>

@@ -172,3 +172,65 @@ header > div#abstract > p {
         font-size: 1.8em;
     }
 }
+
+/* second and third rows of buttons: labs, mini-challenge */
+div.fast-cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    row-gap: 12px;
+    margin: 14px auto 0;
+    padding: 0 10px;
+}
+span.fast-card[hidden] {
+    display: none;
+}
+span.fast-card#b3lab {
+    background: rgb(23, 19, 34);
+}
+span.fast-card#b3lab img {
+    height: 26px;
+}
+span.fast-card#cvl {
+    background: white;
+    padding: 0 10px;
+    border: 1px solid rgb(200, 200, 200);
+}
+span.fast-card#cvl img {
+    height: 32px;
+}
+span.fast-card#cvl > a {
+    color: black;
+    font-weight: bold;
+}
+
+span.fast-card.challenge {
+    background: linear-gradient(135deg, #f5a623, #ff6b4a);
+    animation: challenge-blink 1.8s ease-in-out infinite;
+}
+span.fast-card.challenge > a {
+    gap: 9px;
+}
+span.fast-card.challenge .face {
+    font-size: 1.35em;
+    line-height: 1;
+    display: inline-block;
+    animation: challenge-wiggle 2.4s ease-in-out infinite;
+}
+span.fast-card.challenge:hover {
+    transform: scale(1.04);
+    transition: transform 0.2s;
+}
+@keyframes challenge-blink {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 140, 60, 0.65); }
+    50% { opacity: 0.78; box-shadow: 0 0 0 12px rgba(255, 140, 60, 0); }
+}
+@keyframes challenge-wiggle {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    span.fast-card.challenge, span.fast-card.challenge .face { animation: none; }
+}

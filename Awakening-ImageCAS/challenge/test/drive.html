@@ -1,0 +1,197 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>drive</title>
+<link rel="stylesheet" href="../../styles/CONSTANTS.css"><link rel="stylesheet" href="../css/challenge.css"></head><body>
+<nav id="topbar"></nav><main id="app">
+        <noscript><p class="card">This challenge needs JavaScript.</p></noscript>
+
+        <!-- LANDING -->
+        <section id="screen-landing" class="screen" hidden>
+            <h1>Ostia Challenge <span class="smile">:)</span></h1>
+            <p class="lead">Can you find the coronary ostia as accurately as our deep learning models?</p>
+            <div class="card">
+                <p>
+                    The <b>coronary ostia</b> are the two points where the right and the left coronary arteries leave the aorta.
+                    You will scroll through <b>12 real cardiac CT scans</b> and click where you think the <b>right</b> and the <b>left</b> ostium are.
+                    After every scan we show the expert reference and the predictions of our models, and your running statistics.
+                    Three more scans of a rare pediatric disease are mixed in near the end: those are not scored, they just help research.
+                </p>
+                <ol class="steps">
+                    <li>Scroll the two views (axial and sagittal) until you see the aortic root.</li>
+                    <li>Click the <b>right</b> ostium, then the <b>left</b> one. Refine each point in the second view.</li>
+                    <li>Submit and see how close you were, in millimetres.</li>
+                </ol>
+                <div class="row">
+                    <label>Nickname (optional, shown on the leaderboard)
+                        <input id="nickname" type="text" maxlength="24" autocomplete="off" placeholder="e.g. ostium_hunter">
+                    </label>
+                </div>
+                <div id="landing-actions" class="row">
+                    <button id="btn-start" class="btn primary" type="button">Start the challenge</button>
+                    <button id="btn-tutorial" class="btn" type="button">Show the tutorial first</button>
+                    <button id="btn-board" class="btn" type="button">Leaderboard</button>
+                </div>
+                <p id="cooldown-msg" class="cooldown" hidden></p>
+                <p class="notice">Only your nickname, your clicks and your timing are stored, and results appear on a public leaderboard. No personal data is collected.</p>
+                <p id="demo-msg" class="notice demo" hidden>Demo mode: synthetic images and a local leaderboard.</p>
+            </div>
+        </section>
+
+        <!-- TUTORIAL -->
+        <section id="screen-tutorial" class="screen" hidden>
+            <div class="topline">
+                <h2>Tutorial <span id="tut-step"></span></h2>
+                <button id="tut-skip" class="btn" type="button">Skip tutorial</button>
+            </div>
+            <div class="card tut-text" id="tut-text"></div>
+            <div class="stage">
+                <div class="viewer-wrap">
+                    <div id="viewer-tut" class="viewer"></div>
+                </div>
+                <div class="side">
+                    <canvas id="orient-tut" class="orient" aria-label="Orientation of the planes"></canvas>
+                    <button class="btn r" id="tut-r" type="button">Go to the right ostium</button>
+                    <button class="btn l" id="tut-l" type="button">Go to the left ostium</button>
+                    <p class="hint">The coloured balls mark the expert reference. Scroll through the slices and see how the ostium looks like: a small opening in the wall of the aortic root.</p>
+                    <button id="tut-next" class="btn primary" type="button">Next &rarr;</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CASE -->
+        <section id="screen-case" class="screen" hidden>
+            <div class="topline">
+                <h2>Case <span id="case-n"></span> <span id="case-kind" class="chip"></span></h2>
+                <div class="progress"><i id="progress-bar"></i></div>
+            </div>
+            <div class="stage">
+                <div class="viewer-wrap">
+                    <div id="viewer" class="viewer"></div>
+                    <p id="zoom-hint" class="zoom-hint" hidden>&#9995; grab the image and move it around</p>
+                </div>
+                <div class="side">
+                    <canvas id="orient" class="orient" aria-label="Orientation of the planes"></canvas>
+                    <div id="place-panel">
+                        <button class="btn r" id="btn-r" type="button">1. Place RIGHT ostium<small class="mb">right mouse button</small></button>
+                        <button class="btn l" id="btn-l" type="button">2. Place LEFT ostium<small class="mb">left mouse button</small></button>
+                        <label class="check"><input type="checkbox" id="opt-mouse" checked> Use the mouse buttons: left click places the LEFT ostium, right click the RIGHT one</label>
+                        <div class="row small">
+                            <button id="btn-clear" class="btn" type="button">Clear points</button>
+                            <label class="zoom">Zoom <input id="zoom" type="range" min="1" max="4" step="0.25" value="1"></label>
+                        </div>
+                        <button id="btn-submit" class="btn primary" type="button" disabled>Submit this case</button>
+                        <p id="place-hint" class="hint"></p>
+                    </div>
+                    <div id="reveal-panel" hidden>
+                        <div id="legend" class="legend"></div>
+                        <div class="row small">
+                            <button class="btn r" id="jump-r" type="button">Show right</button>
+                            <button class="btn l" id="jump-l" type="button">Show left</button>
+                        </div>
+                        <div id="case-table"></div>
+                        <button id="btn-next" class="btn primary" type="button">Next case &rarr;</button>
+                    </div>
+                    <div id="thanks-panel" hidden>
+                        <p class="thanks">Thank you! This scan has no reference, your points will help research. It is not part of your score.</p>
+                        <button id="btn-next2" class="btn primary" type="button">Next case &rarr;</button>
+                    </div>
+                </div>
+            </div>
+            <div id="running" class="card" hidden></div>
+        </section>
+
+        <!-- FINAL -->
+        <section id="screen-final" class="screen" hidden>
+            <h2>Your results</h2>
+            <div id="final-table" class="card"></div>
+            <div class="card" id="save-card">
+                <label>Nickname for the leaderboard
+                    <input id="final-nick" type="text" maxlength="24" autocomplete="off" placeholder="optional">
+                </label>
+                <button id="btn-save" class="btn primary" type="button">Save to the leaderboard</button>
+                <p id="save-msg" class="notice"></p>
+            </div>
+        </section>
+
+        <!-- LEADERBOARD -->
+        <section id="screen-board" class="screen" hidden>
+            <div class="topline">
+                <h2>Leaderboard</h2>
+                <div class="board-tools">
+                    <span class="seg" role="group" aria-label="Which trials to show">
+                        <button id="board-all" class="btn active" type="button">Everyone</button><button id="board-me" class="btn" type="button">Only me</button>
+                    </span>
+                    <button id="board-home" class="btn" type="button">Back</button>
+                </div>
+            </div>
+            <p class="notice">Ranked by the median error over both ostia (mm, lower is better). Every completed trial is listed and your own trials are highlighted; click a nickname to see all the trials of that name. Models are evaluated on the same 12 cases.</p>
+            <p id="board-filter" class="notice" hidden></p>
+            <div id="board-cooldown" class="cooldown" hidden></div>
+            <div id="board-table" class="card"></div>
+        </section>
+
+        <p id="error-msg" class="error" hidden></p>
+</main>
+<script src="../config.js"></script><script>OSTIA_CONFIG.MODE="local";if(location.search.indexOf("real")>=0)OSTIA_CONFIG.LOCAL_DATA_BASE="../../_workbench/challenge-data/";</script><script src="../js/stats.js"></script><script src="../demo/phantom.js"></script><script src="../js/api.js"></script>
+<script src="../js/orient.js"></script><script src="../js/viewer.js"></script><script src="../js/app.js"></script>
+<script>
+(function () {
+  var log = [], $ = function (i) { return document.getElementById(i); };
+  window.addEventListener("error", function (e) { log.push("ERR " + e.message); });
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  async function until(f, what) { for (var i = 0; i < 400; i++) { if (f()) return; await sleep(25); } throw new Error("timeout: " + what); }
+  async function run() {
+    try {
+      await until(function () { return !$("screen-landing").hidden; }, "landing");
+      $("nickname").value = "tester"; $("btn-start").click();
+      await until(function () { return !$("screen-tutorial").hidden; }, "tutorial");
+      log.push("tutorial ok");
+      $("tut-skip").click(); await until(function () { return !$("screen-landing").hidden; }, "landing2");
+      $("btn-start").click();
+      var V = window.__ostia.viewer, st = window.__ostia.state, kinds = [];
+      for (var n = 0; n < 15; n++) {
+        await until(function () { return !$("screen-case").hidden && V.meta && V.mode === "R" && !st.submitted && V.cache["axial" + V.slice.axial + "@" + V.meta.token] && V.cache["axial" + V.slice.axial + "@" + V.meta.token] !== "loading"; }, "case " + n);
+        kinds.push(st.seq[st.idx].kind[0]);
+        var c = window.__ostia.api.truth.cases[st.seq[st.idx].token], off = (n % 4) * 0.8;
+        if (n === 1) { $("zoom").value = 2; $("zoom").dispatchEvent(new Event("input")); log.push("zoom hint visible=" + !$("zoom-hint").hidden); $("zoom").value = 1; $("zoom").dispatchEvent(new Event("input")); log.push("hint hidden at zoom 1=" + $("zoom-hint").hidden); }
+        if (n === 2) {   // real pointer events: right button -> RIGHT ostium, left button -> LEFT ostium
+          var cv = V.panes.axial.cv, f = V._fit("axial"), rc = cv.getBoundingClientRect();
+          [["R", 2, [100, 100, 80]], ["L", 0, [120, 110, 80]]].forEach(function (t) {
+            V.setSlice("axial", t[2][2]); var q = V.imageFromVoxel("axial", t[2]);
+            var o = { bubbles: true, pointerId: 7, pointerType: "mouse", button: t[1], clientX: rc.left + f.ox + q[0] * f.s, clientY: rc.top + f.oy + q[1] * f.s };
+            cv.dispatchEvent(new PointerEvent("pointerdown", o)); cv.dispatchEvent(new PointerEvent("pointerup", o));
+          });
+          log.push("mouse buttons: R=" + (V.points.R ? V.points.R.map(Math.round) : "none") + " L=" + (V.points.L ? V.points.L.map(Math.round) : "none"));
+          V.points = { R: null, L: null }; st.placed = { R: false, L: false };
+        }
+        ["R", "L"].forEach(function (sd) {
+          var g = c.gt ? V.rasToVoxel(c.gt[sd]) : [112 + (sd === 'R' ? 12 : -12), 112, 80]; V.setMode(sd);
+          V.setSlice("axial", Math.round(g[2])); var q = V.imageFromVoxel("axial", g);
+          V._place("axial", q[0] + off, q[1] - off);
+          V.setSlice("sagittal", Math.round(g[0])); q = V.imageFromVoxel("sagittal", g);
+          V._place("sagittal", q[0], q[1]);
+        });
+        if ($("btn-submit").disabled) throw new Error("submit disabled at case " + n);
+        $("btn-submit").click();
+        await until(function () { return st.submitted && (!$("reveal-panel").hidden || !$("thanks-panel").hidden); }, "reveal " + n);
+        if (location.search.indexOf("stop=reveal") >= 0 && n === 1) return;
+        if (n === 0) log.push("reveal0 rows=" + $("case-table").querySelectorAll("tr").length + " running=" + !$("running").hidden + " models=" + V.reveal.models.length);
+        (n === 0 ? $("btn-next") : (st.seq[st.idx].kind === "alcapa" ? $("btn-next2") : $("btn-next"))).click();
+      }
+      await until(function () { return !$("screen-final").hidden; }, "final");
+      log.push("sequence=" + kinds.join(""));
+      log.push("final rows=" + $("final-table").querySelectorAll("tbody tr").length);
+      $("final-nick").value = "tester"; $("btn-save").click();
+      await until(function () { return !$("screen-board").hidden && $("board-table").querySelectorAll("tbody tr").length > 0; }, "board");
+      if (location.search.indexOf("stop=board")>=0) { document.getElementById("board-me").click(); await sleep(200); log.push("me-rows=" + $("board-table").querySelectorAll("tbody tr").length); }
+      log.push("board rows=" + $("board-table").querySelectorAll("tbody tr").length + " cookie=" + (document.cookie.indexOf("ostia_cooldown") >= 0));
+      $("board-home").click(); await sleep(50);
+      log.push("start disabled in cooldown=" + $("btn-start").disabled);
+      $("btn-board").click(); await sleep(2600);
+      log.push("board stays after 2.6 s=" + !$("screen-board").hidden + " landing hidden=" + $("screen-landing").hidden);
+      log.push("OK");
+    } catch (e) { log.push("FAIL " + e.message); }
+    document.title = log.join(" | ");
+    var pre = document.createElement("pre"); pre.id = "result"; pre.textContent = log.join("\n"); document.body.appendChild(pre);
+  }
+  run();
+})();
+</script></body></html>
