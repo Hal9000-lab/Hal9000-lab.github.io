@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hal9000 Lab</title>
     <meta name="description" content="Project pages of the Hal9000 Lab at Politecnico di Milano.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Hal9000 Lab">
+    <meta property="og:description" content="Project pages of the Hal9000 Lab at Politecnico di Milano.">
+    <meta property="og:image" content="https://hal9000-lab.github.io/Awakening-ImageCAS/assets/Figure_1.png">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23171322'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23b31b1b'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="./landing.css">
     <script src="./shared/particles/particles.js" defer></script>
@@ -46,33 +51,47 @@
             </a>
         </div>
 
-        <h2 id="people" class="section-h">People</h2>
-        <!-- Each card is configured by its data attributes (empty = not shown):
-             data-start / data-end (years or dates; a non-empty end date, or the attribute data-ex, makes it an EX card),
-             data-orcid (id), data-scholar (user id), data-github (user name), data-web (full url). See people.js -->
+        <h2 id="lineup" class="section-h">Lineup</h2>
+        <!-- Lineup section: each card is configured by its data attributes (empty = not shown), see people.js:
+             data-titles (M.Sc., Ph.D., Prof.), data-start / data-end (a real end date makes it an EX card, "today" = still here),
+             data-foil (silver | holo | glitter | gold | metal, or two layered: gold+holo (automatic order) or glitter>gold (glitter below, gold above); overrides the finish of the group, or picks the one of an EX card), data-orcid, data-scholar, data-github, data-web.
+             Finish rules (people.js): normal cards get a metallic frame by group (data-group of the row): PhD students silver for the oldest start year among
+             the active ones, metal for the others; postdocs: glitter below gold (glitter>gold) with the Prof. title, plain glitter without; chairs: holo (complete
+             silver below, rainbow above). EX cards (whole card): PhD students silver; postdocs plain glitter, or glitter>gold with Prof.; chairs glitter+rainbow.
+             -->
 
         <h3 class="people-title">PhD Students</h3>
-        <div class="people">
-            <div class="person" data-orcid="0009-0002-3434-0559" data-scholar="wOjE0VUAAAAJ" data-github="" data-web="" data-start="" data-end="">
+        <div class="people" data-group="phd">
+            <div class="person" data-titles="M.Sc." data-orcid="0009-0002-3434-0559" data-scholar="wOjE0VUAAAAJ" data-github="" data-web="" data-start="2022" data-end="today">
                 <div class="avatar" aria-hidden="true">ML</div>
                 <h3>Matteo Leccardi</h3>
-                <p class="aff">Politecnico di Milano</p>
+                <p class="aff">Politecnico di Milano<br><span class="aff2">(ETH Zuerich)</span></p>
             </div>
-            <div class="person" data-orcid="" data-scholar="" data-github="" data-web="" data-start="" data-end="">
+            <div class="person" data-titles="M.Sc." data-orcid="" data-scholar="" data-github="" data-web="" data-start="2024" data-end="today">
                 <div class="avatar" aria-hidden="true">AM</div>
                 <h3>Alice Maccarini</h3>
+                <p class="aff"></p>
+            </div>
+            <div class="person" data-titles="M.Sc." data-orcid="" data-scholar="" data-github="" data-web="" data-start="2024" data-end="today">
+                <div class="avatar" aria-hidden="true">LV</div>
+                <h3>Lorenzo Veronese</h3>
+                <p class="aff"></p>
+            </div>
+            <div class="person" data-titles="Ph.D." data-orcid="" data-scholar="" data-github="" data-web="" data-start="2022" data-end="2025">
+                <div class="avatar" aria-hidden="true">LM</div>
+                <h3>Luca Marsilio</h3>
                 <p class="aff"></p>
             </div>
         </div>
 
         <h3 class="people-title">Postdocs &amp; Researchers</h3>
-        <div class="people">
-            <div class="person" data-orcid="0000-0002-3365-580X" data-scholar="J5VLBNIAAAAJ" data-github="" data-web="" data-start="" data-end="">
+        <div class="people" data-group="postdoc">
+            <div class="person" data-titles="Ph.D.,Prof." data-orcid="0000-0002-3365-580X" data-scholar="J5VLBNIAAAAJ" data-github="" data-web="" data-start="2022" data-end="today">
                 <div class="avatar" aria-hidden="true">AM</div>
                 <h3>Andrea Moglia</h3>
                 <p class="aff">Politecnico di Milano</p>
             </div>
-            <div class="person" data-orcid="" data-scholar="" data-github="" data-web="" data-start="" data-end="" data-ex>
+            <div class="person" data-titles="Ph.D." data-orcid="" data-scholar="" data-github="" data-web="" data-start="2022" data-end="2024">
                 <div class="avatar" aria-hidden="true">MR</div>
                 <h3>Matteo Rossi</h3>
                 <p class="aff"></p>
@@ -80,13 +99,13 @@
         </div>
 
         <h3 class="people-title">Chairs</h3>
-        <div class="people">
-            <div class="person" data-orcid="0000-0002-6276-6314" data-scholar="-4sUeToAAAAJ" data-github="" data-web="" data-start="" data-end="">
+        <div class="people" data-group="chair">
+            <div class="person" data-titles="Ph.D.,Prof." data-orcid="0000-0002-6276-6314" data-scholar="-4sUeToAAAAJ" data-github="" data-web="" data-start="2022" data-end="today">
                 <div class="avatar" aria-hidden="true">LM</div>
                 <h3>Luca Mainardi</h3>
                 <p class="aff">Politecnico di Milano</p>
             </div>
-            <div class="person" data-orcid="0000-0003-3995-8673" data-scholar="oHDqHtQAAAAJ" data-github="" data-web="" data-start="" data-end="">
+            <div class="person" data-titles="Ph.D.,Prof." data-orcid="0000-0003-3995-8673" data-scholar="oHDqHtQAAAAJ" data-github="" data-web="" data-start="2022" data-end="today">
                 <div class="avatar" aria-hidden="true">PC</div>
                 <h3>Pietro Cerveri</h3>
                 <p class="aff">Politecnico di Milano<br>Universit&agrave; di Pavia</p>
@@ -99,6 +118,7 @@
         <p>CC 2026</p>
         <p>Website maintained by Matteo Leccardi (until 2027)</p>
     </footer>
+    <script src="./shared/foil/foil.js" defer></script>
     <script src="./people.js" defer></script>
 </body>
 </html>

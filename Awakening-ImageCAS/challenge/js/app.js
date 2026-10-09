@@ -1,6 +1,8 @@
 /* Ostia Challenge: screens and game flow. */
 (function () {
     "use strict";
+    var SKIP_AFTER_MS = 30000;                       // ALCAPA scans only: the skip button appears this long after the scan is shown
+    var SKIPPED = [-1000, -1000, -1000];             // RAS point saved for a skipped scan
     var CFG = window.OSTIA_CONFIG, S = window.OstiaStats, api = window.OstiaApi.create();
     var $ = function (id) { return document.getElementById(id); };
     var state = { init: null, session: null, seq: [], idx: 0, results: [], placed: { R: false, L: false }, submitted: false, t0: 0, tut: 0, nick: "", filter: null, mine: false, msScored: 0 };
@@ -93,6 +95,8 @@
         $("progress-bar").style.width = (state.idx / state.seq.length * 100) + "%";
         ["place-panel", "reveal-panel", "thanks-panel", "running"].forEach(function (id) { $(id).hidden = id !== "place-panel"; });
         $("running").hidden = true;
+        clearTimeout(state.skipTimer); $("btn-skip").hidden = true;
+        if (c.kind === "alcapa") state.skipTimer = setTimeout(function () { if (!state.submitted) $("btn-skip").hidden = false; }, SKIP_AFTER_MS);   // some of these scans may be badly framed
         state.placed = { R: false, L: false }; state.submitted = false; viewer.setLocked(false);
         updatePlaceUI();
         api.meta(c.token).then(function (meta) {
@@ -120,10 +124,11 @@
         updatePlaceUI();
     }
 
-    function submit() {
+    function submit(skipped) {
         if (state.submitted) return;
+        clearTimeout(state.skipTimer); $("btn-skip").hidden = true;
         state.submitted = true; viewer.setMode(null); viewer.setLocked(true); updatePlaceUI();
-        var c = state.seq[state.idx], pts = { R: viewer.voxelToRas(viewer.points.R), L: viewer.voxelToRas(viewer.points.L) };
+        var c = state.seq[state.idx], pts = skipped === true ? { R: SKIPPED.slice(), L: SKIPPED.slice() } : { R: viewer.voxelToRas(viewer.points.R), L: viewer.voxelToRas(viewer.points.L) };
         api.submit({ session: state.session, token: c.token, points: pts, ms: Date.now() - state.t0, scrolls: viewer.scrolls }).then(function (res) {
             $("place-panel").hidden = true;
             if (res.kind === "alcapa") { $("thanks-panel").hidden = false; return; }
@@ -276,6 +281,7 @@
         $("btn-clear").addEventListener("click", function () { viewer.clearPoint("R"); viewer.clearPoint("L"); viewer.setMode("R"); updatePlaceUI(); });
         $("zoom").addEventListener("input", function () { viewer.setZoom(+$("zoom").value); $("zoom-hint").hidden = +$("zoom").value <= 1; });
         $("btn-submit").addEventListener("click", submit);
+        $("btn-skip").addEventListener("click", function () { submit(true); });
         var om = $("opt-mouse"), applyMouse = function () { viewer.mouseSides = om.checked; $("viewer").parentNode.parentNode.classList.toggle("mouse-buttons", om.checked); $("place-panel").classList.toggle("mouse-buttons", om.checked); lsSet("ostia_mouse", om.checked ? "1" : "0"); updatePlaceUI(); };
         om.checked = lsGet("ostia_mouse") !== "0"; om.addEventListener("change", applyMouse); applyMouse();
         $("btn-next").addEventListener("click", nextCase);

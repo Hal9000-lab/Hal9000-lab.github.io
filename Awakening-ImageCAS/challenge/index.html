@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ostia Challenge</title>
     <meta name="description" content="Place the coronary ostia on real CT scans and compare your accuracy with our models.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Ostia Challenge">
+    <meta property="og:description" content="Place the coronary ostia on real CT scans and compare your accuracy with our models.">
+    <meta property="og:image" content="https://hal9000-lab.github.io/Awakening-ImageCAS/assets/Figure_1.png">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="../assets/paper.png">
     <link rel="stylesheet" href="../styles/CONSTANTS.css">
     <link rel="stylesheet" href="../../shared/topbar/topbar.css">
@@ -92,6 +97,7 @@
                             <label class="zoom">Zoom <input id="zoom" type="range" min="1" max="4" step="0.25" value="1"></label>
                         </div>
                         <button id="btn-submit" class="btn primary" type="button" disabled>Submit this case</button>
+                        <button id="btn-skip" class="btn" type="button" hidden>Skip this scan</button>
                         <p id="place-hint" class="hint"></p>
                     </div>
                     <div id="reveal-panel" hidden>

@@ -671,7 +671,7 @@
     }
     function tick(now) {
         raf = 0; if (!playing) return;
-        time += (now - last) / 1000; last = now;
+        time += Math.min((now - last) / 1000, 0.1); last = now;      // a stall (another figure initialising) must not skip the timeline ahead
         if (time >= R + HOLD) time = 0;
         draw();
         raf = requestAnimationFrame(tick);
