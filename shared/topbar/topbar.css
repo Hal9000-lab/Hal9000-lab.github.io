@@ -1,0 +1,45 @@
+/* Hal9000 Lab top bar, shared by every project page (the only shared asset of the repo).
+ * Markup:   <nav id="topbar"><a href="../">&larr; Hal9000 Lab</a></nav>
+ * Include:  <link rel="stylesheet" href="<path>/shared/topbar/topbar.css"> and <script src="<path>/shared/topbar/topbar.js" defer></script>
+ * The script adds a <canvas> behind the link: slow silvery smoke over the dark colour. Without JavaScript the bar is plain dark. */
+
+nav#topbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 38px;
+    overflow: hidden;
+    background-color: rgb(23, 19, 34);
+}
+/* any other element with the attribute data-smoke gets the same background (the script adds the canvas) */
+[data-smoke] {
+    position: relative;
+    overflow: hidden;
+    background: rgb(23, 19, 34);
+}
+[data-smoke] > :not(canvas.topbar-smoke) {
+    position: relative;
+    z-index: 1;
+}
+nav#topbar > canvas.topbar-smoke,
+[data-smoke] > canvas.topbar-smoke {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+nav#topbar > a {
+    position: relative;
+    z-index: 1;
+    font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
+    font-size: 0.95em;
+    text-decoration: none;
+    color: rgb(215, 215, 225);
+    transition: 0.2s;
+}
+nav#topbar > a:hover {
+    color: white;
+}
