@@ -7,7 +7,7 @@
  *   data/                 private files, created/filled by the script (needs to be writable); contains truth.php (you upload it)
  *   slices/<token>/...    the PNG stacks + meta.json exported by export_challenge.py
  *
- * Every private file is a .php file that starts with "<?php exit; ?>", so the web server never shows its content.
+ * Every private file is a .php file whose first line is a PHP "exit" statement (see GUARD below), so the web server never shows its content.
  * Requests: POST api.php?action=<init|start|submit|finish|leaderboard> with a JSON body (sent as text/plain, so no CORS preflight).
  * Answers are always HTTP 200 with a JSON body; failures are {"error": "..."} (+ "cooldown": seconds when relevant).
  */
@@ -27,6 +27,7 @@ $MAX_TRIALS      = 5000;                                     // leaderboard rows
 $MAX_STARTS_HOUR = 30;                                       // new runs per hour and per IP
 
 // ------------------------------------------------------------------ helpers
+define('GUARD', '<' . '?php exit; ?' . ">\n");
 if (!function_exists('mb_substr')) { function mb_substr($s, $a, $l = null, $e = null) { return $l === null ? substr($s, $a) : substr($s, $a, $l); } }
 if (!function_exists('mb_strtolower')) { function mb_strtolower($s, $e = null) { return strtolower($s); } }
 if (!function_exists('intdiv')) { function intdiv($a, $b) { return (int)floor($a / $b); } }
@@ -52,7 +53,7 @@ function out($arr) {
 }
 function fail($msg, $extra = array()) { out(array_merge(array('error' => $msg), $extra)); }
 
-// guarded files: first line is "<?php exit; ?>"
+// guarded files: the first line is the GUARD (a php open tag, exit, a close tag); NEVER write a php close tag inside a // comment, it ends php mode
 function guard_read($path) {
     if (!is_file($path)) { return null; }
     $fh = fopen($path, 'r'); if (!$fh) { return null; }
@@ -66,14 +67,14 @@ function guard_write($path, $body) {
     $fh = fopen($path, 'c'); if (!$fh) { fail('storage error'); }
     flock($fh, LOCK_EX);
     ftruncate($fh, 0); rewind($fh);
-    fwrite($fh, "<?php exit; ?>\n" . $body);
+    fwrite($fh, GUARD . $body);
     fflush($fh); flock($fh, LOCK_UN); fclose($fh);
 }
 function guard_append($path, $line) {
     $new = !is_file($path);
     $fh = fopen($path, 'a'); if (!$fh) { fail('storage error'); }
     flock($fh, LOCK_EX);
-    if ($new || filesize($path) === 0) { fwrite($fh, "<?php exit; ?>\n"); }
+    if ($new || filesize($path) === 0) { fwrite($fh, GUARD); }
     fwrite($fh, $line . "\n");
     fflush($fh); flock($fh, LOCK_UN); fclose($fh);
 }

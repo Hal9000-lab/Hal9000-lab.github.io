@@ -33,7 +33,7 @@ Do NOT upload `cases_map.json` or `truth.json`. The folder `ostia/data/` gets mo
 * if the site uses another domain than `https://hal9000-lab.github.io` for the app (e.g. a custom domain), that domain.
 `challenge/config.js` is already set to `MODE: "remote"`, `API_BASE: "https://shapire.altervista.org/AwakeningImageCAS-challenge/api.php"` and `DATA_BASE: "https://shapire.altervista.org/AwakeningImageCAS-challenge/slices/"`. Open `.../challenge/?mode=local` to run the page on the local data (`_workbench`) with a browser-only leaderboard instead of the server.
 
-## What the server stores (inside `ostia/data/`, download by FTP any time; each file starts with a `<?php exit; ?>` line, then one JSON per line)
+## What the server stores (inside `ostia/data/`, download by FTP any time; each file starts with a one-line php `exit` guard, then one JSON per line)
 * `annotations.log.php`  every click of every run (RAS mm, time in ms, scrolls), including the ALCAPA volumes: the crowd-annotation data.
 * `trials.log.php`       completed runs (the leaderboard).
 * `sessions/`, `cool/`   run state and the 5-minute cooldown (hashed client/IP, never stored in clear).
