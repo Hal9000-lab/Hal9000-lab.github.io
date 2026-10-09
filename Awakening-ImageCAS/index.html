@@ -116,7 +116,7 @@
             </p>
             <p>
                 Building on these annotations, an open-weight benchmark for automatic coronary ostia localization is established,
-                comprising SwinUNETRv2, ResNet50, ResNet101, MedNeXt and nnResUNet models trained with a differentiable
+                comprising SwinUNETRv2, ResNet50, ResNet101, nnResUNet and two MedNeXt variants (S and B), models trained with a differentiable
                 coordinate-regression loss and evaluated on a held-out test set drawn from the three datasets. Localization errors are
                 graded against thresholds derived from the ostial anatomy and from the variability between annotators. The best models,
                 SwinUNETRv2 and nnResUNet, localized all the ostia without any failure, with median errors below one millimetre
@@ -272,7 +272,7 @@
         <section id="benchmark">
             <h2>Benchmark</h2>
             <p>
-                We release open-weight models for automatic ostia localization: SwinUNETRv2, ResNet50, ResNet101, MedNeXt and nnResUNet,
+                We release open-weight models for automatic ostia localization: SwinUNETRv2, ResNet50, ResNet101 and nnResUNet (MedNeXt is part of the benchmark, but its weights are not released),
                 trained with a differentiable coordinate-regression loss and evaluated on a held-out test set from ImageCAS, CAT08
                 and ASOCA. Errors are graded against thresholds derived from the ostial anatomy and from the variability between annotators.
             </p>

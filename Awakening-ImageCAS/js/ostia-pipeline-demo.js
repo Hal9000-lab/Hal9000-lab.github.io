@@ -428,7 +428,7 @@
 
     var MODELS = ["SwinUNETRv2", "ResNet50", "ResNet101", "nnResUNet", "MedNeXt"];
     function scene9(t, k) {
-        // training data on the left, five models trained in the same framework, weights on the right
+        // training data on the left, five models trained in the same framework, weights on the right (MedNeXt: not released)
         tileBox(50, 200, 190, 300, ease(prog(t, 69.3, 70.1)));
         ctx.globalAlpha = ease(prog(t, 69.4, 70.2));
         text("training and validation", 145, 228, 14, C.text, "bold", "center");
@@ -445,7 +445,10 @@
             var p = prog(t, 71.2 + i * 0.15, 76.4 + i * 0.2);
             rrect(530, y + 16, 250, 14, 7, "rgba(255,255,255,0.1)");
             if (p > 0) rrect(530, y + 16, Math.max(14, 250 * p), 14, 7, C.manual);
-            if (p >= 1) { rrect(805, y + 4, 140, 40, 8, "rgba(123,224,160,0.15)", C.ok, 1.5); text("weights", 875, y + 30, 16, C.ok, "bold", "center"); }
+            if (p >= 1) {
+                if (m === "MedNeXt") { rrect(805, y + 4, 140, 40, 8, "rgba(255,255,255,0.06)", C.dim, 1.5); text("not released", 875, y + 30, 14, C.dim, "normal", "center"); }
+                else { rrect(805, y + 4, 140, 40, 8, "rgba(123,224,160,0.15)", C.ok, 1.5); text("weights", 875, y + 30, 16, C.ok, "bold", "center"); }
+            }
             ctx.globalAlpha = 1;
         });
         ctx.globalAlpha = ease(prog(t, 72, 73));
