@@ -14,6 +14,7 @@
     var ROTATION = 0.05, TILT = 0.4;        // turning speed (rad/s) and tilt of the axis (rad)
     var BREATH = 0.03;                      // slight radial wobble of the voxels
     var BASE = [0.20, 0.58, 1.0];            // particle colour (the pen's 0x001f3f is almost black without its bloom pass, so it is brightened here)
+    var BASE_RED = [0.80, 0.14, 0.20], SPLIT_BLEND = 0.18, SPLIT_AT = -0.3;   // the sphere is half blue, half red (hemispheres about its turning axis, SPLIT_BLEND = width of the gradient between them, fraction of the radius)
     var GOLD = [1.0, 0.84, 0.0];
     var BRIGHTNESS = 1.0;                   // overall colour gain
     var DISP_REF = 12;                      // displacement (world units) at which the effects below reach full strength
@@ -58,7 +59,7 @@
         try { pp = program(gl, VS_P, FS_P); pl = program(gl, VS_L, FS_L); pg = program(gl, VS_G, FS_G); } catch (e) { if (window.console) console.warn("particles:", e.message); cv.remove(); return; }
 
         var tanHalf = Math.tan(FOV * Math.PI / 360), aspect = 1, halfW = 1, halfH = 1, pxPerUnit = 1, R = 1;
-        var n = 0, orig = null, cur = null, vel = null, pos = null, col = null, posBuf = gl.createBuffer(), colBuf = gl.createBuffer(), glowBuf = gl.createBuffer(), glw = null;
+        var n = 0, orig = null, cur = null, vel = null, pos = null, col = null, base = null, posBuf = gl.createBuffer(), colBuf = gl.createBuffer(), glowBuf = gl.createBuffer(), glw = null;
         var streaks = [], lineBuf = gl.createBuffer(), lineData = new Float32Array(N_STREAKS * 6);
         var mouse = { x: 1e5, y: 1e5 }, reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -68,13 +69,15 @@
             var rcss = parseFloat(getComputedStyle(el).getPropertyValue("--sphere-radius"));        // optional: sphere radius in css px (so a taller element does not enlarge the sphere)
             R = rcss > 0 ? rcss / (h / 2) * halfH : halfH * SPHERE_RADIUS;
             n = Math.min(MAX_PARTICLES, Math.round(4 * Math.PI * R * R * SURFACE_DENSITY));
-            orig = new Float32Array(n * 3); cur = new Float32Array(n * 3); vel = new Float32Array(n * 3); pos = new Float32Array(n * 3); col = new Float32Array(n * 3); glw = new Float32Array(n);
+            orig = new Float32Array(n * 3); cur = new Float32Array(n * 3); vel = new Float32Array(n * 3); pos = new Float32Array(n * 3); col = new Float32Array(n * 3); base = new Float32Array(n * 3); glw = new Float32Array(n);
             var golden = Math.PI * (3 - Math.sqrt(5));
             for (var i = 0; i < n; i++) {                                   // Fibonacci sphere: even spread over the surface
                 var y = 1 - 2 * (i + 0.5) / n, rr = Math.sqrt(1 - y * y), th = golden * i, rad = R * (1 - SHELL * Math.random());
                 orig[i * 3] = Math.cos(th) * rr * rad; orig[i * 3 + 1] = y * rad; orig[i * 3 + 2] = Math.sin(th) * rr * rad;
                 cur[i * 3] = orig[i * 3]; cur[i * 3 + 1] = orig[i * 3 + 1]; cur[i * 3 + 2] = orig[i * 3 + 2];
-                col[i * 3] = BASE[0]; col[i * 3 + 1] = BASE[1]; col[i * 3 + 2] = BASE[2];
+                var sp = Math.min(1, Math.max(0, ((orig[i * 3 + 1] * Math.sin(TILT) + orig[i * 3 + 2] * Math.cos(TILT)) / R - SPLIT_AT - SPLIT_BLEND) / (-2 * SPLIT_BLEND))); sp = sp * sp * (3 - 2 * sp);      // 0 = blue side, 1 = red side
+                for (var cc = 0; cc < 3; cc++) base[i * 3 + cc] = BASE[cc] + (BASE_RED[cc] - BASE[cc]) * sp;
+                col[i * 3] = base[i * 3]; col[i * 3 + 1] = base[i * 3 + 1]; col[i * 3 + 2] = base[i * 3 + 2];
             }
             var W = 2 * halfW + 30, H = 2 * halfH + 30;
             streaks = [];
@@ -112,7 +115,7 @@
                 var disp = Math.min(1, Math.sqrt(ex * ex + ey * ey + ez * ez) / DISP_REF);                   // how far the sprite is from its place on the sphere
                 glw[i] = disp;
                 var depth = (0.35 + 0.65 * Math.min(1, Math.max(0, (cur[i3 + 2] + R) / (2 * R)))) * (1 + DISP_BOOST * disp);   // far side dimmer, displaced sprites brighter
-                col[i3] = (BASE[0] + (GOLD[0] - BASE[0]) * near) * depth; col[i3 + 1] = (BASE[1] + (GOLD[1] - BASE[1]) * near) * depth; col[i3 + 2] = (BASE[2] + (GOLD[2] - BASE[2]) * near) * depth;
+                col[i3] = (base[i3] + (GOLD[0] - base[i3]) * near) * depth; col[i3 + 1] = (base[i3 + 1] + (GOLD[1] - base[i3 + 1]) * near) * depth; col[i3 + 2] = (base[i3 + 2] + (GOLD[2] - base[i3 + 2]) * near) * depth;
             }
             // twinkle: now and then a random sprite gets brighter and a halo of its own colour, and fades back
             if (n && t >= nextTwinkle && twinkles.length < TWINKLE_MAX) {
