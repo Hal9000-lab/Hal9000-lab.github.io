@@ -14,7 +14,7 @@
     var ROTATION = 0.05, TILT = 0.4;        // turning speed (rad/s) and tilt of the axis (rad)
     var BREATH = 0.03;                      // slight radial wobble of the voxels
     var BASE = [0.20, 0.58, 1.0];            // particle colour (the pen's 0x001f3f is almost black without its bloom pass, so it is brightened here)
-    var BASE_RED = [0.80, 0.14, 0.20], SPLIT_BLEND = 0.18, SPLIT_AT = -0.3;   // the sphere is half blue, half red (hemispheres about its turning axis, SPLIT_BLEND = width of the gradient between them, fraction of the radius)
+    var BASE_RED = [0.80, 0.14, 0.20], SPLIT_BLEND = 0.18, SPLIT_AT = 0;   // the sphere is half blue, half red (hemispheres about its turning axis, SPLIT_BLEND = width of the gradient between them, fraction of the radius)
     var GOLD = [1.0, 0.84, 0.0];
     var BRIGHTNESS = 1.0;                   // overall colour gain
     var DISP_REF = 12;                      // displacement (world units) at which the effects below reach full strength
@@ -75,7 +75,7 @@
                 var y = 1 - 2 * (i + 0.5) / n, rr = Math.sqrt(1 - y * y), th = golden * i, rad = R * (1 - SHELL * Math.random());
                 orig[i * 3] = Math.cos(th) * rr * rad; orig[i * 3 + 1] = y * rad; orig[i * 3 + 2] = Math.sin(th) * rr * rad;
                 cur[i * 3] = orig[i * 3]; cur[i * 3 + 1] = orig[i * 3 + 1]; cur[i * 3 + 2] = orig[i * 3 + 2];
-                var sp = Math.min(1, Math.max(0, ((orig[i * 3 + 1] * Math.sin(TILT) + orig[i * 3 + 2] * Math.cos(TILT)) / R - SPLIT_AT - SPLIT_BLEND) / (-2 * SPLIT_BLEND))); sp = sp * sp * (3 - 2 * sp);      // 0 = blue side, 1 = red side
+                var sp = Math.min(1, Math.max(0, (orig[i * 3 + 2] / R - SPLIT_AT - SPLIT_BLEND) / (-2 * SPLIT_BLEND))); sp = sp * sp * (3 - 2 * sp);      // 0 = blue side, 1 = red side
                 for (var cc = 0; cc < 3; cc++) base[i * 3 + cc] = BASE[cc] + (BASE_RED[cc] - BASE[cc]) * sp;
                 col[i * 3] = base[i * 3]; col[i * 3 + 1] = base[i * 3 + 1]; col[i * 3 + 2] = base[i * 3 + 2];
             }
@@ -99,12 +99,13 @@
 
         var blink = null, nextBlink = 2.0, twinkles = [], nextTwinkle = 0.5;
         function step(t) {                                          // one 60 Hz physics step
-            var r2 = REPEL_RADIUS * REPEL_RADIUS, ca = Math.cos(t * ROTATION), sa = Math.sin(t * ROTATION), ct = Math.cos(TILT), st = Math.sin(TILT);
+            var r2 = REPEL_RADIUS * REPEL_RADIUS, th = t * ROTATION, cth = Math.cos(th), sth = Math.sin(th), omc = 1 - cth;
+            var ax = Math.sin(TILT), ay = Math.cos(TILT);                                                // rotation axis: in the plane of the screen, tilted by TILT (so the colour seam, which contains the axis, turns face-on)
             for (var i = 0; i < n; i++) {
                 var i3 = i * 3, ox = orig[i3], oy = orig[i3 + 1], oz = orig[i3 + 2];
                 var br = 1 + BREATH * Math.sin(ox * WAVE_FREQ + t * WAVE_SPEED);                    // rest position: turn about the tilted axis, with a small radial wobble
-                var rx = (ox * ca + oz * sa) * br, rz = (-ox * sa + oz * ca) * br, ry = oy * br;
-                var tx = rx, ty = ry * ct - rz * st, tz = ry * st + rz * ct;
+                var dot = (ax * ox + ay * oy) * omc;                                                        // Rodrigues rotation about (ax, ay, 0)
+                var tx = (ox * cth + (ay * oz) * sth + ax * dot) * br, ty = (oy * cth - (ax * oz) * sth + ay * dot) * br, tz = (oz * cth + (ax * oy - ay * ox) * sth) * br;
                 var dx = cur[i3] - mouse.x, dy = cur[i3 + 1] - mouse.y, d2 = dx * dx + dy * dy, near = 0;
                 if (d2 < r2) { var dist = Math.sqrt(d2) || 1e-4; near = 1 - dist / REPEL_RADIUS; var f = near * REPEL_FORCE / dist; vel[i3] += dx * f; vel[i3 + 1] += dy * f; }
                 vel[i3] += (tx - cur[i3]) * SPRING; vel[i3 + 1] += (ty - cur[i3 + 1]) * SPRING; vel[i3 + 2] += (tz - cur[i3 + 2]) * SPRING;
@@ -114,7 +115,7 @@
                 var ex = tx - cur[i3], ey = ty - cur[i3 + 1], ez = tz - cur[i3 + 2];
                 var disp = Math.min(1, Math.sqrt(ex * ex + ey * ey + ez * ez) / DISP_REF);                   // how far the sprite is from its place on the sphere
                 glw[i] = disp;
-                var depth = (0.35 + 0.65 * Math.min(1, Math.max(0, (cur[i3 + 2] + R) / (2 * R)))) * (1 + DISP_BOOST * disp);   // far side dimmer, displaced sprites brighter
+                var depth = (0.12 + 0.88 * Math.min(1, Math.max(0, (cur[i3 + 2] + R) / (2 * R)))) * (1 + DISP_BOOST * disp);   // far side dimmer, displaced sprites brighter
                 col[i3] = (base[i3] + (GOLD[0] - base[i3]) * near) * depth; col[i3 + 1] = (base[i3 + 1] + (GOLD[1] - base[i3 + 1]) * near) * depth; col[i3 + 2] = (base[i3 + 2] + (GOLD[2] - base[i3 + 2]) * near) * depth;
             }
             // twinkle: now and then a random sprite gets brighter and a halo of its own colour, and fades back
