@@ -65,7 +65,8 @@
         function build() {
             var w = Math.max(1, el.clientWidth), h = Math.max(1, el.clientHeight);
             aspect = w / h; halfH = CAM_Z * tanHalf; halfW = halfH * aspect;
-            R = halfH * SPHERE_RADIUS;
+            var rcss = parseFloat(getComputedStyle(el).getPropertyValue("--sphere-radius"));        // optional: sphere radius in css px (so a taller element does not enlarge the sphere)
+            R = rcss > 0 ? rcss / (h / 2) * halfH : halfH * SPHERE_RADIUS;
             n = Math.min(MAX_PARTICLES, Math.round(4 * Math.PI * R * R * SURFACE_DENSITY));
             orig = new Float32Array(n * 3); cur = new Float32Array(n * 3); vel = new Float32Array(n * 3); pos = new Float32Array(n * 3); col = new Float32Array(n * 3); glw = new Float32Array(n);
             var golden = Math.PI * (3 - Math.sqrt(5));

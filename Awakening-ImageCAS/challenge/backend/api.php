@@ -27,6 +27,8 @@ $MAX_TRIALS      = 5000;                                     // leaderboard rows
 $MAX_STARTS_HOUR = 30;                                       // new runs per hour and per IP
 $DEV_NICK        = '§§_§§';                                  // this exact nickname is the developer test user: its trials are listed on the leaderboard for $DEV_VISIBLE seconds only
 $DEV_VISIBLE     = 300;
+$MODEL_TIME      = array('SwinUNETRv2' => 55.6, 'nnResUNet' => 41.1, 'ResNet50' => 36.0, 'ResNet101' => 37.3);   // seconds per case: average processing time per volume of the benchmark models (paper, results table)
+$MAX_CASE_MS     = 1800000;                                  // an annotation time is capped at 30 min (a tab left open)
 
 // ------------------------------------------------------------------ helpers
 define('GUARD', '<' . '?php exit; ?' . ">\n");
@@ -203,7 +205,11 @@ if ($action === 'submit') {
     }
     $err = array('R' => dist3($R, $c['gt']['R']), 'L' => dist3($L, $c['gt']['L']));
     $errors = (array)$s['errors'];
-    if (!isset($errors[$tok])) { $errors[$tok] = $err; $done[$tok] = 1; $s['errors'] = $errors; $s['done'] = $done; save_session($id, $s); }
+    if (!isset($errors[$tok])) {
+        $times = isset($s['times']) ? (array)$s['times'] : array();                   // annotation time of the case: from showing it to submitting it, the review is not counted
+        $times[$tok] = max(0, min($MAX_CASE_MS, isset($body['ms']) ? (int)$body['ms'] : 0));
+        $errors[$tok] = $err; $done[$tok] = 1; $s['errors'] = $errors; $s['times'] = $times; $s['done'] = $done; save_session($id, $s);
+    }
     else { $err = $errors[$tok]; }                      // a case counts only the first time
     $models = array();
     foreach ($T['models'] as $m) {
@@ -224,7 +230,9 @@ if ($action === 'finish') {
     $nick = clean_nick(isset($body['nickname']) ? $body['nickname'] : '');
     $trials = read_lines("$DATA/trials.log.php"); $n = 1;
     foreach ($trials as $t) { if (mb_strtolower($t['nickname'], 'UTF-8') === mb_strtolower($nick, 'UTF-8')) { $n++; } }
-    $row = array('nickname' => $nick, 'trial' => $n, 'time' => time() * 1000, 'stats' => side_stats($errors));
+    $tsum = 0; foreach ((array)(isset($s['times']) ? $s['times'] : array()) as $ms) { $tsum += $ms; }
+    $row = array('nickname' => $nick, 'trial' => $n, 'time' => time() * 1000, 'stats' => side_stats($errors),
+                 'time_total' => $tsum / 1000.0, 'time_case' => $tsum / 1000.0 / max(1, count($errors)));
     guard_append("$DATA/trials.log.php", json_encode($row));
     $res = array('trial' => $n, 'time' => $row['time'], 'nickname' => $nick, 'cooldown' => $COOLDOWN);
     $s['finished'] = true; $s['result'] = $res; save_session($id, $s);
@@ -238,7 +246,8 @@ if ($action === 'leaderboard') {
     $models = array();
     foreach ($T['models'] as $m) {
         $errs = array(); foreach ($scored as $c) { $errs[] = $c['models'][$m['name']]['err']; }
-        $models[] = array('name' => $m['name'], 'color' => $m['color'], 'stats' => side_stats($errs));
+        $tc = isset($MODEL_TIME[$m['name']]) ? $MODEL_TIME[$m['name']] : null;
+        $models[] = array('name' => $m['name'], 'color' => $m['color'], 'stats' => side_stats($errs), 'time_case' => $tc, 'time_total' => $tc === null ? null : $tc * $N_SCORED);
     }
     $trials = read_lines("$DATA/trials.log.php");
     $keep = array(); $now_ms = time() * 1000;

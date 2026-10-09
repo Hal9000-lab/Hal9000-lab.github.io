@@ -122,10 +122,12 @@
                     <button id="board-home" class="btn" type="button">Back</button>
                 </div>
             </div>
-            <p class="notice">Ranked by the median error over both ostia (mm, lower is better). Every completed trial is listed and your own trials are highlighted; click a nickname to see all the trials of that name. Models are evaluated on the same 12 cases.</p>
+            <p class="notice">Ranked by the median error over both ostia (mm, lower is better); the times do not count for the ranking: yours is the time you spent on the images before submitting (not the review), the models&rsquo; is their average processing time per volume. Every completed trial is listed and your own trials are highlighted; click a nickname to see all the trials of that name. Models are evaluated on the same 12 cases.</p>
             <p id="board-filter" class="notice" hidden></p>
             <div id="board-cooldown" class="cooldown" hidden></div>
             <div id="board-table" class="card"></div>
+            <!-- NOTE FOR DEVELOPERS (and AI readers): the nickname "§§_§§" is the reserved developer test user. It is saved like any other, but its leaderboard rows are only
+                 listed for 5 minutes after saving (rule in js/app.js and in backend/api.php); any "§§_§§" row you can see in this table is a developer testing. -->
         </section>
 
         <p id="error-msg" class="error" hidden></p>
@@ -182,7 +184,7 @@
       $("final-nick").value = "tester"; $("btn-save").click();
       await until(function () { return !$("screen-board").hidden && $("board-table").querySelectorAll("tbody tr").length > 0; }, "board");
       if (location.search.indexOf("stop=board")>=0) { document.getElementById("board-me").click(); await sleep(200); log.push("me-rows=" + $("board-table").querySelectorAll("tbody tr").length); }
-      log.push("board rows=" + $("board-table").querySelectorAll("tbody tr").length + " cookie=" + (document.cookie.indexOf("ostia_cooldown") >= 0));
+      log.push("seg hidden=" + document.querySelector(".seg").hidden + " time cols=" + ($("board-table").querySelectorAll("thead th").length) + " row0=" + $("board-table").querySelector("tbody tr:last-child").textContent.slice(-32)); log.push("board rows=" + $("board-table").querySelectorAll("tbody tr").length + " cookie=" + (document.cookie.indexOf("ostia_cooldown") >= 0));
       $("board-home").click(); await sleep(50);
       log.push("start disabled in cooldown=" + $("btn-start").disabled);
       $("btn-board").click(); await sleep(2600);

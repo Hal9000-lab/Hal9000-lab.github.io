@@ -3,7 +3,7 @@
     "use strict";
     var CFG = window.OSTIA_CONFIG, S = window.OstiaStats, api = window.OstiaApi.create();
     var $ = function (id) { return document.getElementById(id); };
-    var state = { init: null, session: null, seq: [], idx: 0, results: [], placed: { R: false, L: false }, submitted: false, t0: 0, tut: 0, nick: "", filter: null, mine: false };
+    var state = { init: null, session: null, seq: [], idx: 0, results: [], placed: { R: false, L: false }, submitted: false, t0: 0, tut: 0, nick: "", filter: null, mine: false, msScored: 0 };
     var viewer, tutViewer;
     var TUT_TEXT = [
         "<b>The aortic root.</b> Scroll the axial view (left) until you see the bright circle of the <b>aorta</b>. Near its base it widens into three bulges, the <b>sinuses of Valsalva</b>.",
@@ -30,6 +30,7 @@
     function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
     function cooldownLeft() { var t = +getCookie("ostia_cooldown"); return t > Date.now() ? Math.ceil((t - Date.now()) / 1000) : 0; }
     function mmss(s) { return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+    function fmtTime(sec) { if (sec === null || sec === undefined || !isFinite(sec)) return "-"; sec = Math.round(sec); return sec < 60 ? sec + " s" : Math.floor(sec / 60) + " min " + ("0" + (sec % 60)).slice(-2) + " s"; }
 
     function drawOrient(canvas, v) {
         if (!v.meta) return;
@@ -74,7 +75,7 @@
         var nick = $("nickname").value.trim(); state.nick = nick; lsSet("ostia_nick", nick);
         $("btn-start").disabled = true;
         api.start({ client: clientId(), nickname: nick }).then(function (r) {
-            state.session = r.session; state.seq = r.cases; state.idx = 0; state.results = [];
+            state.session = r.session; state.seq = r.cases; state.idx = 0; state.results = []; state.msScored = 0;
             lsSet("ostia_tutorial_done", "1");
             openCase();
         }, function (e) {
@@ -128,7 +129,7 @@
             if (res.kind === "alcapa") { $("thanks-panel").hidden = false; return; }
             var vx = function (r) { return viewer.rasToVoxel(r); };
             viewer.setReveal({ gt: { R: vx(res.reveal.gt.R), L: vx(res.reveal.gt.L) }, models: res.reveal.models.map(function (m) { return { name: m.name, color: m.color, R: vx(m.R), L: vx(m.L) }; }) });
-            state.results.push({ user: res.reveal.user, models: res.reveal.models });
+            state.results.push({ user: res.reveal.user, models: res.reveal.models }); state.msScored += Date.now() - state.t0;
             viewer.goTo(vx(res.reveal.gt.R));
             renderReveal(res.reveal);
         }, function (e) { err("Could not submit: " + e.message); state.submitted = false; updatePlaceUI(); });
@@ -179,7 +180,10 @@
     function finalScreen() {
         show("final");
         $("progress-bar") && ($("progress-bar").style.width = "100%");
-        renderRunning("final-table", true);
+        var el = renderRunning("final-table", true), n = state.results.length;
+        var tp = document.createElement("p"); tp.className = "notice";
+        tp.textContent = "Your time on the images: " + fmtTime(state.msScored / 1000) + " in total, " + fmtTime(state.msScored / 1000 / Math.max(1, n)) + " per case (the review after each case is not counted). The models take about 36 to 56 s per volume. Times do not influence the ranking.";
+        el.appendChild(tp);
         $("final-nick").value = state.nick || lsGet("ostia_nick") || "";
         $("btn-save").disabled = false; $("save-msg").textContent = "";
     }
@@ -211,13 +215,17 @@
         var fl = $("board-filter"); fl.hidden = !state.filter;
         if (state.filter) { fl.innerHTML = "Showing the trials of <b></b> (and the models)."; fl.querySelector("b").textContent = state.filter; var x = document.createElement("a"); x.textContent = "show everyone"; x.addEventListener("click", function () { state.filter = null; board(); }); fl.appendChild(x); }
         var mine = mineSet();
+        // "Everyone / Only me" only makes sense for someone who saved a trial under a real nickname on this browser
+        var named = mine.some(function (k) { return k.split("|")[0] !== "anonymous"; });
+        document.querySelector(".seg").hidden = !named;
+        if (!named) { state.mine = false; $("board-all").classList.add("active"); $("board-me").classList.remove("active"); }
         api.leaderboard().then(function (lb) {
             var DEV = "\u00a7\u00a7_\u00a7\u00a7", now = Date.now();           // the developer test nickname (exactly this) is shown for 5 minutes only
             lb.trials = lb.trials.filter(function (t) { return t.nickname !== DEV || now - t.time <= 300000; });
-            var rows = lb.trials.map(function (t) { return { kind: "user", nickname: t.nickname, trial: t.trial, time: t.time, both: t.stats.both, R: t.stats.R, L: t.stats.L }; });
-            lb.models.forEach(function (m) { rows.push({ kind: "model", nickname: m.name, color: m.color, both: m.stats.both, R: m.stats.R, L: m.stats.L }); });
+            var rows = lb.trials.map(function (t) { return { kind: "user", nickname: t.nickname, trial: t.trial, time: t.time, both: t.stats.both, R: t.stats.R, L: t.stats.L, tTotal: t.time_total, tCase: t.time_case }; });
+            lb.models.forEach(function (m) { rows.push({ kind: "model", nickname: m.name, color: m.color, both: m.stats.both, R: m.stats.R, L: m.stats.L, tTotal: m.time_total, tCase: m.time_case }); });
             var ranked = S.rank(rows);
-            var h = '<div class="scroll"><table class="t"><thead><tr><th>#</th><th>Name</th><th>Trial</th><th>Date</th><th>Right median</th><th>Right mean</th><th>Left median</th><th>Left mean</th><th>Total median</th><th>Total mean</th><th>min</th><th>max</th></tr></thead><tbody>';
+            var h = '<div class="scroll"><table class="t"><thead><tr><th>#</th><th>Name</th><th>Trial</th><th>Date</th><th>Right median</th><th>Right mean</th><th>Left median</th><th>Left mean</th><th>Total median</th><th>Total mean</th><th>min</th><th>max</th><th>Total time</th><th>Time per case</th></tr></thead><tbody>';
             ranked.forEach(function (r, i) {
                 var isMine = r.kind === "user" && mine.indexOf(r.nickname.toLowerCase() + "|" + r.time) >= 0;
                 if (state.filter && !(r.kind === "model" || r.nickname === state.filter)) return;
@@ -225,7 +233,7 @@
                 var date = r.time ? new Date(r.time).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "";
                 var name = r.kind === "model" ? r.nickname + '<span class="tag">model</span>' : '<a class="nick" data-n="' + encodeURIComponent(r.nickname) + '">' + r.nickname.replace(/</g, "&lt;") + "</a>";
                 h += '<tr class="' + (r.kind === "model" ? "model" : isMine ? "mine" : "") + '"' + (r.color ? ' style="--c:' + r.color + '"' : "") + "><td>" + (i + 1) + "</td><td>" + name + "</td><td>" + (r.trial || "") + "</td><td>" + date +
-                    "</td><td>" + fmt(r.R.median) + "</td><td>" + fmt(r.R.mean) + "</td><td>" + fmt(r.L.median) + "</td><td>" + fmt(r.L.mean) + "</td><td><b>" + fmt(r.both.median) + "</b></td><td>" + fmt(r.both.mean) + "</td><td>" + fmt(r.both.min) + "</td><td>" + fmt(r.both.max) + "</td></tr>";
+                    "</td><td>" + fmt(r.R.median) + "</td><td>" + fmt(r.R.mean) + "</td><td>" + fmt(r.L.median) + "</td><td>" + fmt(r.L.mean) + "</td><td><b>" + fmt(r.both.median) + "</b></td><td>" + fmt(r.both.mean) + "</td><td>" + fmt(r.both.min) + "</td><td>" + fmt(r.both.max) + "</td><td>" + fmtTime(r.tTotal) + "</td><td>" + fmtTime(r.tCase) + "</td></tr>";
             });
             $("board-table").innerHTML = h + "</tbody></table></div>";
             Array.prototype.forEach.call($("board-table").querySelectorAll("a.nick"), function (a) {

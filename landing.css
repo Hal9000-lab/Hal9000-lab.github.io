@@ -37,8 +37,9 @@ header > :not(canvas) {
 }
 /* the particle sphere lives in .hero (the canvas is centred on it): the title sits in the middle of the sphere, the text goes below */
 header > .hero {
-    height: 21em;
-    margin: 0 -1.2em;
+    height: calc(21em + 2cm);            /* 1 cm more above the title, and the same below (pulled back by the negative margin) so that the animation is not cut */
+    margin: 0 -1.2em -1cm;
+    --sphere-radius: 121px;              /* read by shared/particles: the sphere keeps its size when the hero grows */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -142,6 +143,9 @@ a.project:hover .open {
 main > h2.section-h {
     margin-top: 3em;
 }
+main > h2#people {
+    text-align: center;
+}
 .people-title {
     margin: 1.8em 0 0.9em;
     font-size: 0.8em;
@@ -151,17 +155,25 @@ main > h2.section-h {
     color: var(--muted);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 14px;
 }
+.people-title::before,
 .people-title::after {
     content: "";
     flex: 1;
     height: 1px;
+}
+.people-title::before {
+    background: linear-gradient(270deg, rgb(205, 205, 218), transparent);
+}
+.people-title::after {
     background: linear-gradient(90deg, rgb(205, 205, 218), transparent);
 }
 .people {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 24px;
 }
 .person {
@@ -242,12 +254,10 @@ main > h2.section-h {
     width: 1.15em;
 }
 
-/* EX cards: light grey with silver reflections, a metallic sheen that follows the pointer, an "EX" tag at the top right */
+/* EX cards: light grey metal. Bands of reflected light slide across the card as the pointer moves (--mx / --my), as if a light hit it */
 .person.ex {
     color: rgb(70, 74, 82);
-    background:
-        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0) 0 18px, rgba(255, 255, 255, 0.55) 18px 22px, rgba(255, 255, 255, 0) 22px 44px),
-        linear-gradient(135deg, rgb(236, 238, 241) 0%, rgb(205, 209, 216) 38%, rgb(240, 241, 244) 56%, rgb(190, 196, 205) 100%);
+    background: linear-gradient(135deg, rgb(238, 240, 243) 0%, rgb(208, 212, 219) 40%, rgb(241, 242, 245) 58%, rgb(194, 199, 208) 100%);
     border-color: rgb(196, 200, 208);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
 }
@@ -257,17 +267,22 @@ main > h2.section-h {
     inset: 0;
     z-index: 2;
     pointer-events: none;
-    opacity: 0.35;
-    transition: opacity 0.3s;
     background:
-        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 42%),
-        linear-gradient(115deg, rgba(120, 190, 255, 0.28), rgba(255, 140, 220, 0.24) 35%, rgba(255, 235, 140, 0.26) 65%, rgba(130, 255, 200, 0.24));
-    background-blend-mode: soft-light, overlay;
+        repeating-linear-gradient(112deg,
+            rgba(255, 255, 255, 0) 0 20px,
+            rgba(255, 255, 255, 0.75) 26px 30px,
+            rgba(255, 255, 255, 0) 38px 58px,
+            rgba(120, 128, 142, 0.16) 62px 66px,
+            rgba(255, 255, 255, 0) 72px 96px);
+    background-size: 320% 320%;
+    background-position: var(--mx) var(--my);
+    opacity: 0.55;
+    transition: background-position 0.18s ease-out, opacity 0.3s;
     mix-blend-mode: soft-light;
 }
 .person.ex:hover::before {
-    opacity: 1;
-    mix-blend-mode: overlay;
+    opacity: 0.95;
+    mix-blend-mode: normal;
 }
 .person.ex .avatar {
     background: linear-gradient(135deg, rgb(120, 126, 138), rgb(190, 196, 206));
@@ -282,19 +297,14 @@ main > h2.section-h {
 .person .ex-badge {
     position: absolute;
     top: 9px;
-    right: 10px;
+    right: 12px;
     z-index: 3;
-    padding: 1px 8px 1px 6px;
     font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
-    font-size: 0.95em;
+    font-size: 1.05em;
     font-weight: 900;
     font-style: italic;
     letter-spacing: 0.06em;
-    color: rgb(52, 56, 64);
-    background: linear-gradient(135deg, rgb(250, 251, 252), rgb(172, 178, 189) 55%, rgb(236, 238, 241));
-    border: 1px solid rgb(150, 156, 168);
-    border-radius: 6px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    color: rgb(86, 91, 102);
 }
 @media (prefers-reduced-motion: reduce) {
     .person, .person:hover { transition: none; }
@@ -318,6 +328,7 @@ footer > p {
         font-size: 3.4em;
     }
     header > .hero {
-        height: 16em;
+        height: calc(16em + 2cm);
+        --sphere-radius: 92px;
     }
 }

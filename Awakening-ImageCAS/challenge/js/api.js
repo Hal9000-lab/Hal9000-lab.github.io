@@ -26,11 +26,13 @@
     function getJSON(url, opts) {
         return fetch(url, opts).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }).then(parseLoose);
     }
+    var MODEL_TIME = { SwinUNETRv2: 55.6, nnResUNet: 41.1, ResNet50: 36.0, ResNet101: 37.3 };      // s per case, paper results table
     function modelStats(truth) {
         var scored = Object.keys(truth.cases).filter(function (t) { return truth.cases[t].role === "scored"; });
         return truth.models.map(function (m) {
             var errs = scored.map(function (t) { return truth.cases[t].models[m.name].err; });
-            return { name: m.name, color: m.color, stats: S.sideStats(errs) };
+            var tc = MODEL_TIME[m.name] === undefined ? null : MODEL_TIME[m.name];
+            return { name: m.name, color: m.color, stats: S.sideStats(errs), time_case: tc, time_total: tc === null ? null : tc * 12 };
         });
     }
 
@@ -99,7 +101,7 @@
         if (!c || !s) return Promise.reject(new Error("unknown session or case"));
         if (c.role === "alcapa") { s.done[o.token] = o.points; return Promise.resolve({ kind: "alcapa" }); }
         var err = { R: S.euclid(o.points.R, c.gt.R), L: S.euclid(o.points.L, c.gt.L) };
-        if (!s.done[o.token]) { s.done[o.token] = o.points; s.errors.push(err); }
+        if (!s.done[o.token]) { s.done[o.token] = o.points; s.errors.push(err); s.ms = (s.ms || 0) + Math.max(0, Math.min(1800000, o.ms || 0)); }
         var models = this.truth.models.map(function (m) { var mm = c.models[m.name]; return { name: m.name, color: m.color, R: mm.R, L: mm.L, err: mm.err }; });
         return Promise.resolve({ kind: "scored", reveal: { gt: c.gt, models: models, user: err } });
     };
@@ -107,7 +109,7 @@
         var s = this.sessions[o.session]; if (!s || s.errors.length < 12) return Promise.reject(new Error("not finished"));
         var rows = this._rows(); var nick = (o.nickname || "").trim().slice(0, 24) || "anonymous";
         var trial = rows.filter(function (r) { return r.nickname === nick; }).length + 1;
-        rows.push({ nickname: nick, trial: trial, time: Date.now(), stats: S.sideStats(s.errors) });
+        rows.push({ nickname: nick, trial: trial, time: Date.now(), stats: S.sideStats(s.errors), time_total: (s.ms || 0) / 1000, time_case: (s.ms || 0) / 1000 / Math.max(1, s.errors.length) });
         try { localStorage.setItem("ostia_local_trials", JSON.stringify(rows)); } catch (e) {}
         return Promise.resolve({ trial: trial, time: rows[rows.length - 1].time, nickname: nick, cooldown: CFG.COOLDOWN_SECONDS });
     };
