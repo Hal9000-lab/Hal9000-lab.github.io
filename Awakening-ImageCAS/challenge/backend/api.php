@@ -25,6 +25,8 @@ $N_SCORED        = 12;                                       // scored cases of 
 $N_ALCAPA        = 3;                                        // unscored special cases of a run
 $MAX_TRIALS      = 5000;                                     // leaderboard rows kept in the answer
 $MAX_STARTS_HOUR = 30;                                       // new runs per hour and per IP
+$DEV_NICK        = '§§_§§';                                  // this exact nickname is the developer test user: its trials are listed on the leaderboard for $DEV_VISIBLE seconds only
+$DEV_VISIBLE     = 300;
 
 // ------------------------------------------------------------------ helpers
 define('GUARD', '<' . '?php exit; ?' . ">\n");
@@ -115,7 +117,7 @@ function point_ok($p) {
 function clean_nick($s) {
     $s = trim((string)$s);
     $s = strip_tags($s);
-    $s = preg_replace('/[^\p{L}\p{N} _\.\-]/u', '', $s);
+    $s = preg_replace('/[^\p{L}\p{N} _\.\-§]/u', '', $s);
     $s = preg_replace('/\s+/u', ' ', $s);
     $s = mb_substr($s, 0, 24, 'UTF-8');
     return $s === '' ? 'anonymous' : $s;
@@ -213,7 +215,10 @@ if ($action === 'submit') {
 
 if ($action === 'finish') {
     $id = isset($body['session']) ? $body['session'] : ''; $s = load_session($id);
-    if ($s['finished']) { fail('this run was already saved'); }
+    if ($s['finished']) {                                   // already saved (e.g. the answer was lost on the network and the browser asks again): same answer
+        if (isset($s['result'])) { out($s['result']); }
+        fail('this run was already saved');
+    }
     $errors = array_values((array)$s['errors']);
     if (count($errors) < $N_SCORED) { fail('the run is not complete'); }
     $nick = clean_nick(isset($body['nickname']) ? $body['nickname'] : '');
@@ -221,9 +226,10 @@ if ($action === 'finish') {
     foreach ($trials as $t) { if (mb_strtolower($t['nickname'], 'UTF-8') === mb_strtolower($nick, 'UTF-8')) { $n++; } }
     $row = array('nickname' => $nick, 'trial' => $n, 'time' => time() * 1000, 'stats' => side_stats($errors));
     guard_append("$DATA/trials.log.php", json_encode($row));
-    $s['finished'] = true; save_session($id, $s);
+    $res = array('trial' => $n, 'time' => $row['time'], 'nickname' => $nick, 'cooldown' => $COOLDOWN);
+    $s['finished'] = true; $s['result'] = $res; save_session($id, $s);
     set_cooldown(array($s['client'], $s['ip']));
-    out(array('trial' => $n, 'time' => $row['time'], 'nickname' => $nick, 'cooldown' => $COOLDOWN));
+    out($res);
 }
 
 if ($action === 'leaderboard') {
@@ -235,6 +241,12 @@ if ($action === 'leaderboard') {
         $models[] = array('name' => $m['name'], 'color' => $m['color'], 'stats' => side_stats($errs));
     }
     $trials = read_lines("$DATA/trials.log.php");
+    $keep = array(); $now_ms = time() * 1000;
+    foreach ($trials as $t) {                              // developer tests only show for a few minutes after they were saved
+        if ($t['nickname'] === $DEV_NICK && ($now_ms - $t['time']) > $DEV_VISIBLE * 1000) { continue; }
+        $keep[] = $t;
+    }
+    $trials = $keep;
     if (count($trials) > $MAX_TRIALS) { $trials = array_slice($trials, -$MAX_TRIALS); }
     out(array('models' => $models, 'trials' => $trials));
 }

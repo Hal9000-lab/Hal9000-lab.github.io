@@ -212,6 +212,8 @@
         if (state.filter) { fl.innerHTML = "Showing the trials of <b></b> (and the models)."; fl.querySelector("b").textContent = state.filter; var x = document.createElement("a"); x.textContent = "show everyone"; x.addEventListener("click", function () { state.filter = null; board(); }); fl.appendChild(x); }
         var mine = mineSet();
         api.leaderboard().then(function (lb) {
+            var DEV = "\u00a7\u00a7_\u00a7\u00a7", now = Date.now();           // the developer test nickname (exactly this) is shown for 5 minutes only
+            lb.trials = lb.trials.filter(function (t) { return t.nickname !== DEV || now - t.time <= 300000; });
             var rows = lb.trials.map(function (t) { return { kind: "user", nickname: t.nickname, trial: t.trial, time: t.time, both: t.stats.both, R: t.stats.R, L: t.stats.L }; });
             lb.models.forEach(function (m) { rows.push({ kind: "model", nickname: m.name, color: m.color, both: m.stats.both, R: m.stats.R, L: m.stats.L }); });
             var ranked = S.rank(rows);
@@ -233,7 +235,18 @@
     }
 
     /* ---------------------------------------------------------------- wiring */
+    // the reserved developer nickname: a red warning as a repellent (it is saved anyway; its leaderboard rows vanish after 5 minutes)
+    function guardNick(inputId) {
+        var inp = $(inputId), w = document.createElement("div");
+        w.className = "nick-warn"; w.hidden = true; w.setAttribute("role", "alert");
+        w.textContent = "\u26a0 Reserved nickname, please do not use it: your results will not be saved.";
+        inp.parentNode.parentNode.insertBefore(w, inp.parentNode.nextSibling);
+        var chk = function () { w.hidden = inp.value.trim() !== "\u00a7\u00a7_\u00a7\u00a7"; };
+        inp.addEventListener("input", chk); chk();
+    }
+
     function wire() {
+        guardNick("nickname"); guardNick("final-nick");
         viewer = new window.OstiaViewer($("viewer"), { onChange: onPoint, onSlice: function () { drawOrient($("orient"), viewer); } });
         tutViewer = new window.OstiaViewer($("viewer-tut"), { readOnly: true, onSlice: function () { drawOrient($("orient-tut"), tutViewer); } });
         $("btn-start").addEventListener("click", function () {

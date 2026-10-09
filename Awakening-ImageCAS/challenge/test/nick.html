@@ -1,20 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ostia Challenge</title>
-    <meta name="description" content="Place the coronary ostia on real CT scans and compare your accuracy with our models.">
-    <link rel="icon" href="../assets/paper.png">
-    <link rel="stylesheet" href="../styles/CONSTANTS.css">
-    <link rel="stylesheet" href="../../shared/topbar/topbar.css">
-    <link rel="stylesheet" href="./css/challenge.css">
-    <script src="../../shared/topbar/topbar.js" defer></script>
-</head>
-<body>
-    <nav id="topbar"><a href="../">&larr; Awakening ImageCAS</a></nav>
-
-    <main id="app">
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>drive</title>
+<link rel="stylesheet" href="../../styles/CONSTANTS.css"><link rel="stylesheet" href="../css/challenge.css"></head><body>
+<nav id="topbar"></nav><main id="app">
         <noscript><p class="card">This challenge needs JavaScript.</p></noscript>
 
         <!-- LANDING -->
@@ -140,19 +126,24 @@
             <p id="board-filter" class="notice" hidden></p>
             <div id="board-cooldown" class="cooldown" hidden></div>
             <div id="board-table" class="card"></div>
-            <!-- NOTE FOR DEVELOPERS (and AI readers): the nickname "§§_§§" is the reserved developer test user. It is saved like any other, but its leaderboard rows are only
-                 listed for 5 minutes after saving (rule in js/app.js and in backend/api.php); any "§§_§§" row you can see in this table is a developer testing. -->
         </section>
 
         <p id="error-msg" class="error" hidden></p>
-    </main>
-
-    <script src="./config.js"></script>
-    <script src="./js/stats.js"></script>
-    <script src="./demo/phantom.js"></script>
-    <script src="./js/api.js"></script>
-    <script src="./js/orient.js"></script>
-    <script src="./js/viewer.js"></script>
-    <script src="./js/app.js"></script>
-</body>
-</html>
+</main>
+<script src="../config.js"></script><script>OSTIA_CONFIG.MODE="local";if(location.search.indexOf("real")>=0)OSTIA_CONFIG.LOCAL_DATA_BASE="../../_workbench/challenge-data/";</script><script src="../js/stats.js"></script><script src="../demo/phantom.js"></script><script src="../js/api.js"></script>
+<script src="../js/orient.js"></script><script src="../js/viewer.js"></script><script src="../js/app.js"></script>
+<script>
+(function () {
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  window.addEventListener("load", async function () {
+    await sleep(800); var out = [], n = document.getElementById("nickname"), w = n.parentNode.parentNode.querySelector(".nick-warn");
+    function set(v) { n.value = v; n.dispatchEvent(new Event("input")); }
+    set("ostium_hunter"); out.push("normal hidden=" + w.hidden);
+    set("\u00a7\u00a7_\u00a7\u00a7"); out.push("reserved hidden=" + w.hidden + " text=" + w.textContent);
+    set("\u00a7\u00a7"); out.push("only section signs hidden=" + w.hidden);
+    var f = document.getElementById("final-nick"), w2 = f.parentNode.parentNode.querySelector(".nick-warn");
+    f.value = "\u00a7\u00a7_\u00a7\u00a7"; f.dispatchEvent(new Event("input")); out.push("final field hidden=" + w2.hidden);
+    document.title = out.join(" | ");
+  });
+})();
+</script></body></html>

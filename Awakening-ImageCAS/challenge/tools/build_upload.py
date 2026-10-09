@@ -7,6 +7,7 @@ Writes _workbench/altervista-upload/ostia/ :
     api.php                 (backend/api.php with a fresh random $SALT)
     data/.htaccess
     data/truth.php          (private)
+    data/README_HOW_TO_CLEANUP.sh   (how to empty the leaderboard and the collected data)
     slices/<token>/...      (PNG stacks + meta.json of every case)
 Hard links are used, so it takes no extra disk space. Run it again after build_truth.py / export_challenge.py to refresh.
 Upload the folder `ostia` into the root of the Altervista site (see backend/README.md).
@@ -45,6 +46,7 @@ def main():
     os.makedirs(DST, exist_ok=True)
     open(prev, "w").write(api)
     link_or_copy(os.path.join(BACK, "data", ".htaccess"), os.path.join(DST, "data", ".htaccess"))
+    link_or_copy(os.path.join(BACK, "data", "README_HOW_TO_CLEANUP.sh"), os.path.join(DST, "data", "README_HOW_TO_CLEANUP.sh"))
     link_or_copy(os.path.join(SRC, "truth.php"), os.path.join(DST, "data", "truth.php"))
     count = size = 0
     for tok in sorted(os.listdir(SRC)):

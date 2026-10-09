@@ -116,9 +116,17 @@
 
     /* ---------------------------------------------------------------- remote (Altervista api.php) */
     function RemoteApi() { this.source = { slice: function (meta, plane, idx) { return loadImage(CFG.DATA_BASE + meta.token + "/" + plane + "/" + pad(idx) + ".png"); } }; }
-    RemoteApi.prototype._call = function (action, body) {
+    // A POST that dies at the network level (e.g. ERR_HTTP2_PROTOCOL_ERROR on a connection the host closed while the person was thinking) is not retried by the
+    // browser, so it is retried here on a fresh connection. Every action is safe to repeat (submit counts a case once, finish returns the saved result again).
+    RemoteApi.prototype._call = function (action, body, attempt) {
+        var self = this; attempt = attempt || 1;
         return getJSON(CFG.API_BASE + "?action=" + action, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(body || {}) })
-            .then(function (j) { if (j.error) { var e = new Error(j.error); e.data = j; throw e; } return j; });
+            .then(function (j) { if (j.error) { var e = new Error(j.error); e.data = j; throw e; } return j; },
+                function (err) {
+                    if (err instanceof TypeError && attempt < 4)                     // fetch() rejects with a TypeError on network failures
+                        return new Promise(function (res) { setTimeout(res, 400 * attempt); }).then(function () { return self._call(action, body, attempt + 1); });
+                    throw err;
+                });
     };
     RemoteApi.prototype.init = function () { return this._call("init"); };
     RemoteApi.prototype.meta = function (token) { return this._call("meta", { token: token }); };      // through api.php: static files of this host carry no CORS header

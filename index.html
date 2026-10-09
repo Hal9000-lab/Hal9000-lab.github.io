@@ -47,50 +47,49 @@
         </div>
 
         <h2 id="people" class="section-h">People</h2>
+        <!-- Each card is configured by its data attributes (empty = not shown):
+             data-start / data-end (years or dates; a non-empty end date, or the attribute data-ex, makes it an EX card),
+             data-orcid (id), data-scholar (user id), data-github (user name), data-web (full url). See people.js -->
+
+        <h3 class="people-title">PhD Students</h3>
         <div class="people">
-            <div class="person">
+            <div class="person" data-orcid="0009-0002-3434-0559" data-scholar="wOjE0VUAAAAJ" data-github="" data-web="" data-start="" data-end="">
                 <div class="avatar" aria-hidden="true">ML</div>
                 <h3>Matteo Leccardi</h3>
-                <p>Politecnico di Milano</p>
-                <div class="links">
-                    <a target="_blank" rel="noopener" href="https://orcid.org/0009-0002-3434-0559" title="ORCID"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#a6ce39"/><path fill="#fff" d="M8.4 6.1a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0zM6.7 8.2h1.6v9.6H6.7zM10.1 8.2h3.4c3.2 0 4.8 2 4.8 4.8s-1.7 4.8-4.8 4.8h-3.4zm1.6 1.4v6.8h1.7c2.4 0 3.2-1.6 3.2-3.4s-.9-3.4-3.2-3.4z"/></svg>ORCID</a>
-                    <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?hl=en&amp;user=wOjE0VUAAAAJ" title="Google Scholar"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285f4" d="M12 3 1 9l11 6 9-4.9V17h2V9z"/><path fill="#356ac3" d="M5 13.2v4c0 1.7 3.1 3.3 7 3.3s7-1.6 7-3.3v-4l-7 3.8z"/></svg>Scholar</a>
-                </div>
+                <p class="aff">Politecnico di Milano</p>
             </div>
-            <div class="person">
-                <div class="avatar" aria-hidden="true">AM</div>
-                <h3>Andrea Moglia</h3>
-                <p>Politecnico di Milano</p>
-                <div class="links">
-                    <a target="_blank" rel="noopener" href="https://orcid.org/0000-0002-3365-580X" title="ORCID"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#a6ce39"/><path fill="#fff" d="M8.4 6.1a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0zM6.7 8.2h1.6v9.6H6.7zM10.1 8.2h3.4c3.2 0 4.8 2 4.8 4.8s-1.7 4.8-4.8 4.8h-3.4zm1.6 1.4v6.8h1.7c2.4 0 3.2-1.6 3.2-3.4s-.9-3.4-3.2-3.4z"/></svg>ORCID</a>
-                    <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?hl=en&amp;user=J5VLBNIAAAAJ" title="Google Scholar"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285f4" d="M12 3 1 9l11 6 9-4.9V17h2V9z"/><path fill="#356ac3" d="M5 13.2v4c0 1.7 3.1 3.3 7 3.3s7-1.6 7-3.3v-4l-7 3.8z"/></svg>Scholar</a>
-                </div>
-            </div>
-            <div class="person">
-                <div class="avatar" aria-hidden="true">LM</div>
-                <h3>Luca Mainardi</h3>
-                <p>Politecnico di Milano</p>
-                <div class="links">
-                    <a target="_blank" rel="noopener" href="https://orcid.org/0000-0002-6276-6314" title="ORCID"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#a6ce39"/><path fill="#fff" d="M8.4 6.1a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0zM6.7 8.2h1.6v9.6H6.7zM10.1 8.2h3.4c3.2 0 4.8 2 4.8 4.8s-1.7 4.8-4.8 4.8h-3.4zm1.6 1.4v6.8h1.7c2.4 0 3.2-1.6 3.2-3.4s-.9-3.4-3.2-3.4z"/></svg>ORCID</a>
-                    <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?hl=en&amp;user=-4sUeToAAAAJ" title="Google Scholar"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285f4" d="M12 3 1 9l11 6 9-4.9V17h2V9z"/><path fill="#356ac3" d="M5 13.2v4c0 1.7 3.1 3.3 7 3.3s7-1.6 7-3.3v-4l-7 3.8z"/></svg>Scholar</a>
-                </div>
-            </div>
-            <div class="person">
-                <div class="avatar" aria-hidden="true">PC</div>
-                <h3>Pietro Cerveri</h3>
-                <p>Politecnico di Milano<br>Universit&agrave; di Pavia</p>
-                <div class="links">
-                    <a target="_blank" rel="noopener" href="https://orcid.org/0000-0003-3995-8673" title="ORCID"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#a6ce39"/><path fill="#fff" d="M8.4 6.1a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0zM6.7 8.2h1.6v9.6H6.7zM10.1 8.2h3.4c3.2 0 4.8 2 4.8 4.8s-1.7 4.8-4.8 4.8h-3.4zm1.6 1.4v6.8h1.7c2.4 0 3.2-1.6 3.2-3.4s-.9-3.4-3.2-3.4z"/></svg>ORCID</a>
-                    <a target="_blank" rel="noopener" href="https://scholar.google.com/citations?hl=en&amp;user=oHDqHtQAAAAJ" title="Google Scholar"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285f4" d="M12 3 1 9l11 6 9-4.9V17h2V9z"/><path fill="#356ac3" d="M5 13.2v4c0 1.7 3.1 3.3 7 3.3s7-1.6 7-3.3v-4l-7 3.8z"/></svg>Scholar</a>
-                </div>
-            </div>
-            <div class="person">
+            <div class="person" data-orcid="" data-scholar="" data-github="" data-web="" data-start="" data-end="">
                 <div class="avatar" aria-hidden="true">AM</div>
                 <h3>Alice Maccarini</h3>
+                <p class="aff"></p>
             </div>
-            <div class="person">
+        </div>
+
+        <h3 class="people-title">Postdocs &amp; Researchers</h3>
+        <div class="people">
+            <div class="person" data-orcid="0000-0002-3365-580X" data-scholar="J5VLBNIAAAAJ" data-github="" data-web="" data-start="" data-end="">
+                <div class="avatar" aria-hidden="true">AM</div>
+                <h3>Andrea Moglia</h3>
+                <p class="aff">Politecnico di Milano</p>
+            </div>
+            <div class="person" data-orcid="" data-scholar="" data-github="" data-web="" data-start="" data-end="" data-ex>
                 <div class="avatar" aria-hidden="true">MR</div>
                 <h3>Matteo Rossi</h3>
+                <p class="aff"></p>
+            </div>
+        </div>
+
+        <h3 class="people-title">Chairs</h3>
+        <div class="people">
+            <div class="person" data-orcid="0000-0002-6276-6314" data-scholar="-4sUeToAAAAJ" data-github="" data-web="" data-start="" data-end="">
+                <div class="avatar" aria-hidden="true">LM</div>
+                <h3>Luca Mainardi</h3>
+                <p class="aff">Politecnico di Milano</p>
+            </div>
+            <div class="person" data-orcid="0000-0003-3995-8673" data-scholar="oHDqHtQAAAAJ" data-github="" data-web="" data-start="" data-end="">
+                <div class="avatar" aria-hidden="true">PC</div>
+                <h3>Pietro Cerveri</h3>
+                <p class="aff">Politecnico di Milano<br>Universit&agrave; di Pavia</p>
             </div>
         </div>
     </main>
@@ -100,5 +99,6 @@
         <p>CC 2026</p>
         <p>Website maintained by Matteo Leccardi (until 2027)</p>
     </footer>
+    <script src="./people.js" defer></script>
 </body>
 </html>

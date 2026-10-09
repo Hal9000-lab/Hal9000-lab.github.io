@@ -142,20 +142,51 @@ a.project:hover .open {
 main > h2.section-h {
     margin-top: 3em;
 }
+.people-title {
+    margin: 1.8em 0 0.9em;
+    font-size: 0.8em;
+    font-weight: normal;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.people-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgb(205, 205, 218), transparent);
+}
 .people {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 24px;
 }
 .person {
+    position: relative;
+    width: 218px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1.6em 1.2em 1.4em;
+    padding: 1.6em 1.2em 1.3em;
     text-align: center;
     background: white;
     border: 1px solid rgb(225, 225, 235);
-    border-radius: 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.35s ease-out, box-shadow 0.3s;
+    --mx: 50%;
+    --my: 50%;
+}
+.person:hover {
+    transition: transform 0.08s linear, box-shadow 0.3s;
+    box-shadow: 0 10px 24px rgba(23, 19, 34, 0.16);
+}
+.person > * {
+    position: relative;
+    z-index: 1;
 }
 .person .avatar {
     width: 72px;
@@ -175,16 +206,25 @@ main > h2.section-h {
     margin: 0;
     font-size: 1.15em;
 }
-.person p {
-    margin: 0.5em 0 0.9em;
+.person p.aff {
+    margin: 0.5em 0 0;
+    min-height: 1.4em;
     font-size: 0.9em;
     line-height: 1.4em;
     color: var(--muted);
 }
+.person p.dates {
+    margin: 0.5em 0 0;
+    font-size: 0.8em;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
 .person .links {
     display: flex;
-    gap: 14px;
-    margin-top: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 14px;
+    margin-top: 0.9em;
 }
 .person .links a {
     display: inline-flex;
@@ -200,6 +240,64 @@ main > h2.section-h {
 .person .links svg {
     height: 1.15em;
     width: 1.15em;
+}
+
+/* EX cards: light grey with silver reflections, a metallic sheen that follows the pointer, an "EX" tag at the top right */
+.person.ex {
+    color: rgb(70, 74, 82);
+    background:
+        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0) 0 18px, rgba(255, 255, 255, 0.55) 18px 22px, rgba(255, 255, 255, 0) 22px 44px),
+        linear-gradient(135deg, rgb(236, 238, 241) 0%, rgb(205, 209, 216) 38%, rgb(240, 241, 244) 56%, rgb(190, 196, 205) 100%);
+    border-color: rgb(196, 200, 208);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+.person.ex::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+    background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 42%),
+        linear-gradient(115deg, rgba(120, 190, 255, 0.28), rgba(255, 140, 220, 0.24) 35%, rgba(255, 235, 140, 0.26) 65%, rgba(130, 255, 200, 0.24));
+    background-blend-mode: soft-light, overlay;
+    mix-blend-mode: soft-light;
+}
+.person.ex:hover::before {
+    opacity: 1;
+    mix-blend-mode: overlay;
+}
+.person.ex .avatar {
+    background: linear-gradient(135deg, rgb(120, 126, 138), rgb(190, 196, 206));
+    color: white;
+}
+.person.ex p.aff, .person.ex p.dates {
+    color: rgb(98, 102, 112);
+}
+.person.ex .links a {
+    color: rgb(70, 74, 86);
+}
+.person .ex-badge {
+    position: absolute;
+    top: 9px;
+    right: 10px;
+    z-index: 3;
+    padding: 1px 8px 1px 6px;
+    font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
+    font-size: 0.95em;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    color: rgb(52, 56, 64);
+    background: linear-gradient(135deg, rgb(250, 251, 252), rgb(172, 178, 189) 55%, rgb(236, 238, 241));
+    border: 1px solid rgb(150, 156, 168);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+    .person, .person:hover { transition: none; }
 }
 
 /* footer */
