@@ -17,7 +17,8 @@
     var VS = "attribute vec2 p; varying vec2 vUv; void main() { vUv = p * 0.5 + 0.5; gl_Position = vec4(p, 0.0, 1.0); }";
     var FS = [
         "precision mediump float;",
-        "varying vec2 vUv; uniform vec2 uRes, uPtr; uniform float uTime, uStrength, uMode, uMode2, uFrame, uRadius;",
+        "varying vec2 vUv; uniform vec2 uRes, uPtr; uniform float uTime, uStrength, uMode, uMode2, uFrame, uRadius, uInner, uRing;",
+        "float gmetal = 0.0;                                             // 1 while the glitter is drawn as a frame (metallic cells), 0 for the inner whitish glitter",
         "float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
         "vec2 hash2(vec2 p) { p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3))); return fract(sin(p) * 43758.5453); }",
         "float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);",
@@ -39,9 +40,9 @@
         "  vec3 col = vec3(0.0); float a = 0.0;",
         "  if (mode < 0.5) {                                              // silver: flat silver foil, bumpy grain, a hint of rainbow",
         "    float g = vnoise(q * 46.0) * 0.6 + vnoise(q * 120.0) * 0.4;",
-        "    if (uFrame > 0.0) g = mix(0.5, g, 0.25);                        // a calmer grain on the thin frame",
+        "    if (gmetal > 0.5) g = mix(0.5, g, 0.25);                        // a calmer grain on the thin frame",
         "    float band = sin((uv.x + uv.y) * 7.0 - (ptr.x + ptr.y) * 9.0) * 0.5 + 0.5;",
-        "    vec3 rb = desat(sun(uv.x * 0.9 - ptr.x * 0.7 + ptr.y * 0.3), 0.25) * (uFrame > 0.0 ? 0.4 : 1.0);",
+        "    vec3 rb = desat(sun(uv.x * 0.9 - ptr.x * 0.7 + ptr.y * 0.3), 0.25) * (gmetal > 0.5 ? 0.4 : 1.0);",
         "    col = mix(vec3(0.82, 0.85, 0.9), vec3(1.0), band * 0.7) * (0.75 + 0.5 * g) + rb * 0.15;",
         "    a = (0.30 + 0.45 * spot + 0.20 * pow(band, 3.0) * uStrength) * lit;",
         "  } else if (mode < 1.5) {                                       // holo: sun-pillar rainbow sliding with the pointer, spotlight on top",
@@ -51,6 +52,7 @@
         "  } else if (mode < 2.5) {                                       // glitter: Voronoi cells, each with its own colour phase, sparkling as the light passes",
         "    vec2 v = voro(q * 17.0); float ph = fract(sin(v.x * 127.1) * 43758.5453);",
         "    vec3 rb = desat(sun(ph + ptr.x * 0.8 - ptr.y * 0.5), 0.55);",
+        "    if (gmetal > 0.5) rb = mix(vec3(0.86, 0.89, 0.94) * (0.8 + 0.4 * vnoise(q * 60.0 + ph * 10.0)), desat(rb, 0.7), 0.3);   // on a frame: metallic silver cells with only a hint of colour",
         "    float tw = sin(ph * 40.0 + (ptr.x + ptr.y) * 10.0 + uTime * 1.6 * uStrength);",
         "    float spark = pow(max(tw, 0.0), 14.0);",
         "    float dust = pow(vnoise(q * 90.0 + ph * 20.0), 6.0);",
@@ -80,9 +82,11 @@
         "  ptr = vec2(uPtr.x, 1.0 - uPtr.y);                              // pointer, y up",
         "  spot = 1.0 - smoothstep(0.0, 0.75, length((uv - ptr) * vec2(asp, 1.0))); spot = pow(spot, 1.4);",
         "  lit = 0.35 + 0.65 * uStrength;                                 // a faint finish at rest, full when hovered",
+        "  gmetal = (uFrame > 0.0 && uRing < -0.5) ? 1.0 : 0.0;",
         "  vec4 c = shade(uMode);",
         "  if (uMode2 > -0.5) { vec4 d = shade(uMode2) * 0.8; c = d + c * (1.0 - d.a); }       // a second finish layered over the first",
-        "  if (uFrame > 0.0) {                                             // frame only: a solid metallic ring (rounded box distance), nothing inside",
+        "  if (uFrame > 0.0) {                                             // frame: a solid metallic ring (rounded box distance); inside it nothing, or the fill finish when a ring finish (uRing) is set",
+        "    vec4 fill = c; if (uRing > -0.5) { gmetal = 1.0; c = shade(uRing); }",
         "    vec3 col = c.rgb / max(c.a, 0.001);",
         "    vec2 hp = (uv - 0.5) * uRes; vec2 hb = uRes * 0.5 - vec2(uRadius);",
         "    vec2 dq = abs(hp) - hb; float sd = length(max(dq, 0.0)) + min(max(dq.x, dq.y), 0.0) - uRadius;   // < 0 inside the card",
@@ -91,6 +95,12 @@
         "    col = pow(clamp(col, 0.0, 1.0), vec3(1.4)) * 0.95;                                              // deeper tones: the ring has to stand out on a white card",
         "    float a = 0.97 * ring + edge * 0.30; col = mix(col, vec3(1.0), edge * 0.35);",
         "    c = vec4(col * a, a);",
+        "    if (uRing > -0.5) c = c + fill * (1.0 - smoothstep(-1.0, 1.0, sd)) * (1.0 - c.a);               // finish of the card under the ring",
+        "    if (uInner > 0.0) {                                              // faint whitish glitter inside the card (same context: browsers allow only a few WebGL contexts)",
+        "      gmetal = 0.0; vec4 g = shade(2.0); float lum = dot(g.rgb / max(g.a, 0.001), vec3(0.3333)); float ga = g.a * uInner;",
+        "      float inside = 1.0 - smoothstep(-1.0, 1.0, sd);",
+        "      vec4 inner = vec4(vec3(lum * 0.9) * ga, ga) * inside; c = c + inner * (1.0 - c.a);",
+        "    }",
         "  }",
         "  gl_FragColor = c;",
         "}"
@@ -115,11 +125,12 @@
         gl.useProgram(prog);
         var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
         var loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-        var u = { res: gl.getUniformLocation(prog, "uRes"), ptr: gl.getUniformLocation(prog, "uPtr"), time: gl.getUniformLocation(prog, "uTime"), s: gl.getUniformLocation(prog, "uStrength"), mode: gl.getUniformLocation(prog, "uMode"), mode2: gl.getUniformLocation(prog, "uMode2"), frame: gl.getUniformLocation(prog, "uFrame"), radius: gl.getUniformLocation(prog, "uRadius") };
+        var u = { res: gl.getUniformLocation(prog, "uRes"), ptr: gl.getUniformLocation(prog, "uPtr"), time: gl.getUniformLocation(prog, "uTime"), s: gl.getUniformLocation(prog, "uStrength"), mode: gl.getUniformLocation(prog, "uMode"), mode2: gl.getUniformLocation(prog, "uMode2"), frame: gl.getUniformLocation(prog, "uFrame"), inner: gl.getUniformLocation(prog, "uInner"), ring: gl.getUniformLocation(prog, "uRing"), radius: gl.getUniformLocation(prog, "uRadius") };
         var raw = String(mode), parts = raw.split(/[+>]/).slice(0, 2);
         if (raw.indexOf(">") < 0) parts.sort(function (x, y) { return (ORDER[x] === undefined ? 9 : ORDER[x]) - (ORDER[y] === undefined ? 9 : ORDER[y]); });     // "a+b": automatic order; "a>b": a below, b above, as written
         var m1 = MODES[parts[0]], m2 = parts.length > 1 ? MODES[parts[1]] : undefined;                                  // one finish, or two layered ("gold+glitter")
         gl.uniform1f(u.mode, m1 === undefined ? 0 : m1); gl.uniform1f(u.mode2, m2 === undefined ? -1 : m2);
+        gl.uniform1f(u.ring, opts.ring && MODES[opts.ring] !== undefined && opts.frame ? MODES[opts.ring] : -1);       // opts.ring: finish of the frame drawn over the card finish (needs opts.frame)
         gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         function size() {
             var dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.max(1, Math.round(el.clientWidth * dpr)), h = Math.max(1, Math.round(el.clientHeight * dpr));
@@ -131,7 +142,7 @@
                 size(); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
                 var dpr = cv.width / Math.max(1, el.clientWidth);
                 gl.uniform2f(u.res, cv.width, cv.height); gl.uniform2f(u.ptr, px, py); gl.uniform1f(u.s, strength); gl.uniform1f(u.time, time);
-                gl.uniform1f(u.frame, (opts.frame || 0) * dpr); gl.uniform1f(u.radius, (opts.radius || 12) * dpr);
+                gl.uniform1f(u.frame, (opts.frame || 0) * dpr); gl.uniform1f(u.inner, opts.inner || 0); gl.uniform1f(u.radius, (opts.radius || 12) * dpr);
                 gl.drawArrays(gl.TRIANGLES, 0, 3);
             }
         };

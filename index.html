@@ -53,12 +53,9 @@
 
         <h2 id="lineup" class="section-h">Lineup</h2>
         <!-- Lineup section: each card is configured by its data attributes (empty = not shown), see people.js:
-             data-titles (M.Sc., Ph.D., Prof.), data-start / data-end (a real end date makes it an EX card, "today" = still here),
-             data-foil (silver | holo | glitter | gold | metal, or two layered: gold+holo (automatic order) or glitter>gold (glitter below, gold above); overrides the finish of the group, or picks the one of an EX card), data-orcid, data-scholar, data-github, data-web.
-             Finish rules (people.js): normal cards get a metallic frame by group (data-group of the row): PhD students silver for the oldest start year among
-             the active ones, metal for the others; postdocs: glitter below gold (glitter>gold) with the Prof. title, plain glitter without; faculty (data-group="chair"): holo (complete
-             silver below, rainbow above). EX cards (whole card): PhD students silver; postdocs plain glitter, or glitter>gold with Prof.; chairs glitter+rainbow.
-             -->
+             data-titles (M.Sc., Ph.D., Prof.), data-start / data-end (a real end date makes it an EX card, "today" = still here), data-orcid, data-scholar, data-github, data-web.
+             Finishes (people.js), no exceptions: base foil by group (data-group of the row): PhD students metal, postdocs silver, faculty (data-group="chair") silver + rainbow. Active cards also get a faint white glitter inside (opacity 0.30 for everyone).
+             Current members show the base foil as a 7 px frame; EX cards are filled with it and get a glitter frame over it. -->
 
         <h3 class="people-title">PhD Students</h3>
         <div class="people" data-group="phd">
@@ -105,7 +102,7 @@
                 <h3>Pietro Cerveri</h3>
                 <p class="aff">Politecnico di Milano<br>Universit&agrave; di Pavia</p>
             </div>
-            <div class="person" data-titles="Ph.D.,Prof." data-orcid="0000-0002-3365-580X" data-scholar="J5VLBNIAAAAJ" data-github="" data-web="" data-foil="glitter>gold" data-start="2022" data-end="today">
+            <div class="person" data-titles="Ph.D.,Prof." data-orcid="0000-0002-3365-580X" data-scholar="J5VLBNIAAAAJ" data-github="" data-web="" data-start="2022" data-end="today">
                 <div class="avatar" aria-hidden="true">AM</div>
                 <h3>Andrea Moglia</h3>
                 <p class="aff">Politecnico di Milano</p>
