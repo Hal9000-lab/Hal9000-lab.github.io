@@ -121,7 +121,7 @@
             .then(function (j) { if (j.error) { var e = new Error(j.error); e.data = j; throw e; } return j; });
     };
     RemoteApi.prototype.init = function () { return this._call("init"); };
-    RemoteApi.prototype.meta = function (token) { return getJSON(CFG.DATA_BASE + token + "/meta.json"); };
+    RemoteApi.prototype.meta = function (token) { return this._call("meta", { token: token }); };      // through api.php: static files of this host carry no CORS header
     RemoteApi.prototype.start = function (o) { return this._call("start", o); };
     RemoteApi.prototype.submit = function (o) { return this._call("submit", o); };
     RemoteApi.prototype.finish = function (o) { return this._call("finish", o); };

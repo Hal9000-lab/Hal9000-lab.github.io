@@ -239,4 +239,15 @@ if ($action === 'leaderboard') {
     out(array('models' => $models, 'trials' => $trials));
 }
 
+if ($action === 'meta') {      // meta.json of a case, through the api so that it carries the CORS header (a plain static file on this host does not)
+    $tok = isset($body['token']) ? (string)$body['token'] : (isset($_GET['token']) ? (string)$_GET['token'] : '');
+    if (!preg_match('/^[a-f0-9]{12}$/', $tok)) { fail('bad token'); }
+    $f = __DIR__ . '/slices/' . $tok . '/meta.json';
+    if (!is_file($f)) { fail('unknown case'); }
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: public, max-age=3600');
+    readfile($f);
+    exit;
+}
+
 fail('unknown action');
