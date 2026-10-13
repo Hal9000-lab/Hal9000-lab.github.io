@@ -91,6 +91,55 @@ figure > div.placeholder {
     border: 2px dashed rgb(200, 200, 210);
     border-radius: 8px;
 }
+
+/* carousel of the ostia annotation examples */
+
+#oc-figure > img {
+    display: block;
+    height: auto;
+    aspect-ratio: 1839 / 606;
+    background: #fff;
+}
+#oc-figure > input[type=range] {
+    --fill: 0%;
+    display: block;
+    width: min(320px, 70%);
+    height: 8px;
+    margin: 12px auto 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, rgb(130, 130, 130) var(--fill), #fff var(--fill));
+    border: 1px solid rgb(130, 130, 130);
+    border-radius: 999px;
+    outline-offset: 4px;
+}
+#oc-figure > input[type=range]::-webkit-slider-runnable-track {
+    height: 100%;
+    background: transparent;
+}
+#oc-figure > input[type=range]::-moz-range-track {
+    height: 100%;
+    background: transparent;
+}
+#oc-figure > input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -4px;
+    background: rgb(130, 130, 130);
+    border: none;
+    border-radius: 50%;
+}
+#oc-figure > input[type=range]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: rgb(130, 130, 130);
+    border: none;
+    border-radius: 50%;
+}
 figcaption {
     margin-top: 0.6em;
     font-size: 0.85em;

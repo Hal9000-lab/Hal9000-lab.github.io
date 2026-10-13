@@ -174,10 +174,12 @@
                 <li><b>One consistent definition.</b> The annotations are reconciled with the operational definitions of the ostium used by
                     CAT08 and ASOCA, so that the three datasets can be used together.</li>
             </ul>
-            <figure>
-                <!-- TODO: replace with an example figure (left/right ostia on a CCTA slice) -->
-                <div class="placeholder">Ostia annotation example (coming soon)</div>
-                <figcaption>Example of left and right ostium landmarks on a CCTA volume.</figcaption>
+            <figure id="oc-figure">
+                <img width="1839" height="606" alt="Left and right ostium landmarks on axial and sagittal CCTA slices"
+                     src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+                <input type="range" min="0" max="99" value="0" aria-label="Browse the annotation examples">
+                <figcaption>Left (navy) and right (firebrick) ostium landmarks on an axial and a sagittal slice through each ostium, for 100
+                    volumes of ImageCAS, ASOCA and CAT08. The examples change every few seconds; use the slider to browse them.</figcaption>
             </figure>
         </section>
 
@@ -464,6 +466,7 @@
         });
     });
     </script>
+    <script src="./js/ostia-carousel.js"></script>
     <script src="./js/lazy.js"></script>
 </body>
 </html>
