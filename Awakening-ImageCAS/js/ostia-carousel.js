@@ -1,5 +1,5 @@
 /* Carousel of the ostia annotation examples (figure #oc-figure): one image per volume, the left and right ostium on an axial and a sagittal slice.
- * The frames change every STEP_MS; when the visitor moves the slider the image stays still for HOLD_MS, then the carousel goes on.
+ * The frames change every STEP_MS; when the visitor moves the slider or presses an arrow the image stays still for HOLD_MS, then the carousel goes on.
  * Only the frame on screen and the next one are downloaded, and the carousel stops while the figure is out of view or the tab is hidden.
  * FRAMES is the content of assets/frames/ (a static site cannot list a folder): update it when the frames change. */
 (function () {
@@ -31,7 +31,7 @@
     ];
 
     var fig = document.getElementById("oc-figure"); if (!fig || !FRAMES.length) return;
-    var img = fig.querySelector("img"), slider = fig.querySelector("input[type=range]");
+    var img = fig.querySelector("img"), slider = fig.querySelector("input[type=range]"), count = fig.querySelector(".oc-count");
     var index = 0, timer = null, visible = false, pending = null;
 
     function label(name) {                                           // 000__CAT08__image22.png -> CAT08 image22
@@ -45,6 +45,7 @@
     function show(i) {
         index = (i + FRAMES.length) % FRAMES.length;
         slider.value = index; paint();
+        if (count) count.textContent = (index + 1) + " of " + FRAMES.length;
         var name = FRAMES[index], im = new Image();
         pending = im;                                                // the image is swapped only once it is downloaded (no blank frame)
         im.onload = function () {
@@ -63,6 +64,10 @@
 
     slider.min = 0; slider.max = FRAMES.length - 1; slider.step = 1;
     slider.addEventListener("input", function () { show(parseInt(slider.value, 10)); schedule(HOLD_MS); });
+    [[".oc-prev", -1], [".oc-next", 1]].forEach(function (b) {
+        var btn = fig.querySelector(b[0]);
+        if (btn) btn.addEventListener("click", function () { show(index + b[1]); schedule(HOLD_MS); });
+    });
     document.addEventListener("visibilitychange", function () { schedule(STEP_MS); });
 
     if ("IntersectionObserver" in window) {

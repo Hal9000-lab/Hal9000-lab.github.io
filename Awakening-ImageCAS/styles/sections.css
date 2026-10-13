@@ -100,12 +100,50 @@ figure > div.placeholder {
     aspect-ratio: 1839 / 606;
     background: #fff;
 }
-#oc-figure > input[type=range] {
+#oc-figure > .oc-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+#oc-figure button {
+    display: flex;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    border-radius: 4px;
+}
+#oc-figure button > svg {
+    width: 100%;
+    height: 100%;
+    fill: rgb(130, 130, 130);
+    stroke: rgb(130, 130, 130);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+#oc-figure button:hover > svg {
+    fill: rgb(90, 90, 90);
+    stroke: rgb(90, 90, 90);
+}
+#oc-figure .oc-count {
+    min-width: 5.2em;
+    font-size: 0.8em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: rgb(130, 130, 130);
+}
+#oc-figure input[type=range] {
     --fill: 0%;
     display: block;
-    width: min(320px, 70%);
+    flex: 0 1 320px;
+    min-width: 0;
     height: 8px;
-    margin: 12px auto 0;
+    margin: 0 4px;
     padding: 0;
     box-sizing: border-box;
     cursor: pointer;
@@ -116,15 +154,15 @@ figure > div.placeholder {
     border-radius: 999px;
     outline-offset: 4px;
 }
-#oc-figure > input[type=range]::-webkit-slider-runnable-track {
+#oc-figure input[type=range]::-webkit-slider-runnable-track {
     height: 100%;
     background: transparent;
 }
-#oc-figure > input[type=range]::-moz-range-track {
+#oc-figure input[type=range]::-moz-range-track {
     height: 100%;
     background: transparent;
 }
-#oc-figure > input[type=range]::-webkit-slider-thumb {
+#oc-figure input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 14px;
     height: 14px;
@@ -133,7 +171,7 @@ figure > div.placeholder {
     border: none;
     border-radius: 50%;
 }
-#oc-figure > input[type=range]::-moz-range-thumb {
+#oc-figure input[type=range]::-moz-range-thumb {
     width: 14px;
     height: 14px;
     background: rgb(130, 130, 130);

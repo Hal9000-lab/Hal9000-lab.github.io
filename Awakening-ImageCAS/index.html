@@ -177,9 +177,14 @@
             <figure id="oc-figure">
                 <img width="1839" height="606" alt="Left and right ostium landmarks on axial and sagittal CCTA slices"
                      src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
-                <input type="range" min="0" max="99" value="0" aria-label="Browse the annotation examples">
+                <div class="oc-controls">
+                    <button type="button" class="oc-prev" aria-label="Previous example"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M7.5 1.5 L2.5 5 L7.5 8.5 Z"/></svg></button>
+                    <button type="button" class="oc-next" aria-label="Next example"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 1.5 L7.5 5 L2.5 8.5 Z"/></svg></button>
+                    <input type="range" min="0" max="99" value="0" aria-label="Browse the annotation examples">
+                    <span class="oc-count" aria-live="off">1 of 100</span>
+                </div>
                 <figcaption>Left (navy) and right (firebrick) ostium landmarks on an axial and a sagittal slice through each ostium, for 100
-                    volumes of ImageCAS, ASOCA and CAT08. The examples change every few seconds; use the slider to browse them.</figcaption>
+                    volumes of ImageCAS, ASOCA and CAT08. The examples change every few seconds; use the arrows or the slider to browse them.</figcaption>
             </figure>
         </section>
 
