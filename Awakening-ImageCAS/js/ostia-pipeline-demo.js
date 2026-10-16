@@ -180,9 +180,9 @@
     function scene0(t, k) {
         var gx = 215, gy = 190;
         grid(gx, gy, 50, 1000, 9, 2, function (i, row) { return prog(t, 0.4, 2.4) * 20 > row ? C.base : null; });
-        text("ImageCAS: 1000 CCTA volumes and coronary masks", gx, gy - 14, 17, C.text, "bold");
+        text("ImageCAS: 1000 CCTA volumes and coronary masks", gx, gy - 36, 17, C.text, "bold");
         var a = ease(prog(t, 2.2, 3.0));
-        ctx.globalAlpha = a; text("no ostium annotation", gx + 550, gy - 14, 17, C.bad, "bold", "right"); ctx.globalAlpha = 1;
+        ctx.globalAlpha = a; text("no ostium annotation", gx, gy - 14, 17, C.bad, "bold"); ctx.globalAlpha = 1;
         // CAT08 and ASOCA, each cell carries its ostium reference
         var by = 470;
         text("CAT08 (32 volumes)", gx, by - 12, 15, C.text, "bold");
