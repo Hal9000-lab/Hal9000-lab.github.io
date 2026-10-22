@@ -166,6 +166,12 @@ header > div#abstract > p {
     font-size: 1.1em;
     line-height: 1.3em;
 }
+header > div#abstract > p.abstract-source {
+    margin-top: 0.3em;
+    text-align: center;
+    font-size: 0.85em;
+    color: rgb(130, 130, 130);
+}
 
 @media (max-width: 600px) {
     header > h1 {
