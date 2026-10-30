@@ -109,20 +109,21 @@
                 coronary artery segmentation, with two annotation sets for its 1000 patients, which make it, to the authors'
                 knowledge, the largest public dataset for ostium localization and the only one with centerline graphs that follow the
                 official ImageCAS masks and start at annotated ostia. Each ostium was annotated
-                by three annotators per volume in the first 500 volumes, and, in a human-in-the-loop second stage, by correcting
+                by three annotators in the first 500 volumes, and, in a human-in-the-loop second stage, by correcting
                 the candidates of a deep learning model trained on the first batch.
             </p>
             <p>
                 Six 3D deep learning localization models were benchmarked on 58 volumes from ImageCAS, ASOCA, and CAT08.
-                SwinUNETR-V2 and nnResUNet localized all the ostia without any failure, with median errors of 0.74 mm (right) and
-                0.85 mm (left), and of 0.70 mm (right) and 0.87 mm (left), respectively. An ablation on training-set size shows
-                that 250 ImageCAS volumes are enough to remove all the failures, reducing the median errors below 1 mm.
+                SwinUNETR-V2 and nnResUNet localized all the ostia without any failure, with median errors of 0.70&ndash;0.87 mm.
+                An ablation on training-set size shows that a model trained on the public CAT08 and ASOCA volumes fails on a
+                third to half of the ostia, whereas adding 250 annotated ImageCAS volumes removes all failures, with median
+                errors below 1 mm.
             </p>
             <p>
                 Centerline graphs rooted at these ostia were extracted from the segmentation masks of 999 patients by a
                 deterministic minimal-path procedure with quality control; on the public ASOCA dataset, they cover a median of
-                99.5% of the reference length at a mean distance of 0.22 mm. The annotations, centerlines, code, and the weights
-                of the models are available as reusable resources at
+                99.5% of the reference length, with the reference points lying on average 0.22 mm from the extracted centerlines.
+                The annotations, centerlines, code, and model weights are available as reusable resources at
                 <a href="https://hal9000-lab.github.io/">https://hal9000-lab.github.io/</a> .
             </p>
         </div>
