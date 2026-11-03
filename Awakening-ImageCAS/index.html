@@ -103,26 +103,26 @@
         <div id="abstract">
             <h2>Abstract</h2>
             <p>
-                Coronary ostia and centerlines serve as key reference points for the automated analysis of coronary computed
-                tomography angiography (CCTA), from surgical planning to intraoperative vessel tracking. However, public ostium
-                annotations cover only 77 non-gated aortic scans. This work enriches ImageCAS, the largest public CCTA dataset for
-                coronary artery segmentation, with two annotation sets for its 1000 patients, which make it, to the authors'
-                knowledge, the largest public dataset for ostium localization and the only one with centerline graphs that follow the
-                official ImageCAS masks and start at annotated ostia. Each ostium was annotated
-                by three annotators in the first 500 volumes and, in the next 500, in a human-in-the-loop stage, by correcting
-                the candidates of a deep learning model trained on the first batch.
+                Coronary ostia and centerlines are key reference points for automated analysis of coronary computed
+                tomography angiography (CCTA), from surgical planning to intraoperative vessel tracking. However, the only
+                public ostium annotations cover 77 non-gated aortic scans, not CCTA, while CAT08 and ASOCA (32 and 40 CCTA
+                scans) mark the ostia only implicitly, as centerline start points. This work enriches ImageCAS, the largest
+                public dataset for coronary artery segmentation, with ostium annotations for its 1000 patients and centerline
+                graphs rooted at these new ostia, making it, to the authors' knowledge, the largest public dataset for ostium
+                localization and the only one with centerlines following the official ImageCAS masks and starting at annotated
+                ostia. Three annotators marked each ostium in the first 500 volumes; in the next 500, the candidates of a model
+                trained on the first batch were corrected (human-in-the-loop).
             </p>
             <p>
-                Six 3D localization models were benchmarked on 58 volumes from ImageCAS, ASOCA, and CAT08.
-                SwinUNETR-V2 and nnResUNet localized all ostia without failure, with median errors of 0.70&ndash;0.87 mm.
-                An ablation on training-set size shows that SwinUNETR-V2 trained on the public CAT08 and ASOCA volumes fails on a
-                third to half of the ostia, whereas adding 250 annotated ImageCAS volumes removes all failures.
+                Six 3D localization models, trained on ImageCAS, CAT08 and ASOCA, were benchmarked on 58 held-out volumes
+                (50 ImageCAS, 4 CAT08, 4 ASOCA). SwinUNETR-V2 and nnResUNet localized all ostia without failure (&gt;5 mm
+                error), with median errors of 0.70&ndash;0.87 mm. Trained on CAT08 and ASOCA alone, SwinUNETR-V2 fails on 34% of
+                right and 53% of left ostia, whereas adding 250 ImageCAS volumes removes all failures.
             </p>
             <p>
-                Centerline graphs rooted at these ostia were extracted from the segmentation masks of 999 patients by a
-                deterministic minimal-path procedure with quality control; on ASOCA, they cover a median of
-                99.5% of the reference length, with the reference points on average 0.22 mm from the extracted centerlines.
-                The annotations, centerlines, code, and model weights are available as reusable resources at
+                The centerlines were extracted by a deterministic, quality-controlled minimal-path procedure; on ASOCA, they
+                cover a median of 99.5% of the reference length, with the reference points on average 0.22 mm from the
+                centerlines. Annotations, centerlines, code, and weights are available at
                 <a href="https://hal9000-lab.github.io/">https://hal9000-lab.github.io/</a> .
             </p>
         </div>
