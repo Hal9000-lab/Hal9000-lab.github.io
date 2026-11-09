@@ -66,8 +66,8 @@
             <span class="fast-card soon" id="paper">
                 <span class="label">Paper</span>
             </span>
-            <span class="fast-card soon" id="arxiv">
-                <span class="label"><img src="./assets/arxiv-logo-one-color-white.svg" alt="arXiv"></span>
+            <span class="fast-card" id="arxiv">
+                <a href="https://arxiv.org/abs/2611.09714" target="_blank" rel="noopener"><img src="./assets/arxiv-logo-one-color-white.svg" alt="arXiv"></a>
             </span>
             <span class="fast-card" id="github">
                 <a href="https://github.com/AAMIASoftwares-research/HCATOstiaLocalizationRelease" target="_blank" rel="noopener"><img src="./assets/github_dark.png" alt="GitHub"></a>
@@ -341,7 +341,7 @@
             <h2>Resources</h2>
             <!-- TODO: fill in the links below once available. -->
             <ul>
-                <li><b>Paper:</b> coming soon</li>
+                <li><b>Paper:</b> <a href="https://arxiv.org/abs/2611.09714" target="_blank" rel="noopener">arXiv:2611.09714</a> (preprint)</li>
                 <li><b>Dataset annotations:</b> <a href="https://doi.org/10.5281/zenodo.23243093" target="_blank">Zenodo, doi:10.5281/zenodo.23243093</a> (ostia and centerlines, CC BY-NC 4.0)</li>
                 <li><b>Model weights:</b> <a href="https://doi.org/10.5281/zenodo.23399623" target="_blank">Zenodo, doi:10.5281/zenodo.23399623</a> (SwinUNETRv2, ResNet50, ResNet101, nnResUNet; CC BY-NC 4.0)</li>
                 <li><b>Code:</b> <a href="https://github.com/AAMIASoftwares-research/HCATOstiaLocalizationRelease" target="_blank" rel="noopener">GitHub</a> (inference, training and evaluation code, MIT)</li>
@@ -352,12 +352,16 @@
             <h2>Citation</h2>
             <!-- TODO: update both entries (key, venue, year, DOI) after publication / Zenodo release. -->
             <h3>Paper</h3>
-            <pre id="bibtex-paper">@article{leccardi_awakening_imagecas,
-  title   = {Beyond Segmentation: Enriching ImageCAS with Coronary Ostia Landmarks, Rooted Centerline Graphs, and Open-Weight Localization Models},
-  author  = {Leccardi, Matteo and Moglia, Andrea and Morandini, Marco and Brembilla, Michele and Nicosia, Alessandro and
-             Penserini, Andrea and Brandini, Christian and Konukoglu, Ender and Marcon, Marco and
-             Mainardi, Luca and Cerveri, Pietro},
-  note    = {Under review}
+            <pre id="bibtex-paper">@misc{leccardi2026segmentationenrichingimagecascoronary,
+  title         = {Beyond Segmentation: Enriching ImageCAS with Coronary Ostia Landmarks, Rooted Centerline Graphs, and Open-Weight Localization Models},
+  author        = {Matteo Leccardi and Andrea Moglia and Marco Morandini and Michele Brembilla and Alessandro Nicosia and
+                   Andrea Penserini and Christian Brandini and Ender Konukoglu and Marco Marcon and
+                   Luca Mainardi and Pietro Cerveri},
+  year          = {2026},
+  eprint        = {2611.09714},
+  archivePrefix = {arXiv},
+  primaryClass  = {eess.IV},
+  url           = {https://arxiv.org/abs/2611.09714}
 }</pre>
             <div class="bib-buttons">
                 <button type="button" data-copy="bibtex-paper">Copy BibTeX</button>
